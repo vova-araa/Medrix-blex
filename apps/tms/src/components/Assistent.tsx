@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { DemoAssistent, type AiBron } from "../ai/bron";
 import type { AppState } from "../data/state";
 import { t } from "../i18n";
+import { Icoon } from "./Icoon";
 
 const bron: AiBron = new DemoAssistent();
 
@@ -35,14 +36,16 @@ export function Assistent({ state, nu }: { state: AppState; nu: string }) {
         onClick={() => setOpen(!open)}
         aria-expanded={open}
       >
-        ✨ {t("assistent.knop")}
+        <Icoon naam="assistent" maat={15} /> {t("assistent.knop")}
       </button>
       {open && (
         <div className="assistent-paneel">
           <div className="assistent-kop">
             <b>{t("assistent.titel")}</b>
             <span className="assistent-demo">{t("assistent.demo")}</span>
-            <button className="btn" onClick={() => setOpen(false)} aria-label={t("detail.sluiten")}>✕</button>
+            <button className="btn" onClick={() => setOpen(false)} aria-label={t("detail.sluiten")}>
+              <Icoon naam="kruis" maat={13} />
+            </button>
           </div>
           <div className="assistent-berichten" ref={lijstRef}>
             {berichten.length === 0 && (

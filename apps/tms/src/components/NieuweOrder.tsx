@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { AppState } from "../data/state";
 import { t } from "../i18n";
 import { PLAATS_COORDS } from "../kaart/coords";
+import { Icoon } from "./Icoon";
 
 const TENANT = "blex";
 const PLAATSEN = Object.keys(PLAATS_COORDS).sort();
@@ -17,7 +18,12 @@ interface Props {
 }
 
 export function NieuweOrder({ state, onSluit, onAanmaken }: Props) {
-  const opdrachtgevers = [...new Set(Object.values(state.orders).map((o) => o.opdrachtgever))].sort();
+  const opdrachtgevers = [
+    ...new Set([
+      ...Object.keys(state.klanten),
+      ...Object.values(state.orders).map((o) => o.opdrachtgever),
+    ]),
+  ].sort();
   const [opdrachtgever, setOpdrachtgever] = useState(opdrachtgevers[0] ?? "");
   const [vanNaam, setVanNaam] = useState("Depot Venlo");
   const [vanPlaats, setVanPlaats] = useState("Venlo");
@@ -63,7 +69,9 @@ export function NieuweOrder({ state, onSluit, onAanmaken }: Props) {
     <div className="detail-overlay" onClick={(e) => { if (e.target === e.currentTarget) onSluit(); }}>
       <aside className="detail">
         <div className="detail-head">
-          <button className="btn detail-close" onClick={onSluit} aria-label={t("detail.sluiten")}>✕</button>
+          <button className="btn detail-close" onClick={onSluit} aria-label={t("detail.sluiten")}>
+            <Icoon naam="kruis" maat={13} />
+          </button>
           <div className="eyebrow">{t("order.eyebrow")}</div>
           <h3>{t("order.titel")}</h3>
         </div>

@@ -9,13 +9,17 @@ import { DashboardView } from "./components/DashboardView";
 import { DetailPaneel } from "./components/DetailPaneel";
 import { EmballageView } from "./components/EmballageView";
 import { FacturenView } from "./components/FacturenView";
+import { Icoon } from "./components/Icoon";
 import { KaartView } from "./components/KaartView";
+import { KlantenView } from "./components/KlantenView";
 import { ModulesView } from "./components/ModulesView";
 import { NieuweOrder } from "./components/NieuweOrder";
+import { OperatieView } from "./components/OperatieView";
 import { PortaalView } from "./components/PortaalView";
 import { UrenView } from "./components/UrenView";
 import { WagenparkView } from "./components/WagenparkView";
-import type { AdresFoto, Tarief } from "./data/bron";
+import type { AdresFoto, Klant, Tarief } from "./data/bron";
+import { meldingen } from "./data/meldingen";
 import { MockDataBron } from "./data/mock";
 import { MODULES, type ModuleId } from "./data/modules";
 import {
@@ -184,7 +188,13 @@ export default function App() {
     meld(t(actief ? "toast.moduleAan" : "toast.moduleUit", { module: t(`module.${module}.naam`) }));
   }
 
+  function nieuweKlant(klant: Klant, tarief: Tarief) {
+    dispatch({ type: "nieuwe_klant", klant, tarief });
+    meld(t("toast.klantAangemaakt", { klant: klant.naam }));
+  }
+
   const assistentActief = state.actieveModules.includes("assistent");
+  const aantalMeldingen = meldingen(state, nu).length;
 
   return (
     <div>
@@ -193,10 +203,10 @@ export default function App() {
         <div className="brand"><span className="mark">S</span> {t("app.naam")}</div>
         <div className="role-switch" role="tablist">
           <button className={rol === "bedrijf" ? "active" : ""} onClick={() => setRol("bedrijf")}>
-            {t("rol.bedrijf")}
+            <Icoon naam="bedrijf" maat={14} /> {t("rol.bedrijf")}
           </button>
           <button className={rol === "chauffeur" ? "active" : ""} onClick={() => setRol("chauffeur")}>
-            {t("rol.chauffeur")}
+            <Icoon naam="truck" maat={14} /> {t("rol.chauffeur")}
           </button>
         </div>
         {rol === "bedrijf" && (
@@ -207,21 +217,24 @@ export default function App() {
                 className={effectieveTab === moduleDef.id ? "active" : ""}
                 onClick={() => setTab(moduleDef.id)}
               >
-                {t(`module.${moduleDef.id}.naam`)}
+                <Icoon naam={moduleDef.icoon} maat={13} /> {t(`module.${moduleDef.id}.naam`)}
+                {moduleDef.id === "operatie" && aantalMeldingen > 0 && (
+                  <span className="nav-badge">{aantalMeldingen}</span>
+                )}
               </button>
             ))}
             <button
               className={`modules-tab${effectieveTab === "modules" ? " active" : ""}`}
               onClick={() => setTab("modules")}
             >
-              {t("nav.modules")}
+              <Icoon naam="modules" maat={13} /> {t("nav.modules")}
             </button>
           </nav>
         )}
         <div className="spacer" />
         {rol === "bedrijf" && (
-          <button className="btn primary" onClick={() => setOrderFormOpen(true)}>
-            {t("order.knop")}
+          <button className="btn primary knop-met-icoon" onClick={() => setOrderFormOpen(true)}>
+            <Icoon naam="plus" maat={14} /> {t("order.knop")}
           </button>
         )}
         <span className="date">
@@ -240,6 +253,10 @@ export default function App() {
           onPlanZending={planZending}
           onSelecteerTaak={setGeselecteerdeTaak}
         />
+      )}
+      {rol === "bedrijf" && effectieveTab === "operatie" && <OperatieView state={state} nu={nu} />}
+      {rol === "bedrijf" && effectieveTab === "klanten" && (
+        <KlantenView state={state} onNieuweKlant={nieuweKlant} />
       )}
       {rol === "bedrijf" && effectieveTab === "kaart" && <KaartView state={state} nu={nu} />}
       {rol === "bedrijf" && effectieveTab === "uren" && <UrenView state={state} nu={nu} />}

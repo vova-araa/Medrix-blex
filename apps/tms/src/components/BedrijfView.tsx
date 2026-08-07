@@ -10,6 +10,7 @@ import {
 import { statusLabel, t } from "../i18n";
 import { ritEta } from "../kaart/simulatie";
 import { initialen, laadmeters, tijd } from "../utils";
+import { Icoon, type IcoonNaam } from "./Icoon";
 import { TruckSvg } from "./TruckSvg";
 
 interface Props {
@@ -21,11 +22,11 @@ interface Props {
 
 export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak }: Props) {
   const alleTaken = state.taken;
-  const kpis = [
-    { ico: "🚛", cls: "i-truck", n: String(state.ritten.filter((r) => statusVanRit(state, r.id) === "onderweg").length), label: t("kpi.rittenOnderweg") },
-    { ico: "✅", cls: "i-ok", n: `${alleTaken.filter((tk) => statusVanTaak(state, tk.id) === "afgerond").length}/${alleTaken.length}`, label: t("kpi.takenAfgerond") },
-    { ico: "⚠️", cls: "i-warn", n: String(alleTaken.filter((tk) => statusVanTaak(state, tk.id) === "probleem").length), label: t("kpi.problemen") },
-    { ico: "📦", cls: "i-box", n: String(state.ongepland.length), label: t("kpi.ongepland") },
+  const kpis: Array<{ ico: IcoonNaam; cls: string; n: string; label: string }> = [
+    { ico: "truck", cls: "i-truck", n: String(state.ritten.filter((r) => statusVanRit(state, r.id) === "onderweg").length), label: t("kpi.rittenOnderweg") },
+    { ico: "check", cls: "i-ok", n: `${alleTaken.filter((tk) => statusVanTaak(state, tk.id) === "afgerond").length}/${alleTaken.length}`, label: t("kpi.takenAfgerond") },
+    { ico: "waarschuwing", cls: "i-warn", n: String(alleTaken.filter((tk) => statusVanTaak(state, tk.id) === "probleem").length), label: t("kpi.problemen") },
+    { ico: "pakket", cls: "i-box", n: String(state.ongepland.length), label: t("kpi.ongepland") },
   ];
 
   return (
@@ -33,7 +34,7 @@ export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak }: Props
       <div className="kpis">
         {kpis.map((k) => (
           <div className="kpi-tile" key={k.label}>
-            <span className={`ico ${k.cls}`}>{k.ico}</span>
+            <span className={`ico ${k.cls}`}><Icoon naam={k.ico} maat={18} /></span>
             <div><b>{k.n}</b><span>{k.label}</span></div>
           </div>
         ))}

@@ -4,6 +4,7 @@ import { adresSleutel, type AdresFoto } from "../data/bron";
 import { adresInfoVan, eventsVanTaak, statusVanTaak, zendingVan, type AppState } from "../data/state";
 import { statusLabel, t } from "../i18n";
 import { tijd, venster } from "../utils";
+import { Icoon } from "./Icoon";
 
 interface Props {
   state: AppState;
@@ -37,7 +38,9 @@ export function DetailPaneel({
     <div className="detail-overlay" onClick={(e) => { if (e.target === e.currentTarget) onSluit(); }}>
       <aside className="detail">
         <div className="detail-head">
-          <button className="btn detail-close" onClick={onSluit} aria-label={t("detail.sluiten")}>✕</button>
+          <button className="btn detail-close" onClick={onSluit} aria-label={t("detail.sluiten")}>
+            <Icoon naam="kruis" maat={13} />
+          </button>
           <div className="eyebrow">{rit.id} · {rit.chauffeur || t("vloot.beschikbaar")}</div>
           <h3>{t(`taak.${taak.soort}`)} — {taak.adres.naam}</h3>
           <span className={`status-chip s-${s === "bezig" || s === "onderweg" ? "onderweg" : s}`}>{statusLabel(s)}</span>
@@ -144,8 +147,8 @@ function AdresInfoBewerker({
         >
           {t("adres.opslaan")}
         </button>
-        <label className="btn adres-upload">
-          {t("adres.fotoToevoegen")}
+        <label className="btn adres-upload knop-met-icoon">
+          <Icoon naam="camera" maat={14} /> {t("adres.fotoToevoegen")}
           <input type="file" accept="image/*" onChange={fotoGekozen} hidden />
         </label>
       </div>

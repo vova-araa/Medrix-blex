@@ -28,6 +28,13 @@ export interface Tarief {
   perLaadmeterCenten: number;
 }
 
+export interface Klant {
+  naam: string;
+  contactpersoon: string;
+  email: string;
+  telefoon: string;
+}
+
 export interface WagenparkItem {
   kenteken: string;
   landcode: string;
@@ -51,6 +58,7 @@ export interface DagSnapshot {
   emballage: EmballageTransactie[];
   tarieven: Record<string, Tarief>;
   wagenpark: WagenparkItem[];
+  klanten: Record<string, Klant>;
 }
 
 export interface DataBron {

@@ -16,6 +16,7 @@ import {
 } from "../data/state";
 import { statusLabel, t } from "../i18n";
 import { initialen, tijd, venster } from "../utils";
+import { Icoon, type IcoonNaam } from "./Icoon";
 
 interface Props {
   state: AppState;
@@ -38,118 +39,120 @@ export function ChauffeurView({
 
   return (
     <div className="driver-main">
-      <div className="phone">
-        <div className="ph-card ph-head">
-          <div className="driver-chips">
-            {chauffeurs.map((naam) => (
-              <button
-                key={naam}
-                className={naam === actieveChauffeur ? "active" : ""}
-                onClick={() => onKiesChauffeur(naam)}
-              >
-                {naam}
-              </button>
-            ))}
-          </div>
+      <div className="demo-kiezer">
+        <span className="demo-label">{t("chauffeur.demoLabel")}</span>
+        <div className="driver-chips">
+          {chauffeurs.map((naam) => (
+            <button
+              key={naam}
+              className={naam === actieveChauffeur ? "active" : ""}
+              onClick={() => onKiesChauffeur(naam)}
+            >
+              {naam}
+            </button>
+          ))}
         </div>
+      </div>
 
-        <div className="ph-card sync-row">
-          <span className={`sync-chip ${state.offline ? "offline" : "online"}`}>
-            <span className="bol" />
-            {state.offline ? t("chauffeur.offline", { aantal: state.outbox }) : t("chauffeur.online")}
+      <div className="telefoon">
+        <div className="tel-status">
+          <span className="tel-tijd">{tijd(nu)}</span>
+          <span className="tel-merk">{t("chauffeur.appNaam")}</span>
+          <span className="tel-rechts">
+            <span className="tel-signaal" aria-hidden="true"><i /><i /><i /><i /></span>
+            <span className="tel-batterij" aria-hidden="true"><i /></span>
           </span>
-          <label className="offline-toggle">
-            <input
-              type="checkbox"
-              checked={state.offline}
-              onChange={(e) => onZetOffline(e.target.checked)}
-            />
-            {t("chauffeur.offlineToggle")}
-          </label>
         </div>
 
-        <KlokKaart
-          state={state}
-          nu={nu}
-          chauffeur={actieveChauffeur}
-          onWerktijdEvent={onWerktijdEvent}
-        />
-
-        {rit && (
-          <div className="ph-card">
-            <div className="ph-rit-head">
-              <span className="avatar">{initialen(rit.chauffeur)}</span>
-              <div className="groet">
-                <b>{t("chauffeur.groet", { naam: rit.chauffeur.split(" ").pop() ?? rit.chauffeur })}</b>
-                <span>
-                  {rit.id} · {rit.voertuig.landcode}{" "}
-                  {formatteerKenteken({ landcode: rit.voertuig.landcode, kenteken: rit.voertuig.kentekenGenormaliseerd })}
-                  {" · "}{rit.voertuig.omschrijving}
-                </span>
+        <div className="tel-scherm">
+          {rit && (
+            <div className="ph-card app-kop">
+              <div className="ph-rit-head">
+                <span className="avatar avatar-accent">{initialen(rit.chauffeur)}</span>
+                <div className="groet">
+                  <b>{t("chauffeur.groet", { naam: rit.chauffeur.split(" ").pop() ?? rit.chauffeur })}</b>
+                  <span>
+                    {rit.id} · {rit.voertuig.landcode}{" "}
+                    {formatteerKenteken({ landcode: rit.voertuig.landcode, kenteken: rit.voertuig.kentekenGenormaliseerd })}
+                  </span>
+                </div>
+              </div>
+              <div className="ph-progress">
+                <div className="pp-label">
+                  <span>{t("chauffeur.voortgang")}</span>
+                  <span>{t("chauffeur.taken", { klaar, totaal: taken.length })}</span>
+                </div>
+                <div className="pp-bar">
+                  <div className="pp-fill" style={{ width: `${taken.length ? Math.round((klaar / taken.length) * 100) : 0}%` }} />
+                </div>
               </div>
             </div>
-            <div className="ph-progress">
-              <div className="pp-label">
-                <span>{t("chauffeur.voortgang")}</span>
-                <span>{t("chauffeur.taken", { klaar, totaal: taken.length })}</span>
-              </div>
-              <div className="pp-bar">
-                <div className="pp-fill" style={{ width: `${taken.length ? Math.round((klaar / taken.length) * 100) : 0}%` }} />
-              </div>
-            </div>
-          </div>
-        )}
+          )}
 
-        {!rit || taken.length === 0 ? (
-          <div className="ph-card">
-            <div className="klaar-melding">
-              <span className="emoji">🕐</span>
-              <b>{t("chauffeur.geenRit.titel")}</b>
-              <span>{t("chauffeur.geenRit.uitleg")}</span>
+          {!rit || taken.length === 0 ? (
+            <div className="ph-card">
+              <div className="klaar-melding">
+                <span className="klaar-icoon wacht"><Icoon naam="klok" maat={26} /></span>
+                <b>{t("chauffeur.geenRit.titel")}</b>
+                <span>{t("chauffeur.geenRit.uitleg")}</span>
+              </div>
             </div>
-          </div>
-        ) : !huidige ? (
-          <div className="ph-card">
-            <div className="klaar-melding">
-              <span className="emoji">🎉</span>
-              <b>{t("chauffeur.klaar.titel")}</b>
-              <span>{t("chauffeur.klaar.uitleg", { totaal: taken.length })}</span>
+          ) : !huidige ? (
+            <div className="ph-card">
+              <div className="klaar-melding">
+                <span className="klaar-icoon klaar"><Icoon naam="vlag" maat={26} /></span>
+                <b>{t("chauffeur.klaar.titel")}</b>
+                <span>{t("chauffeur.klaar.uitleg", { totaal: taken.length })}</span>
+              </div>
             </div>
-          </div>
-        ) : (
-          <HuidigeTaakKaart
-            state={state}
-            taakId={huidige.id}
-            onRegistreer={onRegistreer}
-          />
-        )}
+          ) : (
+            <HuidigeTaakKaart state={state} taakId={huidige.id} onRegistreer={onRegistreer} />
+          )}
 
-        {taken.length > 0 && (
-          <div className="ph-card ph-stops">
-            <h4>{t("chauffeur.route")}</h4>
-            <ul className="vstops">
-              {taken.map((tk) => {
-                const s = statusVanTaak(state, tk.id);
-                const cls = s === "afgerond" ? "done" : s === "probleem" ? "probleem" : tk.id === huidige?.id ? "bezig" : "";
-                return (
-                  <li className={cls} key={tk.id}>
-                    <span className="vdot" />
-                    <div>
-                      <div className="vs-titel">{t(`taak.${tk.soort}`)} · {tk.adres.plaats}</div>
-                      <div className="vs-sub">
-                        {tk.adres.naam}
-                        {tk.adres.tijdvenster && <> · {venster(tk.adres.tijdvenster)}</>}
+          {taken.length > 0 && (
+            <div className="ph-card ph-stops">
+              <h4>{t("chauffeur.route")}</h4>
+              <ul className="vstops">
+                {taken.map((tk) => {
+                  const s = statusVanTaak(state, tk.id);
+                  const cls = s === "afgerond" ? "done" : s === "probleem" ? "probleem" : tk.id === huidige?.id ? "bezig" : "";
+                  return (
+                    <li className={cls} key={tk.id}>
+                      <span className="vdot" />
+                      <div>
+                        <div className="vs-titel">{t(`taak.${tk.soort}`)} · {tk.adres.plaats}</div>
+                        <div className="vs-sub">
+                          {tk.adres.naam}
+                          {tk.adres.tijdvenster && <> · {venster(tk.adres.tijdvenster)}</>}
+                        </div>
                       </div>
-                    </div>
-                    <span className="vs-tijd">{tijd(tk.geplandVan)}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
+                      <span className="vs-tijd">{tijd(tk.geplandVan)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
 
-        <p className="nacht-note">{t("chauffeur.nachtNoot")}</p>
+          <KlokKaart state={state} nu={nu} chauffeur={actieveChauffeur} onWerktijdEvent={onWerktijdEvent} />
+
+          <div className="ph-card sync-row">
+            <span className={`sync-chip ${state.offline ? "offline" : "online"}`}>
+              <span className="bol" />
+              {state.offline ? t("chauffeur.offline", { aantal: state.outbox }) : t("chauffeur.online")}
+            </span>
+            <label className="offline-toggle">
+              <input
+                type="checkbox"
+                checked={state.offline}
+                onChange={(e) => onZetOffline(e.target.checked)}
+              />
+              {t("chauffeur.offlineToggle")}
+            </label>
+          </div>
+
+          <p className="nacht-note"><Icoon naam="maan" maat={12} /> {t("chauffeur.nachtNoot")}</p>
+        </div>
       </div>
     </div>
   );
@@ -168,20 +171,20 @@ function KlokKaart({
 }) {
   const totalen = urenTotalen(werktijdenVan(state, chauffeur), nu);
 
-  const knoppen: Array<[WerktijdEventType, string]> =
+  const knoppen: Array<[WerktijdEventType, string, IcoonNaam]> =
     totalen.actief === null
-      ? [["ingeklokt", t("klok.inklokken")]]
+      ? [["ingeklokt", t("klok.inklokken"), "speel"]]
       : [
-          ...(totalen.actief !== "rijden" ? [["rijden_gestart", t("klok.rijden")] as [WerktijdEventType, string]] : []),
-          ...(totalen.actief !== "werk" ? [["werk_gestart", t("klok.werk")] as [WerktijdEventType, string]] : []),
-          ...(totalen.actief !== "pauze" ? [["pauze_gestart", t("klok.pauze")] as [WerktijdEventType, string]] : []),
-          ["uitgeklokt", t("klok.uitklokken")],
+          ...(totalen.actief !== "rijden" ? [["rijden_gestart", t("klok.rijden"), "stuur"] as [WerktijdEventType, string, IcoonNaam]] : []),
+          ...(totalen.actief !== "werk" ? [["werk_gestart", t("klok.werk"), "pakket"] as [WerktijdEventType, string, IcoonNaam]] : []),
+          ...(totalen.actief !== "pauze" ? [["pauze_gestart", t("klok.pauze"), "koffie"] as [WerktijdEventType, string, IcoonNaam]] : []),
+          ["uitgeklokt", t("klok.uitklokken"), "stopblok"],
         ];
 
   return (
     <div className="ph-card klok-kaart">
       <div className="klok-kop">
-        <h4>{t("klok.titel")}</h4>
+        <h4><Icoon naam="klok" maat={14} /> {t("klok.titel")}</h4>
         {totalen.actief ? (
           <span className={`klok-chip k-${totalen.actief}`}>{t(`uren.actief.${totalen.actief}`)}</span>
         ) : (
@@ -195,13 +198,13 @@ function KlokKaart({
         <div><b>{urenTekst(totalen.pauzeMinuten)}</b><span>{t("uren.pauze")}</span></div>
       </div>
       <div className="klok-knoppen">
-        {knoppen.map(([type, label]) => (
+        {knoppen.map(([type, label, icoon]) => (
           <button
             key={type}
-            className={`btn${type === "ingeklokt" ? " primary" : type === "uitgeklokt" ? " secundair" : ""}`}
+            className={`btn knop-met-icoon${type === "ingeklokt" ? " primary" : type === "uitgeklokt" ? " secundair" : ""}`}
             onClick={() => onWerktijdEvent(type)}
           >
-            {label}
+            <Icoon naam={icoon} maat={14} /> {label}
           </button>
         ))}
       </div>
@@ -223,16 +226,17 @@ function HuidigeTaakKaart({
   const zending = zendingVan(state, taak);
   const adresInfo = adresInfoVan(state, taak.adres);
 
-  const acties: Array<[TaakEventType, string, string]> = {
-    gepland: [["vertrokken", t("chauffeur.actie.vertrek"), "primary"]] as Array<[TaakEventType, string, string]>,
-    onderweg: [["aangekomen", t("chauffeur.actie.aangekomen"), "primary"]] as Array<[TaakEventType, string, string]>,
+  const acties: Array<[TaakEventType, string, string, IcoonNaam]> = {
+    gepland: [["vertrokken", t("chauffeur.actie.vertrek"), "primary", "truck"]] as Array<[TaakEventType, string, string, IcoonNaam]>,
+    onderweg: [["aangekomen", t("chauffeur.actie.aangekomen"), "primary", "locatie"]] as Array<[TaakEventType, string, string, IcoonNaam]>,
     bezig: [
       [taak.soort === "laden" ? "geladen" : "gelost",
-        taak.soort === "laden" ? t("chauffeur.actie.geladen") : t("chauffeur.actie.gelost"), "primary"],
-      ["probleem_gemeld", t("chauffeur.actie.probleem"), "probleem-knop"],
-    ] as Array<[TaakEventType, string, string]>,
-    afgerond: [] as Array<[TaakEventType, string, string]>,
-    probleem: [["aangekomen", t("chauffeur.actie.hervatten"), "secundair"]] as Array<[TaakEventType, string, string]>,
+        taak.soort === "laden" ? t("chauffeur.actie.geladen") : t("chauffeur.actie.gelost"),
+        "primary", taak.soort === "laden" ? "check" : "pen"],
+      ["probleem_gemeld", t("chauffeur.actie.probleem"), "probleem-knop", "waarschuwing"],
+    ] as Array<[TaakEventType, string, string, IcoonNaam]>,
+    afgerond: [] as Array<[TaakEventType, string, string, IcoonNaam]>,
+    probleem: [["aangekomen", t("chauffeur.actie.hervatten"), "secundair", "speel"]] as Array<[TaakEventType, string, string, IcoonNaam]>,
   }[s];
 
   return (
@@ -244,11 +248,13 @@ function HuidigeTaakKaart({
         {zending && <> · <span className="mono">{zending.barcode}</span></>}
       </p>
       {taak.adres.tijdvenster && (
-        <span className="venster-groot">{t("chauffeur.venster", { venster: venster(taak.adres.tijdvenster) })}</span>
+        <span className="venster-groot">
+          <Icoon naam="klok" maat={13} /> {t("chauffeur.venster", { venster: venster(taak.adres.tijdvenster) })}
+        </span>
       )}
       {adresInfo && (adresInfo.instructies || adresInfo.fotos.length > 0) && (
         <div className="chauffeur-adres-info">
-          <h4>{t("adres.chauffeurTitel")}</h4>
+          <h4><Icoon naam="locatie" maat={13} /> {t("adres.chauffeurTitel")}</h4>
           {adresInfo.instructies && <p>{adresInfo.instructies}</p>}
           {adresInfo.fotos.length > 0 && (
             <div className="adres-fotos">
@@ -263,9 +269,9 @@ function HuidigeTaakKaart({
         </div>
       )}
       <div className="acties">
-        {acties.map(([type, label, cls]) => (
-          <button key={type} className={`btn big ${cls}`} onClick={() => onRegistreer(taakId, type)}>
-            {label}
+        {acties.map(([type, label, cls, icoon]) => (
+          <button key={type} className={`btn big knop-met-icoon ${cls}`} onClick={() => onRegistreer(taakId, type)}>
+            <Icoon naam={icoon} maat={17} /> {label}
           </button>
         ))}
       </div>

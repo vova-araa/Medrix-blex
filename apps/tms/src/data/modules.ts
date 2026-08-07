@@ -3,11 +3,15 @@
 // `inOntwikkeling` staan wel in de catalogus (verkoopvitrine) maar zijn nog
 // niet leverbaar. Alle module-namen en -omschrijvingen zijn eigen werk.
 
+import type { IcoonNaam } from "../components/Icoon";
+
 export type ModuleId =
   | "planbord"
+  | "operatie"
   | "kaart"
   | "uren"
   | "facturen"
+  | "klanten"
   | "emballage"
   | "portaal"
   | "wagenpark"
@@ -20,7 +24,7 @@ export type ModuleId =
 
 export interface ModuleDef {
   id: ModuleId;
-  icoon: string;
+  icoon: IcoonNaam;
   /** Kernmodules zitten in elk abonnement en kunnen niet uit. */
   kern?: boolean;
   /** Zichtbaar in de catalogus, nog niet leverbaar. */
@@ -30,19 +34,21 @@ export interface ModuleDef {
 }
 
 export const MODULES: ModuleDef[] = [
-  { id: "planbord", icoon: "🗓️", kern: true, tab: true },
-  { id: "kaart", icoon: "🗺️", tab: true },
-  { id: "uren", icoon: "⏱️", tab: true },
-  { id: "facturen", icoon: "🧾", tab: true },
-  { id: "emballage", icoon: "📦", tab: true },
-  { id: "portaal", icoon: "🔎", tab: true },
-  { id: "wagenpark", icoon: "🚚", tab: true },
-  { id: "rapportage", icoon: "📈", tab: true },
-  { id: "assistent", icoon: "✨" },
-  { id: "dock", icoon: "🏭", inOntwikkeling: true },
-  { id: "edi", icoon: "🔗", inOntwikkeling: true },
-  { id: "documenten", icoon: "📄", inOntwikkeling: true },
-  { id: "boekhouding", icoon: "📚", inOntwikkeling: true },
+  { id: "planbord", icoon: "planbord", kern: true, tab: true },
+  { id: "operatie", icoon: "operatie", kern: true, tab: true },
+  { id: "kaart", icoon: "kaart", tab: true },
+  { id: "uren", icoon: "klok", tab: true },
+  { id: "facturen", icoon: "factuur", tab: true },
+  { id: "klanten", icoon: "klanten", tab: true },
+  { id: "emballage", icoon: "emballage", tab: true },
+  { id: "portaal", icoon: "portaal", tab: true },
+  { id: "wagenpark", icoon: "wagenpark", tab: true },
+  { id: "rapportage", icoon: "rapportage", tab: true },
+  { id: "assistent", icoon: "assistent" },
+  { id: "dock", icoon: "dock", inOntwikkeling: true },
+  { id: "edi", icoon: "edi", inOntwikkeling: true },
+  { id: "documenten", icoon: "document", inOntwikkeling: true },
+  { id: "boekhouding", icoon: "boek", inOntwikkeling: true },
 ];
 
 export const STANDAARD_ACTIEF: ModuleId[] = MODULES.filter(

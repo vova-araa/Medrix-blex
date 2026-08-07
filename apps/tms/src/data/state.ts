@@ -13,7 +13,10 @@ import {
   type WerktijdEvent,
   type Zending,
 } from "@sharzi/domain";
-import { adresSleutel, type AdresFoto, type AdresInfo, type DagSnapshot, type Tarief } from "./bron";
+import {
+  adresSleutel,
+  type AdresFoto, type AdresInfo, type DagSnapshot, type Klant, type Tarief,
+} from "./bron";
 import { STANDAARD_ACTIEF, type ModuleId } from "./modules";
 
 export interface AppState extends DagSnapshot {
@@ -33,11 +36,13 @@ export type Actie =
   | { type: "nieuwe_order"; order: Order; zending: Zending }
   | { type: "zet_tarief"; opdrachtgever: string; tarief: Tarief }
   | { type: "zet_module"; module: ModuleId; actief: boolean }
-  | { type: "emballage_transactie"; transactie: EmballageTransactie };
+  | { type: "emballage_transactie"; transactie: EmballageTransactie }
+  | { type: "nieuwe_klant"; klant: Klant; tarief: Tarief };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
   adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
+  klanten: {},
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
 };
@@ -101,6 +106,12 @@ export function reducer(state: AppState, actie: Actie): AppState {
       };
     case "emballage_transactie":
       return { ...state, emballage: [...state.emballage, actie.transactie] };
+    case "nieuwe_klant":
+      return {
+        ...state,
+        klanten: { ...state.klanten, [actie.klant.naam]: actie.klant },
+        tarieven: { ...state.tarieven, [actie.klant.naam]: actie.tarief },
+      };
   }
 }
 

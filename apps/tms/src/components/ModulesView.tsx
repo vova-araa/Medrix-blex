@@ -1,6 +1,7 @@
 import type { AppState } from "../data/state";
 import { MODULES, type ModuleId } from "../data/modules";
 import { t } from "../i18n";
+import { Icoon } from "./Icoon";
 
 interface Props {
   state: AppState;
@@ -25,7 +26,7 @@ export function ModulesView({ state, onZetModule }: Props) {
               className={`module-kaart${moduleDef.inOntwikkeling ? " ontwikkeling" : aan ? " aan" : " uit"}`}
             >
               <div className="module-kop">
-                <span className="module-icoon">{moduleDef.icoon}</span>
+                <span className="module-icoon"><Icoon naam={moduleDef.icoon} maat={20} /></span>
                 <b>{t(`module.${moduleDef.id}.naam`)}</b>
                 {moduleDef.kern && <span className="module-badge kern">{t("modules.kern")}</span>}
                 {moduleDef.inOntwikkeling && (

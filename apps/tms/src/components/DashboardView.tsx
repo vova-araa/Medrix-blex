@@ -4,14 +4,15 @@ import { conceptFacturen } from "../data/facturen";
 import { statusVanTaak, werktijdenVan, type AppState } from "../data/state";
 import { statusLabel, t } from "../i18n";
 import { kmVandaag } from "../kaart/simulatie";
+import { Icoon, type IcoonNaam } from "./Icoon";
 
 // Vormkeuze (dataviz): statustegels voor kerncijfers, horizontale balken per
 // rij voor omzet (één reeks, één kleur) en status (statuskleur + icoon + label,
 // nooit kleur alleen). Waarden staan als tekst bij elke balk — geen legenda nodig.
 
 const STATUS_VOLGORDE: TaakStatus[] = ["afgerond", "bezig", "onderweg", "gepland", "probleem"];
-const STATUS_ICOON: Record<TaakStatus, string> = {
-  afgerond: "✓", bezig: "◔", onderweg: "→", gepland: "…", probleem: "!",
+const STATUS_ICOON: Record<TaakStatus, IcoonNaam> = {
+  afgerond: "check", bezig: "timer", onderweg: "pijl", gepland: "klok", probleem: "waarschuwing",
 };
 
 export function DashboardView({ state, nu }: { state: AppState; nu: string }) {
@@ -103,7 +104,9 @@ export function DashboardView({ state, nu }: { state: AppState; nu: string }) {
             {perStatus.map(({ status, aantal }) => (
               <div className="staaf-rij" key={status}>
                 <span className="staaf-naam">
-                  <i className={`status-stip s-${status}`} aria-hidden="true">{STATUS_ICOON[status]}</i>{" "}
+                  <i className={`status-stip s-${status}`} aria-hidden="true">
+                    <Icoon naam={STATUS_ICOON[status]} maat={9} />
+                  </i>{" "}
                   {statusLabel(status)}
                 </span>
                 <div className="staaf-baan">
