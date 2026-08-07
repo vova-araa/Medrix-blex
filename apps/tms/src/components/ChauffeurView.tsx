@@ -1,9 +1,11 @@
 import {
   formatteerKenteken,
   urenTotalen,
+  type EmballageSoort,
   type TaakEventType,
   type WerktijdEventType,
 } from "@sharzi/domain";
+import { useState } from "react";
 import {
   adresInfoVan,
   huidigeTaak,
@@ -26,10 +28,11 @@ interface Props {
   onRegistreer: (taakId: string, type: TaakEventType) => void;
   onWerktijdEvent: (type: WerktijdEventType) => void;
   onZetOffline: (offline: boolean) => void;
+  onEmballage: (taakId: string, soort: EmballageSoort, geleverd: number, retour: number) => void;
 }
 
 export function ChauffeurView({
-  state, nu, actieveChauffeur, onKiesChauffeur, onRegistreer, onWerktijdEvent, onZetOffline,
+  state, nu, actieveChauffeur, onKiesChauffeur, onRegistreer, onWerktijdEvent, onZetOffline, onEmballage,
 }: Props) {
   const chauffeurs = state.ritten.map((r) => r.chauffeur).filter(Boolean);
   const rit = ritVanChauffeur(state, actieveChauffeur);
@@ -106,7 +109,7 @@ export function ChauffeurView({
               </div>
             </div>
           ) : (
-            <HuidigeTaakKaart state={state} taakId={huidige.id} onRegistreer={onRegistreer} />
+            <HuidigeTaakKaart state={state} taakId={huidige.id} onRegistreer={onRegistreer} onEmballage={onEmballage} />
           )}
 
           {taken.length > 0 && (
@@ -214,11 +217,12 @@ function KlokKaart({
 }
 
 function HuidigeTaakKaart({
-  state, taakId, onRegistreer,
+  state, taakId, onRegistreer, onEmballage,
 }: {
   state: AppState;
   taakId: string;
   onRegistreer: (taakId: string, type: TaakEventType) => void;
+  onEmballage: (taakId: string, soort: EmballageSoort, geleverd: number, retour: number) => void;
 }) {
   const taak = state.taken.find((tk) => tk.id === taakId);
   if (!taak) return null;
@@ -268,12 +272,72 @@ function HuidigeTaakKaart({
           )}
         </div>
       )}
+      {(taak.soort === "lossen" || taak.soort === "emballage_retour") && s === "bezig" && (
+        <EmballageFormulier taakId={taakId} onEmballage={onEmballage} />
+      )}
       <div className="acties">
         {acties.map(([type, label, cls, icoon]) => (
           <button key={type} className={`btn big knop-met-icoon ${cls}`} onClick={() => onRegistreer(taakId, type)}>
             <Icoon naam={icoon} maat={17} /> {label}
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+const EMBALLAGE_SOORTEN: EmballageSoort[] = ["europallet", "rolcontainer", "fust", "kist"];
+
+function EmballageFormulier({
+  taakId, onEmballage,
+}: {
+  taakId: string;
+  onEmballage: (taakId: string, soort: EmballageSoort, geleverd: number, retour: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [soort, setSoort] = useState<EmballageSoort>("europallet");
+  const [geleverd, setGeleverd] = useState("0");
+  const [retour, setRetour] = useState("0");
+
+  if (!open) {
+    return (
+      <button className="btn knop-met-icoon emballage-toggle" onClick={() => setOpen(true)}>
+        <Icoon naam="emballage" maat={14} /> {t("emballageForm.open")}
+      </button>
+    );
+  }
+
+  const kan = (Number(geleverd) || 0) > 0 || (Number(retour) || 0) > 0;
+
+  return (
+    <div className="emballage-form">
+      <div className="emballage-velden">
+        <label>{t("emballageForm.soort")}
+          <select value={soort} onChange={(e) => setSoort(e.target.value as EmballageSoort)}>
+            {EMBALLAGE_SOORTEN.map((naam) => (
+              <option key={naam} value={naam}>{t(`emballage.soort.${naam}`)}</option>
+            ))}
+          </select>
+        </label>
+        <label>{t("emballage.geleverd")}
+          <input type="number" min="0" value={geleverd} onChange={(e) => setGeleverd(e.target.value)} />
+        </label>
+        <label>{t("emballage.retour")}
+          <input type="number" min="0" value={retour} onChange={(e) => setRetour(e.target.value)} />
+        </label>
+      </div>
+      <div className="adres-acties">
+        <button className="btn" onClick={() => setOpen(false)}>{t("klanten.annuleer")}</button>
+        <button
+          className="btn primary"
+          disabled={!kan}
+          onClick={() => {
+            onEmballage(taakId, soort, Number(geleverd) || 0, Number(retour) || 0);
+            setOpen(false); setGeleverd("0"); setRetour("0");
+          }}
+        >
+          {t("emballageForm.vastleggen")}
+        </button>
       </div>
     </div>
   );

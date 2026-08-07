@@ -45,9 +45,9 @@ export const MODULES: ModuleDef[] = [
   { id: "wagenpark", icoon: "wagenpark", tab: true },
   { id: "rapportage", icoon: "rapportage", tab: true },
   { id: "assistent", icoon: "assistent" },
-  { id: "dock", icoon: "dock", inOntwikkeling: true },
+  { id: "dock", icoon: "dock" },
   { id: "edi", icoon: "edi", inOntwikkeling: true },
-  { id: "documenten", icoon: "document", inOntwikkeling: true },
+  { id: "documenten", icoon: "document", tab: true },
   { id: "boekhouding", icoon: "boek", inOntwikkeling: true },
 ];
 

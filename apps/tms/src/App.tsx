@@ -1,5 +1,5 @@
 import type {
-  Order, Taak, TaakEvent, TaakEventType, WerktijdEventType, Zending,
+  DockEventType, EmballageSoort, Order, Taak, TaakEvent, TaakEventType, WerktijdEventType, Zending,
 } from "@sharzi/domain";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { Assistent } from "./components/Assistent";
@@ -7,6 +7,8 @@ import { BedrijfView } from "./components/BedrijfView";
 import { ChauffeurView } from "./components/ChauffeurView";
 import { DashboardView } from "./components/DashboardView";
 import { DetailPaneel } from "./components/DetailPaneel";
+import { DockView } from "./components/DockView";
+import { DocumentenView } from "./components/DocumentenView";
 import { EmballageView } from "./components/EmballageView";
 import { FacturenView } from "./components/FacturenView";
 import { Icoon } from "./components/Icoon";
@@ -43,7 +45,7 @@ type Tab = ModuleId | "modules";
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, leegState);
-  const [rol, setRol] = useState<"bedrijf" | "chauffeur">("bedrijf");
+  const [rol, setRol] = useState<"bedrijf" | "chauffeur" | "dock">("bedrijf");
   const [tab, setTab] = useState<Tab>("planbord");
   const [actieveChauffeur, setActieveChauffeur] = useState("J. Peeters");
   const [geselecteerdeTaak, setGeselecteerdeTaak] = useState<string | null>(null);
@@ -193,6 +195,42 @@ export default function App() {
     meld(t("toast.klantAangemaakt", { klant: klant.naam }));
   }
 
+  function dockEvent(zendingId: string, type: DockEventType, locatie?: string) {
+    dispatch({
+      type: "dock_event",
+      event: {
+        id: crypto.randomUUID(),
+        tenantId: TENANT,
+        zendingId, type, locatie,
+        tijdstip: nu,
+        wie: "F. Janssen",
+        apparaat: "dock-scanner",
+      },
+    });
+    meld(t("toast.dock", { event: t(`dock.event.${type}`), zending: zendingId }));
+  }
+
+  function registreerEmballage(taakId: string, soort: EmballageSoort, geleverd: number, retour: number) {
+    const taak = state.taken.find((tk) => tk.id === taakId);
+    if (!taak) return;
+    const zending = taak.zendingId ? state.zendingen[taak.zendingId] : undefined;
+    const klant = zending
+      ? state.orders[zending.orderId]?.opdrachtgever ?? taak.adres.naam
+      : taak.adres.naam;
+    dispatch({
+      type: "emballage_transactie",
+      transactie: {
+        id: crypto.randomUUID(),
+        tenantId: TENANT,
+        klant, soort, geleverd, retour,
+        tijdstip: nu,
+        ritId: taak.ritId,
+        wie: actieveChauffeur,
+      },
+    });
+    meld(t("toast.emballage", { klant }));
+  }
+
   const assistentActief = state.actieveModules.includes("assistent");
   const aantalMeldingen = meldingen(state, nu).length;
 
@@ -208,6 +246,11 @@ export default function App() {
           <button className={rol === "chauffeur" ? "active" : ""} onClick={() => setRol("chauffeur")}>
             <Icoon naam="truck" maat={14} /> {t("rol.chauffeur")}
           </button>
+          {state.actieveModules.includes("dock") && (
+            <button className={rol === "dock" ? "active" : ""} onClick={() => setRol("dock")}>
+              <Icoon naam="dock" maat={14} /> {t("rol.dock")}
+            </button>
+          )}
         </div>
         {rol === "bedrijf" && (
           <nav className="sub-tabs">
@@ -268,6 +311,7 @@ export default function App() {
         <PortaalView state={state} nu={nu} onAfspraak={() => meld(t("toast.afspraak"))} />
       )}
       {rol === "bedrijf" && effectieveTab === "wagenpark" && <WagenparkView state={state} nu={nu} />}
+      {rol === "bedrijf" && effectieveTab === "documenten" && <DocumentenView state={state} />}
       {rol === "bedrijf" && effectieveTab === "rapportage" && <DashboardView state={state} nu={nu} />}
       {rol === "bedrijf" && effectieveTab === "modules" && (
         <ModulesView state={state} onZetModule={zetModule} />
@@ -282,8 +326,11 @@ export default function App() {
           onRegistreer={registreerAlsChauffeur}
           onWerktijdEvent={werktijdEvent}
           onZetOffline={zetOffline}
+          onEmballage={registreerEmballage}
         />
       )}
+
+      {rol === "dock" && <DockView state={state} onDockEvent={dockEvent} />}
 
       {geselecteerdeTaak && (
         <DetailPaneel

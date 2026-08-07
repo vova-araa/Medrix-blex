@@ -1,5 +1,5 @@
 import type {
-  Adres, EmballageTransactie, Order, Rit, Taak, TaakEvent, TaakEventType,
+  Adres, DockEvent, DockEventType, EmballageTransactie, Order, Rit, Taak, TaakEvent, TaakEventType,
   WerktijdEvent, WerktijdEventType, Zending,
 } from "@sharzi/domain";
 import type { AdresInfo, DagSnapshot, DataBron, Klant, Tarief, WagenparkItem } from "./bron";
@@ -277,6 +277,27 @@ const klanten: Record<string, Klant> = {
   "Plus Retail": { naam: "Plus Retail", contactpersoon: "D. Smits", email: "dc@plusretail.example", telefoon: "030 851 66 40" },
 };
 
+let dkTeller = 0;
+const dk = (
+  zendingId: string, type: DockEventType, tijd: string, locatie?: string
+): DockEvent => ({
+  id: `D-${String(++dkTeller).padStart(3, "0")}`,
+  tenantId: TENANT,
+  zendingId, type, locatie,
+  tijdstip: dag(tijd),
+  wie: "F. Janssen",
+  apparaat: "dock-scanner",
+});
+
+const dockEvents: DockEvent[] = [
+  dk("SHZ-114-021", "aangemeld", "03:50"),
+  dk("SHZ-114-021", "ingescand", "05:12", "A2"),
+  dk("SHZ-114-022", "aangemeld", "03:50"),
+  dk("SHZ-114-023", "aangemeld", "03:50"),
+  dk("SHZ-114-023", "ingescand", "05:40", "B1"),
+  dk("SHZ-114-023", "schade_gemeld", "06:05"),
+];
+
 export class MockDataBron implements DataBron {
   laadDag(_datum: string): Promise<DagSnapshot> {
     return Promise.resolve({
@@ -292,6 +313,7 @@ export class MockDataBron implements DataBron {
       tarieven,
       wagenpark,
       klanten,
+      dockEvents,
     });
   }
 }

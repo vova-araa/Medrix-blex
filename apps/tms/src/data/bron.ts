@@ -1,5 +1,5 @@
 import type {
-  Adres, EmballageTransactie, Order, Rit, Taak, TaakEvent, WerktijdEvent, Zending,
+  Adres, DockEvent, EmballageTransactie, Order, Rit, Taak, TaakEvent, WerktijdEvent, Zending,
 } from "@sharzi/domain";
 
 // De UI praat alleen met deze poort. Nu zit er een mock achter (in-memory);
@@ -59,6 +59,7 @@ export interface DagSnapshot {
   tarieven: Record<string, Tarief>;
   wagenpark: WagenparkItem[];
   klanten: Record<string, Klant>;
+  dockEvents: DockEvent[];
 }
 
 export interface DataBron {

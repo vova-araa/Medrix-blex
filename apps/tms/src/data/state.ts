@@ -3,6 +3,7 @@ import {
   taakStatus,
   voegEventToe,
   type Adres,
+  type DockEvent,
   type EmballageTransactie,
   type Order,
   type Rit,
@@ -37,12 +38,13 @@ export type Actie =
   | { type: "zet_tarief"; opdrachtgever: string; tarief: Tarief }
   | { type: "zet_module"; module: ModuleId; actief: boolean }
   | { type: "emballage_transactie"; transactie: EmballageTransactie }
-  | { type: "nieuwe_klant"; klant: Klant; tarief: Tarief };
+  | { type: "nieuwe_klant"; klant: Klant; tarief: Tarief }
+  | { type: "dock_event"; event: DockEvent };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
   adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
-  klanten: {},
+  klanten: {}, dockEvents: [],
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
 };
@@ -112,6 +114,8 @@ export function reducer(state: AppState, actie: Actie): AppState {
         klanten: { ...state.klanten, [actie.klant.naam]: actie.klant },
         tarieven: { ...state.tarieven, [actie.klant.naam]: actie.tarief },
       };
+    case "dock_event":
+      return { ...state, dockEvents: [...state.dockEvents, actie.event] };
   }
 }
 
@@ -162,4 +166,8 @@ export function werktijdenVan(state: AppState, chauffeur: string): WerktijdEvent
 
 export function adresInfoVan(state: AppState, adres: Adres): AdresInfo | undefined {
   return state.adresInfo[adresSleutel(adres)];
+}
+
+export function dockEventsVanZending(state: AppState, zendingId: string): DockEvent[] {
+  return state.dockEvents.filter((e) => e.zendingId === zendingId);
 }
