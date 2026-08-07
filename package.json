@@ -1,0 +1,10 @@
+{
+  "name": "sharzi",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @sharzi/tms dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

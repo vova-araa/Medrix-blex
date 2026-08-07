@@ -1,0 +1,390 @@
+:root {
+    --ground: #eef1f4;
+    --surface: #ffffff;
+    --surface-2: #e6eaef;
+    --ink: #1a2230;
+    --muted: #5c6674;
+    --faint: #8a93a1;
+    --line: #d7dce2;
+    --line-strong: #b6bdc7;
+    --accent: #d94f1e;
+    --accent-soft: #fbe9e0;
+    --ok: #2e7d5b;
+    --ok-soft: #e0efe8;
+    --info: #2a5d9c;
+    --info-soft: #e2ecf7;
+    --warn: #a3690a;
+    --warn-soft: #f7eeda;
+    --crit: #b3362b;
+    --crit-soft: #f9e5e2;
+    --wheel: #333a44;
+    --shadow: 0 6px 22px rgba(26, 34, 48, 0.12);
+    --shadow-big: 0 14px 40px rgba(26, 34, 48, 0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #11151c;
+      --surface: #1a202a;
+      --surface-2: #242c38;
+      --ink: #e7eaef;
+      --muted: #9aa4b1;
+      --faint: #6f7987;
+      --line: #2c3441;
+      --line-strong: #46505f;
+      --accent: #f06a35;
+      --accent-soft: #3a2419;
+      --ok: #58b48d;
+      --ok-soft: #1d3229;
+      --info: #6fa3dd;
+      --info-soft: #1c2a3d;
+      --warn: #d9a94f;
+      --warn-soft: #362c17;
+      --crit: #e07064;
+      --crit-soft: #3b1f1c;
+      --wheel: #0c0f14;
+      --shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+      --shadow-big: 0 14px 40px rgba(0, 0, 0, 0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #11151c;
+    --surface: #1a202a;
+    --surface-2: #242c38;
+    --ink: #e7eaef;
+    --muted: #9aa4b1;
+    --faint: #6f7987;
+    --line: #2c3441;
+    --line-strong: #46505f;
+    --accent: #f06a35;
+    --accent-soft: #3a2419;
+    --ok: #58b48d;
+    --ok-soft: #1d3229;
+    --info: #6fa3dd;
+    --info-soft: #1c2a3d;
+    --warn: #d9a94f;
+    --warn-soft: #362c17;
+    --crit: #e07064;
+    --crit-soft: #3b1f1c;
+    --wheel: #0c0f14;
+    --shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+    --shadow-big: 0 14px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Segoe UI", "Avenir Next", -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 13.5px;
+    line-height: 1.45;
+    min-height: 100vh;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace; }
+  button { font: inherit; }
+
+  .proto-banner {
+    background: var(--accent-soft); color: var(--accent);
+    padding: 5px 16px; font-size: 11.5px;
+  }
+
+  /* ── Topbar ─────────────────────────────── */
+  .topbar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line-strong);
+    padding: 8px 16px;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
+  .brand .mark {
+    width: 24px; height: 24px; background: var(--accent); color: #fff;
+    display: grid; place-items: center; font-size: 13px; font-weight: 800;
+    border-radius: 6px;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .role-switch {
+    display: flex; background: var(--surface-2); border-radius: 8px; padding: 3px; gap: 2px;
+  }
+  .role-switch button {
+    border: none; background: none; cursor: pointer; color: var(--muted);
+    padding: 6px 16px; border-radius: 6px; font-weight: 600;
+  }
+  .role-switch button.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+  .role-switch button:focus-visible { outline: 2px solid var(--accent); }
+  .topbar .spacer { flex: 1; }
+  .date { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .btn {
+    appearance: none; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line-strong); border-radius: 7px;
+    padding: 6px 12px;
+  }
+  .btn:hover { background: var(--surface-2); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.big { padding: 13px 18px; font-size: 15px; font-weight: 700; border-radius: 10px; width: 100%; }
+  .btn.fb-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+  /* ── KPI-strip ──────────────────────────── */
+  .kpis {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px; padding: 14px 16px 0; max-width: 1280px; margin: 0 auto;
+  }
+  .kpi-tile {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 12px;
+  }
+  .kpi-tile .ico {
+    width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center;
+    font-size: 16px; flex: none;
+  }
+  .kpi-tile b { font-size: 20px; font-variant-numeric: tabular-nums; display: block; line-height: 1.1; }
+  .kpi-tile span { font-size: 11.5px; color: var(--muted); }
+  .ico.i-truck { background: var(--info-soft); }
+  .ico.i-ok { background: var(--ok-soft); }
+  .ico.i-warn { background: var(--crit-soft); }
+  .ico.i-box { background: var(--accent-soft); }
+
+  /* ── Bedrijfsweergave layout ────────────── */
+  .bedrijf-main {
+    display: flex; gap: 14px; padding: 14px 16px 40px;
+    max-width: 1280px; margin: 0 auto; align-items: flex-start;
+  }
+  .sidebar {
+    width: 240px; flex: none;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    position: sticky; top: 64px;
+  }
+  .sidebar-head { padding: 12px 14px 8px; border-bottom: 1px solid var(--line); }
+  .sidebar-head h2 { margin: 0; font-size: 13.5px; display: flex; justify-content: space-between; }
+  .sidebar-head .count { color: var(--faint); font-variant-numeric: tabular-nums; }
+  .sidebar-head p { margin: 4px 0 0; color: var(--faint); font-size: 11.5px; }
+  .sidebar-list { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .zending-card {
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px;
+    padding: 9px 11px; cursor: grab;
+  }
+  .zending-card:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+  .zending-card.dragging { opacity: 0.45; }
+  .zending-card .barcode { font-size: 10.5px; color: var(--faint); letter-spacing: 0.04em; }
+  .zending-card .route { font-weight: 600; margin: 2px 0; font-size: 12.5px; }
+  .zending-card .specs { color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+  .zending-card .venster { color: var(--warn); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+  .fleet { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 14px; }
+
+  /* ── Ritkaart ───────────────────────────── */
+  .rit-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px 16px 16px; position: relative; overflow: hidden;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .rit-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--faint); }
+  .rit-card.s-onderweg::before { background: var(--info); }
+  .rit-card.s-probleem::before { background: var(--crit); }
+  .rit-card.s-afgerond::before { background: var(--ok); }
+  .rit-card.dropping { outline: 2px dashed var(--accent); outline-offset: -4px; background: var(--accent-soft); }
+
+  .rc-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex: none;
+    background: var(--surface-2); border: 1px solid var(--line-strong);
+    display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--muted);
+  }
+  .rc-who { flex: 1; min-width: 120px; }
+  .rc-who .naam { font-weight: 700; font-size: 14px; line-height: 1.2; }
+  .rc-who .ritnr { font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; color: var(--accent); letter-spacing: 0.05em; }
+  .status-chip {
+    font-size: 10.5px; font-weight: 700; border-radius: 999px;
+    padding: 3px 11px; text-transform: uppercase; letter-spacing: 0.07em; flex: none;
+  }
+  .status-chip.s-gepland { background: var(--surface-2); color: var(--muted); }
+  .status-chip.s-onderweg { background: var(--info-soft); color: var(--info); }
+  .status-chip.s-probleem { background: var(--crit-soft); color: var(--crit); }
+  .status-chip.s-afgerond { background: var(--ok-soft); color: var(--ok); }
+
+  .rc-truck { display: flex; align-items: flex-end; gap: 12px; }
+  .rc-truck svg { width: 210px; max-width: 55%; height: auto; flex: none; }
+  .tr-box { fill: var(--surface-2); stroke: var(--line-strong); }
+  .tr-band { fill: var(--accent); opacity: 0.9; }
+  .tr-text { fill: var(--muted); font: 700 9px ui-monospace, Consolas, monospace; letter-spacing: 0.08em; }
+  .tr-cab { fill: var(--accent); }
+  .tr-window { fill: var(--info-soft); stroke: var(--line-strong); }
+  .tr-chassis { fill: var(--line-strong); }
+  .tr-wheel { fill: var(--wheel); }
+  .tr-rim { fill: var(--faint); }
+  .rc-truck-meta { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .plate {
+    display: inline-flex; align-items: stretch; border-radius: 4px; overflow: hidden;
+    border: 1px solid #b99b00; width: fit-content;
+    font-family: ui-monospace, Consolas, monospace; font-weight: 700; font-size: 12px;
+  }
+  .plate .eu { background: #003399; color: #ffcc00; padding: 2px 4px; font-size: 9px; display: grid; place-items: center; }
+  .plate .nr { background: #f6c500; color: #111; padding: 2px 8px; letter-spacing: 0.06em; }
+  .voertuigtype { color: var(--muted); font-size: 11.5px; }
+  .laadmeter { display: flex; flex-direction: column; gap: 3px; }
+  .laadmeter .lm-label { font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .lm-bar { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; width: 150px; max-width: 100%; }
+  .lm-fill { height: 100%; border-radius: 999px; background: var(--accent); }
+  .lm-fill.vol { background: var(--crit); }
+
+  /* Route-stepper */
+  .rc-route { padding-top: 2px; }
+  .stops { display: flex; }
+  .stop { flex: 1; position: relative; text-align: center; min-width: 0; }
+  .stop::before {
+    content: ""; position: absolute; top: 7px; right: 50%; width: 100%; height: 3px;
+    background: var(--line-strong); z-index: 0;
+  }
+  .stop:first-child::before { display: none; }
+  .stop.done::before { background: var(--ok); }
+  .stop.bezig::before { background: var(--ok); }
+  .stop-btn { background: none; border: none; cursor: pointer; width: 100%; padding: 0; color: inherit; }
+  .stop-btn:focus-visible { outline: 2px solid var(--accent); border-radius: 6px; }
+  .dot {
+    position: relative; z-index: 1;
+    display: inline-grid; place-items: center;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--surface); border: 3px solid var(--line-strong);
+    font-size: 9px; color: #fff;
+  }
+  .stop.done .dot { background: var(--ok); border-color: var(--ok); }
+  .stop.done .dot::after { content: "✓"; font-size: 9px; }
+  .stop.bezig .dot { border-color: var(--warn); background: var(--warn-soft); }
+  .stop.probleem .dot { border-color: var(--crit); background: var(--crit); }
+  .stop.probleem .dot::after { content: "!"; font-weight: 800; }
+  .stop .plaats { display: block; font-size: 11px; font-weight: 600; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stop .tijd { display: block; font-size: 10.5px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .stop .soort-mini { display: block; font-size: 9.5px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .rc-leeg {
+    border: 2px dashed var(--line-strong); border-radius: 10px;
+    padding: 18px; text-align: center; color: var(--faint); font-size: 12.5px;
+  }
+
+  /* ── Detail-overlay (bedrijf) ───────────── */
+  .detail-overlay {
+    position: fixed; inset: 0; z-index: 30;
+    background: rgba(10, 14, 20, 0.4);
+    display: flex; justify-content: flex-end;
+  }
+  .detail-overlay.hidden { display: none; }
+  .detail {
+    width: min(360px, 92vw); background: var(--surface); height: 100%;
+    display: flex; flex-direction: column; box-shadow: var(--shadow-big);
+  }
+  .detail-head { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+  .detail-head .eyebrow { font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--faint); }
+  .detail-head h3 { margin: 3px 0 6px; font-size: 16px; }
+  .detail-close { float: right; }
+  .detail-body { flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .kv { display: grid; grid-template-columns: 96px 1fr; gap: 3px 10px; font-size: 12.5px; margin: 0; }
+  .kv dt { color: var(--faint); }
+  .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .events h4 { margin: 0 0 2px; font-size: 12.5px; }
+  .events .events-note { font-size: 11px; color: var(--faint); margin: 0 0 8px; }
+  .event-list { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line-strong); }
+  .event-list li { position: relative; padding: 0 0 10px 14px; }
+  .event-list li::before {
+    content: ""; position: absolute; left: -5px; top: 4px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--surface); border: 2px solid var(--faint);
+  }
+  .event-list li:first-child::before { border-color: var(--accent); background: var(--accent); }
+  .event-list .e-type { font-weight: 600; font-size: 12px; }
+  .event-list .e-meta { font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .event-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  /* ── Chauffeursweergave ─────────────────── */
+  .driver-main { display: flex; justify-content: center; padding: 18px 16px 48px; }
+  .phone {
+    width: min(420px, 100%); display: flex; flex-direction: column; gap: 12px;
+  }
+  .ph-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .ph-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .driver-chips { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+  .driver-chips button {
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted);
+    border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: 12px;
+  }
+  .driver-chips button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .driver-chips button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .sync-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
+  .sync-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; border-radius: 999px; padding: 3px 11px; font-weight: 600;
+  }
+  .sync-chip.online { background: var(--ok-soft); color: var(--ok); }
+  .sync-chip.offline { background: var(--warn-soft); color: var(--warn); }
+  .sync-chip .bol { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .offline-toggle { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+  .ph-rit-head { display: flex; align-items: center; gap: 10px; }
+  .ph-rit-head .groet { flex: 1; }
+  .ph-rit-head .groet b { font-size: 16px; display: block; }
+  .ph-rit-head .groet span { color: var(--muted); font-size: 12px; }
+  .ph-progress { margin-top: 10px; }
+  .ph-progress .pp-label { font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+  .pp-bar { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: 4px; }
+  .pp-fill { height: 100%; background: var(--ok); border-radius: 999px; }
+
+  .huidige { border-width: 2px; border-color: var(--accent); }
+  .huidige .nu-label { font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); }
+  .huidige h3 { margin: 4px 0 2px; font-size: 20px; line-height: 1.2; }
+  .huidige .adres-sub { color: var(--muted); font-size: 13px; margin: 0 0 4px; }
+  .huidige .venster-groot { font-size: 13px; color: var(--warn); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .huidige .acties { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .btn.secundair { background: var(--surface-2); border-color: var(--line-strong); }
+  .btn.probleem-knop { background: var(--crit-soft); border-color: var(--crit); color: var(--crit); }
+  .klaar-melding { text-align: center; padding: 8px 0 2px; }
+  .klaar-melding .emoji { font-size: 34px; }
+  .klaar-melding b { display: block; font-size: 16px; margin-top: 4px; }
+  .klaar-melding span { color: var(--muted); font-size: 12.5px; }
+
+  .ph-stops h4 { margin: 0 0 10px; font-size: 13px; }
+  .vstops { list-style: none; margin: 0; padding: 0; }
+  .vstops li { display: grid; grid-template-columns: 26px 1fr auto; gap: 0 10px; position: relative; padding-bottom: 14px; }
+  .vstops li:last-child { padding-bottom: 0; }
+  .vstops li::before {
+    content: ""; position: absolute; left: 12px; top: 18px; bottom: -2px; width: 3px;
+    background: var(--line-strong);
+  }
+  .vstops li:last-child::before { display: none; }
+  .vstops li.done::before { background: var(--ok); }
+  .vstops .vdot {
+    width: 18px; height: 18px; border-radius: 50%; margin-left: 3px;
+    background: var(--surface); border: 3px solid var(--line-strong);
+    display: grid; place-items: center; font-size: 10px; color: #fff; z-index: 1;
+  }
+  .vstops li.done .vdot { background: var(--ok); border-color: var(--ok); }
+  .vstops li.done .vdot::after { content: "✓"; }
+  .vstops li.bezig .vdot { border-color: var(--warn); background: var(--warn-soft); }
+  .vstops li.probleem .vdot { border-color: var(--crit); background: var(--crit); }
+  .vstops li.probleem .vdot::after { content: "!"; font-weight: 800; }
+  .vstops .vs-titel { font-weight: 600; font-size: 13px; }
+  .vstops .vs-sub { color: var(--muted); font-size: 11.5px; }
+  .vstops .vs-tijd { font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; padding-top: 1px; }
+  .nacht-note { text-align: center; color: var(--faint); font-size: 11px; }
+
+  /* ── Toast & feedback ───────────────────── */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(8px);
+    background: var(--ink); color: var(--ground);
+    padding: 8px 16px; border-radius: 8px; font-size: 12.5px;
+    opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease;
+    box-shadow: var(--shadow-big); z-index: 60; max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+  @media (max-width: 760px) {
+    .bedrijf-main { flex-direction: column; }
+    .sidebar { width: 100%; position: static; }
+    .fleet { grid-template-columns: 1fr; }
+  }
