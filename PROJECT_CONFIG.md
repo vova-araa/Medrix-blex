@@ -66,6 +66,32 @@ Vastgelegd op 2026-07-30 na de initialisatievragen uit CLAUDE.md §0 en §2.
   planning en verantwoording, niet beoordeling van chauffeurs; de chauffeur
   ziet zijn eigen registraties in de app.
 
+## Modulair verkoopmodel (2026-08-07)
+
+Sharzi wordt per module verkoopbaar, met een moduleregister per tenant:
+- **Kern** (elk abonnement): Planbord + orderinvoer + adresbibliotheek
+- **Los activeerbaar:** Kaart & tracking, Uren, Facturen & tarieven, Emballage,
+  Portaal, Wagenpark, Rapportage, AI-assistent
+- **Roadmap** (in catalogus, nog niet leverbaar): Dock (cross-dock scanner),
+  EDI & klantorders, Documenten (CMR), Boekhoudkoppeling
+- Prijsstelling per module: nog te bepalen bij livegang.
+
+## Eigenheid & IP
+
+Sharzi concurreert met MendriX op functionaliteit — dat is toegestaan; een
+functiecategorie (planbord, emballage, facturatie) is geen beschermd idee.
+Om elke claim te voorkomen gelden deze regels:
+- **Alle code, UI-ontwerp, teksten en naamgeving zijn eigen werk**, vanaf nul
+  geschreven in deze repository; de git-historie documenteert dat.
+- Nooit code, schermontwerpen, iconen, teksten, documentatie of screenshots
+  van MendriX (of andere concurrenten) kopiëren of als sjabloon gebruiken.
+- Nooit de merknaam MendriX gebruiken in product, marketing of UI —
+  concurrentievergelijking alleen op functioneel niveau in interne documenten.
+- Marktonderzoek beperkt zich tot publiek beschikbare functiebeschrijvingen
+  (wat kan het), nooit tot hoe het eruitziet of hoe het gebouwd is.
+- Bij oprichting van de juridische entiteit: dit beleid juridisch laten toetsen
+  en merkregistratie voor "Sharzi" overwegen.
+
 ## Openstaande beslissingen
 
 - [ ] Naam en oprichting van de nieuwe juridische entiteit

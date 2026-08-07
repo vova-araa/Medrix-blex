@@ -1,7 +1,8 @@
 import type {
-  Adres, Order, Rit, Taak, TaakEvent, TaakEventType, WerktijdEvent, WerktijdEventType, Zending,
+  Adres, EmballageTransactie, Order, Rit, Taak, TaakEvent, TaakEventType,
+  WerktijdEvent, WerktijdEventType, Zending,
 } from "@sharzi/domain";
-import type { AdresInfo, DagSnapshot, DataBron } from "./bron";
+import type { AdresInfo, DagSnapshot, DataBron, Tarief, WagenparkItem } from "./bron";
 
 // Demodag voor Blex: 2026-08-07. Alle tijden staan in UTC (CLAUDE.md §5.3);
 // Europe/Amsterdam is die dag UTC+2, dus 06:30 lokaal = 04:30Z.
@@ -227,6 +228,46 @@ const werktijden: WerktijdEvent[] = [
   wt("S. de Boer", "werk_gestart", "06:00"),
 ];
 
+let etTeller = 0;
+const et = (
+  klant: string, soort: EmballageTransactie["soort"],
+  geleverd: number, retour: number, tijd: string, ritId?: string
+): EmballageTransactie => ({
+  id: `ET-${String(++etTeller).padStart(3, "0")}`,
+  tenantId: TENANT,
+  klant, soort, geleverd, retour,
+  tijdstip: dag(tijd),
+  ritId,
+  wie: ritId ? "chauffeur" : "depot",
+});
+
+const emballage: EmballageTransactie[] = [
+  et("Jumbo Supermarkten BV", "europallet", 26, 0, "06:54", "R-260807-01"),
+  et("Jumbo Supermarkten BV", "europallet", 0, 20, "06:55", "R-260807-01"),
+  et("Jumbo Supermarkten BV", "rolcontainer", 12, 8, "06:55", "R-260807-01"),
+  et("Brouwerij De Kroon", "fust", 96, 40, "05:30"),
+  et("Van Dijk Agro BV", "europallet", 8, 8, "04:10"),
+  et("Van Dijk Agro BV", "kist", 40, 0, "04:10"),
+  et("Plus Retail", "rolcontainer", 18, 12, "05:00"),
+];
+
+// Mock-tarieven per opdrachtgever; via Facturen-tab aan te passen.
+const tarieven: Record<string, Tarief> = {
+  "Jumbo Supermarkten BV": { basisCenten: 4900, perLaadmeterCenten: 1750 },
+  "Van Dijk Agro BV": { basisCenten: 4200, perLaadmeterCenten: 1900 },
+  "Brouwerij De Kroon": { basisCenten: 4500, perLaadmeterCenten: 1850 },
+  "Kwekerij Maasbree": { basisCenten: 5200, perLaadmeterCenten: 2100 },
+  "Bouwgroep Limburg BV": { basisCenten: 4700, perLaadmeterCenten: 1950 },
+  "Plus Retail": { basisCenten: 4800, perLaadmeterCenten: 1800 },
+};
+
+const wagenpark: WagenparkItem[] = [
+  { kenteken: "43BKL7", landcode: "NL", omschrijving: "Trekker + city-trailer", kmStand: 412_680, apkTot: "2026-09-02", volgendeOnderhoudKm: 420_000, verbruikL100: 27.4, kostenPerMaandCenten: 312_500 },
+  { kenteken: "87TDF3", landcode: "NL", omschrijving: "Bakwagen", kmStand: 188_240, apkTot: "2027-03-15", volgendeOnderhoudKm: 195_000, verbruikL100: 21.1, kostenPerMaandCenten: 218_000 },
+  { kenteken: "12PGH9", landcode: "NL", omschrijving: "Bakwagen met laadklep", kmStand: 96_410, apkTot: "2026-08-21", volgendeOnderhoudKm: 100_000, verbruikL100: 22.8, kostenPerMaandCenten: 224_500 },
+  { kenteken: "66KLM2", landcode: "NL", omschrijving: "Bakwagen", kmStand: 240_155, apkTot: "2026-11-30", volgendeOnderhoudKm: 245_000, verbruikL100: 21.9, kostenPerMaandCenten: 209_000 },
+];
+
 export class MockDataBron implements DataBron {
   laadDag(_datum: string): Promise<DagSnapshot> {
     return Promise.resolve({
@@ -238,6 +279,9 @@ export class MockDataBron implements DataBron {
       ongepland: ["SHZ-114-021", "SHZ-114-022", "SHZ-114-023", "SHZ-114-024"],
       adresInfo,
       werktijden,
+      emballage,
+      tarieven,
+      wagenpark,
     });
   }
 }

@@ -1,4 +1,6 @@
-import type { Adres, Order, Rit, Taak, TaakEvent, WerktijdEvent, Zending } from "@sharzi/domain";
+import type {
+  Adres, EmballageTransactie, Order, Rit, Taak, TaakEvent, WerktijdEvent, Zending,
+} from "@sharzi/domain";
 
 // De UI praat alleen met deze poort. Nu zit er een mock achter (in-memory);
 // zodra het Supabase dev-project bestaat komt daar een tweede implementatie
@@ -20,6 +22,23 @@ export function adresSleutel(adres: Adres): string {
   return `${adres.naam}|${adres.plaats}`;
 }
 
+/** Tarief per opdrachtgever: starttarief + bedrag per laadmeter, in centen. */
+export interface Tarief {
+  basisCenten: number;
+  perLaadmeterCenten: number;
+}
+
+export interface WagenparkItem {
+  kenteken: string;
+  landcode: string;
+  omschrijving: string;
+  kmStand: number;
+  apkTot: string;
+  volgendeOnderhoudKm: number;
+  verbruikL100: number;
+  kostenPerMaandCenten: number;
+}
+
 export interface DagSnapshot {
   ritten: Rit[];
   taken: Taak[];
@@ -29,6 +48,9 @@ export interface DagSnapshot {
   ongepland: string[];
   adresInfo: Record<string, AdresInfo>;
   werktijden: WerktijdEvent[];
+  emballage: EmballageTransactie[];
+  tarieven: Record<string, Tarief>;
+  wagenpark: WagenparkItem[];
 }
 
 export interface DataBron {

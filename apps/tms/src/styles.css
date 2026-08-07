@@ -588,3 +588,122 @@
 
 /* Labels vangen geen klikken af — de marker eronder blijft klikbaar. */
 .kaart-voertuig text { pointer-events: none; }
+
+/* ── Modules ─────────────────────────────── */
+.modules-main { padding: 14px 16px 40px; max-width: 1280px; margin: 0 auto; }
+.modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.module-kaart {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 18px; display: flex; flex-direction: column; gap: 8px;
+}
+.module-kaart.aan { border-color: var(--ok); }
+.module-kaart.ontwikkeling { opacity: 0.75; border-style: dashed; }
+.module-kop { display: flex; align-items: center; gap: 8px; }
+.module-icoon { font-size: 20px; }
+.module-kop b { flex: 1; font-size: 14px; }
+.module-badge {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  border-radius: 999px; padding: 2px 8px;
+}
+.module-badge.kern { background: var(--accent-soft); color: var(--accent); }
+.module-badge.roadmap { background: var(--surface-2); color: var(--faint); }
+.module-oms { margin: 0; font-size: 12.5px; color: var(--muted); flex: 1; }
+.module-voet { border-top: 1px solid var(--line); padding-top: 8px; }
+.module-status { font-size: 11.5px; color: var(--faint); }
+.module-schakel { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.sub-tabs .modules-tab { color: var(--faint); }
+
+/* ── Emballage ───────────────────────────── */
+.saldo-plus { color: var(--ok); font-weight: 700; }
+.saldo-min { color: var(--crit); font-weight: 700; }
+.saldo-nul { color: var(--faint); }
+.saldo-uitleg { margin-top: 10px; }
+.uren-kaart + .uren-kaart { margin-top: 14px; }
+
+/* ── Orderformulier ──────────────────────── */
+.order-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.order-form input, .order-form select {
+  font: inherit; font-size: 13px; color: var(--ink);
+  background: var(--ground); border: 1px solid var(--line-strong); border-radius: 6px;
+  padding: 7px 9px;
+}
+.order-form input:focus-visible, .order-form select:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+.order-rij { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tarief-invoer {
+  font: inherit; font-size: 13px; width: 110px; text-align: right;
+  color: var(--ink); background: var(--ground);
+  border: 1px solid var(--line-strong); border-radius: 6px; padding: 5px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.tarieven-kaart { margin-bottom: 14px; }
+
+/* ── Portaal ─────────────────────────────── */
+.portaal-preview { flex: 1; display: flex; justify-content: center; }
+.portaal-frame {
+  width: min(430px, 100%); background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: 16px; overflow: hidden;
+  box-shadow: var(--shadow); height: fit-content;
+}
+.portaal-balk {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--accent); color: #fff; font-weight: 700;
+  padding: 10px 16px;
+}
+.portaal-balk .mark {
+  width: 20px; height: 20px; background: #fff; color: var(--accent);
+  display: grid; place-items: center; border-radius: 4px;
+  font-family: ui-monospace, Consolas, monospace; font-size: 12px; font-weight: 800;
+}
+.portaal-inhoud { padding: 18px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.portaal-barcode { margin: 0; color: var(--faint); font-size: 12px; letter-spacing: 0.05em; }
+.portaal-inhoud h3 { margin: 0; font-size: 19px; }
+.portaal-oms { margin: 0; color: var(--muted); font-size: 13px; }
+.portaal-eta { margin: 0; font-weight: 700; font-size: 14px; }
+.portaal-venster { margin: 0; color: var(--muted); font-size: 12.5px; }
+.portaal-tijdlijn { width: 100%; }
+.portaal-privacy { margin: 4px 0 0; font-size: 11px; color: var(--faint); }
+.portaal-kies { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.portaal-kies select {
+  font: inherit; font-size: 13px; color: var(--ink);
+  background: var(--ground); border: 1px solid var(--line-strong); border-radius: 6px; padding: 7px 9px;
+}
+
+/* ── Wagenpark ───────────────────────────── */
+.wagenpark-type { display: block; margin-top: 3px; }
+.wagenpark-alarm { margin-left: 8px; }
+
+/* ── Dashboard ───────────────────────────── */
+.dash-tegels { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.dash-tegel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 2px;
+}
+.dash-tegel.held { border-color: var(--accent); }
+.dash-label { font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint); }
+.dash-tegel b { font-size: 24px; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.dash-tegel.held b { color: var(--accent); }
+.dash-sub { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-grafieken { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
+.staaf-lijst { display: flex; flex-direction: column; gap: 8px; }
+.staaf-rij { display: grid; grid-template-columns: 170px 1fr auto; gap: 10px; align-items: center; font-size: 12.5px; }
+.staaf-naam { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.staaf-baan { background: var(--surface-2); border-radius: 4px; height: 14px; }
+.staaf { height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; }
+.staaf.omzet { background: var(--info); }
+.staaf.st-afgerond { background: var(--ok); }
+.staaf.st-bezig { background: var(--warn); }
+.staaf.st-onderweg { background: var(--info); }
+.staaf.st-gepland { background: var(--faint); }
+.staaf.st-probleem { background: var(--crit); }
+.staaf-waarde { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.status-stip {
+  display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%;
+  font-style: normal; font-size: 9px; font-weight: 800; color: #fff; margin-right: 2px; vertical-align: -2px;
+}
+.status-stip.s-afgerond { background: var(--ok); }
+.status-stip.s-bezig { background: var(--warn); }
+.status-stip.s-onderweg { background: var(--info); }
+.status-stip.s-gepland { background: var(--faint); }
+.status-stip.s-probleem { background: var(--crit); }
+.dash-tip { margin: 10px 0 0; font-size: 12px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
+.dashboard > .uren-noot { margin-top: 14px; }

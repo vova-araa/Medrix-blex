@@ -4,3 +4,4 @@ export * from "./kenteken";
 export * from "./geld";
 export * from "./werktijden";
 export * from "./facturatie";
+export * from "./emballage";

@@ -4,13 +4,16 @@ import {
   type FactuurRegel,
   type FactuurTotalen,
   type Geld,
+  type Zending,
 } from "@sharzi/domain";
+import type { Tarief } from "./bron";
 import { statusVanTaak, type AppState } from "./state";
 
-// Mock-tarief tot er een echte tarieventabel per opdrachtgever bestaat:
-// starttarief + bedrag per laadmeter, in centen.
-export function tariefVoorZending(laadmeters: number): Geld {
-  return geld(4500 + Math.round(laadmeters * 1850));
+const STANDAARD_TARIEF: Tarief = { basisCenten: 4500, perLaadmeterCenten: 1850 };
+
+export function tariefVoorZending(zending: Zending, tarief: Tarief | undefined): Geld {
+  const { basisCenten, perLaadmeterCenten } = tarief ?? STANDAARD_TARIEF;
+  return geld(basisCenten + Math.round(zending.laadmeters * perLaadmeterCenten));
 }
 
 export interface ConceptFactuur {
@@ -36,7 +39,7 @@ export function conceptFacturen(state: AppState): ConceptFactuur[] {
     const opdrachtgever = order?.opdrachtgever ?? zending.orderId;
     const regel: FactuurRegel = {
       omschrijving: `${order?.referentie ?? zending.orderId} · ${zending.van.plaats} → ${zending.naar.plaats} (${zending.barcode})`,
-      bedrag: tariefVoorZending(zending.laadmeters),
+      bedrag: tariefVoorZending(zending, state.tarieven[opdrachtgever]),
     };
     const regels = perOpdrachtgever.get(opdrachtgever) ?? [];
     regels.push(regel);

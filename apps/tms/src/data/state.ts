@@ -3,6 +3,8 @@ import {
   taakStatus,
   voegEventToe,
   type Adres,
+  type EmballageTransactie,
+  type Order,
   type Rit,
   type RitStatus,
   type Taak,
@@ -11,11 +13,13 @@ import {
   type WerktijdEvent,
   type Zending,
 } from "@sharzi/domain";
-import { adresSleutel, type AdresFoto, type AdresInfo, type DagSnapshot } from "./bron";
+import { adresSleutel, type AdresFoto, type AdresInfo, type DagSnapshot, type Tarief } from "./bron";
+import { STANDAARD_ACTIEF, type ModuleId } from "./modules";
 
 export interface AppState extends DagSnapshot {
   offline: boolean;
   outbox: number;
+  actieveModules: ModuleId[];
 }
 
 export type Actie =
@@ -25,12 +29,17 @@ export type Actie =
   | { type: "zet_offline"; offline: boolean }
   | { type: "werktijd_event"; event: WerktijdEvent }
   | { type: "adres_instructies"; sleutel: string; instructies: string }
-  | { type: "adres_foto"; sleutel: string; foto: AdresFoto };
+  | { type: "adres_foto"; sleutel: string; foto: AdresFoto }
+  | { type: "nieuwe_order"; order: Order; zending: Zending }
+  | { type: "zet_tarief"; opdrachtgever: string; tarief: Tarief }
+  | { type: "zet_module"; module: ModuleId; actief: boolean }
+  | { type: "emballage_transactie"; transactie: EmballageTransactie };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
-  adresInfo: {}, werktijden: [],
+  adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
   offline: false, outbox: 0,
+  actieveModules: STANDAARD_ACTIEF,
 };
 
 export function reducer(state: AppState, actie: Actie): AppState {
@@ -74,6 +83,24 @@ export function reducer(state: AppState, actie: Actie): AppState {
         },
       };
     }
+    case "nieuwe_order":
+      return {
+        ...state,
+        orders: { ...state.orders, [actie.order.id]: actie.order },
+        zendingen: { ...state.zendingen, [actie.zending.id]: actie.zending },
+        ongepland: [...state.ongepland, actie.zending.id],
+      };
+    case "zet_tarief":
+      return { ...state, tarieven: { ...state.tarieven, [actie.opdrachtgever]: actie.tarief } };
+    case "zet_module":
+      return {
+        ...state,
+        actieveModules: actie.actief
+          ? [...new Set([...state.actieveModules, actie.module])]
+          : state.actieveModules.filter((m) => m !== actie.module),
+      };
+    case "emballage_transactie":
+      return { ...state, emballage: [...state.emballage, actie.transactie] };
   }
 }
 

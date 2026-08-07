@@ -1,14 +1,23 @@
-import type { Taak, TaakEvent, TaakEventType, WerktijdEventType } from "@sharzi/domain";
+import type {
+  Order, Taak, TaakEvent, TaakEventType, WerktijdEventType, Zending,
+} from "@sharzi/domain";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { Assistent } from "./components/Assistent";
 import { BedrijfView } from "./components/BedrijfView";
 import { ChauffeurView } from "./components/ChauffeurView";
+import { DashboardView } from "./components/DashboardView";
 import { DetailPaneel } from "./components/DetailPaneel";
+import { EmballageView } from "./components/EmballageView";
 import { FacturenView } from "./components/FacturenView";
 import { KaartView } from "./components/KaartView";
+import { ModulesView } from "./components/ModulesView";
+import { NieuweOrder } from "./components/NieuweOrder";
+import { PortaalView } from "./components/PortaalView";
 import { UrenView } from "./components/UrenView";
-import type { AdresFoto } from "./data/bron";
+import { WagenparkView } from "./components/WagenparkView";
+import type { AdresFoto, Tarief } from "./data/bron";
 import { MockDataBron } from "./data/mock";
+import { MODULES, type ModuleId } from "./data/modules";
 import {
   gebruikteLaadmeters,
   leegState,
@@ -26,20 +35,26 @@ const bron = new MockDataBron();
 // zodat posities en ETA's bewegen. Met echte data wordt dit gewoon de klok.
 const SIM_START = Date.parse("2026-08-07T08:42:00Z");
 
-type BedrijfTab = "planbord" | "kaart" | "uren" | "facturen";
-const BEDRIJF_TABS: BedrijfTab[] = ["planbord", "kaart", "uren", "facturen"];
+type Tab = ModuleId | "modules";
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, leegState);
   const [rol, setRol] = useState<"bedrijf" | "chauffeur">("bedrijf");
-  const [tab, setTab] = useState<BedrijfTab>("planbord");
+  const [tab, setTab] = useState<Tab>("planbord");
   const [actieveChauffeur, setActieveChauffeur] = useState("J. Peeters");
   const [geselecteerdeTaak, setGeselecteerdeTaak] = useState<string | null>(null);
+  const [orderFormOpen, setOrderFormOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [simMs, setSimMs] = useState(SIM_START);
   const toastTimer = useRef<number | undefined>(undefined);
 
   const nu = new Date(simMs).toISOString();
+
+  const tabModules = MODULES.filter(
+    (m) => m.tab && state.actieveModules.includes(m.id)
+  );
+  const effectieveTab: Tab =
+    tab === "modules" || tabModules.some((m) => m.id === tab) ? tab : "planbord";
 
   useEffect(() => {
     bron.laadDag("2026-08-07").then((snapshot) => dispatch({ type: "dag_geladen", snapshot }));
@@ -154,6 +169,23 @@ export default function App() {
     dispatch({ type: "zet_offline", offline });
   }
 
+  function nieuweOrder(order: Order, zending: Zending) {
+    dispatch({ type: "nieuwe_order", order, zending });
+    setOrderFormOpen(false);
+    meld(t("toast.orderAangemaakt", { zending: zending.barcode, opdrachtgever: order.opdrachtgever }));
+  }
+
+  function zetTarief(opdrachtgever: string, tarief: Tarief) {
+    dispatch({ type: "zet_tarief", opdrachtgever, tarief });
+  }
+
+  function zetModule(module: ModuleId, actief: boolean) {
+    dispatch({ type: "zet_module", module, actief });
+    meld(t(actief ? "toast.moduleAan" : "toast.moduleUit", { module: t(`module.${module}.naam`) }));
+  }
+
+  const assistentActief = state.actieveModules.includes("assistent");
+
   return (
     <div>
       <div className="proto-banner">{t("banner.mock")}</div>
@@ -169,18 +201,29 @@ export default function App() {
         </div>
         {rol === "bedrijf" && (
           <nav className="sub-tabs">
-            {BEDRIJF_TABS.map((naam) => (
+            {tabModules.map((moduleDef) => (
               <button
-                key={naam}
-                className={tab === naam ? "active" : ""}
-                onClick={() => setTab(naam)}
+                key={moduleDef.id}
+                className={effectieveTab === moduleDef.id ? "active" : ""}
+                onClick={() => setTab(moduleDef.id)}
               >
-                {t(`nav.${naam}`)}
+                {t(`module.${moduleDef.id}.naam`)}
               </button>
             ))}
+            <button
+              className={`modules-tab${effectieveTab === "modules" ? " active" : ""}`}
+              onClick={() => setTab("modules")}
+            >
+              {t("nav.modules")}
+            </button>
           </nav>
         )}
         <div className="spacer" />
+        {rol === "bedrijf" && (
+          <button className="btn primary" onClick={() => setOrderFormOpen(true)}>
+            {t("order.knop")}
+          </button>
+        )}
         <span className="date">
           {new Intl.DateTimeFormat("nl-NL", {
             weekday: "short", day: "numeric", month: "short",
@@ -190,7 +233,7 @@ export default function App() {
         </span>
       </div>
 
-      {rol === "bedrijf" && tab === "planbord" && (
+      {rol === "bedrijf" && effectieveTab === "planbord" && (
         <BedrijfView
           state={state}
           nu={nu}
@@ -198,9 +241,20 @@ export default function App() {
           onSelecteerTaak={setGeselecteerdeTaak}
         />
       )}
-      {rol === "bedrijf" && tab === "kaart" && <KaartView state={state} nu={nu} />}
-      {rol === "bedrijf" && tab === "uren" && <UrenView state={state} nu={nu} />}
-      {rol === "bedrijf" && tab === "facturen" && <FacturenView state={state} />}
+      {rol === "bedrijf" && effectieveTab === "kaart" && <KaartView state={state} nu={nu} />}
+      {rol === "bedrijf" && effectieveTab === "uren" && <UrenView state={state} nu={nu} />}
+      {rol === "bedrijf" && effectieveTab === "facturen" && (
+        <FacturenView state={state} onZetTarief={zetTarief} />
+      )}
+      {rol === "bedrijf" && effectieveTab === "emballage" && <EmballageView state={state} />}
+      {rol === "bedrijf" && effectieveTab === "portaal" && (
+        <PortaalView state={state} nu={nu} onAfspraak={() => meld(t("toast.afspraak"))} />
+      )}
+      {rol === "bedrijf" && effectieveTab === "wagenpark" && <WagenparkView state={state} nu={nu} />}
+      {rol === "bedrijf" && effectieveTab === "rapportage" && <DashboardView state={state} nu={nu} />}
+      {rol === "bedrijf" && effectieveTab === "modules" && (
+        <ModulesView state={state} onZetModule={zetModule} />
+      )}
 
       {rol === "chauffeur" && (
         <ChauffeurView
@@ -231,7 +285,11 @@ export default function App() {
         />
       )}
 
-      {rol === "bedrijf" && <Assistent state={state} nu={nu} />}
+      {orderFormOpen && (
+        <NieuweOrder state={state} onSluit={() => setOrderFormOpen(false)} onAanmaken={nieuweOrder} />
+      )}
+
+      {rol === "bedrijf" && assistentActief && <Assistent state={state} nu={nu} />}
 
       {toast && <div className="toast show" role="status">{toast}</div>}
     </div>
