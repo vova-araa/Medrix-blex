@@ -8,16 +8,18 @@ import {
   type AppState,
 } from "../data/state";
 import { statusLabel, t } from "../i18n";
+import { ritEta } from "../kaart/simulatie";
 import { initialen, laadmeters, tijd } from "../utils";
 import { TruckSvg } from "./TruckSvg";
 
 interface Props {
   state: AppState;
+  nu: string;
   onPlanZending: (zendingId: string, ritId: string) => void;
   onSelecteerTaak: (taakId: string) => void;
 }
 
-export function BedrijfView({ state, onPlanZending, onSelecteerTaak }: Props) {
+export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak }: Props) {
   const alleTaken = state.taken;
   const kpis = [
     { ico: "🚛", cls: "i-truck", n: String(state.ritten.filter((r) => statusVanRit(state, r.id) === "onderweg").length), label: t("kpi.rittenOnderweg") },
@@ -44,6 +46,7 @@ export function BedrijfView({ state, onPlanZending, onSelecteerTaak }: Props) {
               key={rit.id}
               rit={rit}
               state={state}
+              nu={nu}
               onPlanZending={onPlanZending}
               onSelecteerTaak={onSelecteerTaak}
             />
@@ -87,16 +90,18 @@ function OngeplandLijst({ state }: { state: AppState }) {
 }
 
 function RitKaart({
-  rit, state, onPlanZending, onSelecteerTaak,
+  rit, state, nu, onPlanZending, onSelecteerTaak,
 }: {
   rit: Rit;
   state: AppState;
+  nu: string;
   onPlanZending: (zendingId: string, ritId: string) => void;
   onSelecteerTaak: (taakId: string) => void;
 }) {
   const [dropping, setDropping] = useState(false);
   const taken = takenVanRit(state, rit.id);
   const rs = statusVanRit(state, rit.id);
+  const eta = ritEta(state, rit.id, nu);
   const gebruikt = gebruikteLaadmeters(state, rit.id);
   const cap = rit.voertuig.capaciteitLaadmeters;
   const pct = Math.min(100, Math.round((gebruikt / cap) * 100));
@@ -123,6 +128,11 @@ function RitKaart({
           </div>
           <div className="ritnr">{rit.id}</div>
         </div>
+        {eta && eta.vertragingMin > 0 && (
+          <span className={`eta-chip${eta.naVenster ? " te-laat" : ""}`}>
+            {t("kaart.etaChip", { tijd: tijd(eta.aankomstIso), minuten: eta.vertragingMin })}
+          </span>
+        )}
         <span className={`status-chip s-${rs}`}>{statusLabel(rs)}</span>
       </div>
       <div className="rc-truck">

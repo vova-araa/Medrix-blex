@@ -388,3 +388,203 @@
     .sidebar { width: 100%; position: static; }
     .fleet { grid-template-columns: 1fr; }
   }
+
+/* ── Subtabs ─────────────────────────────── */
+.sub-tabs { display: flex; gap: 2px; }
+.sub-tabs button {
+  border: none; background: none; cursor: pointer; color: var(--muted);
+  padding: 7px 13px; border-radius: 7px; font-weight: 600;
+}
+.sub-tabs button.active { background: var(--accent-soft); color: var(--accent); }
+.sub-tabs button:hover:not(.active) { color: var(--ink); }
+.sub-tabs button:focus-visible { outline: 2px solid var(--accent); }
+
+/* ── Kaart ───────────────────────────────── */
+.kaart-main {
+  display: flex; gap: 14px; padding: 14px 16px 40px;
+  max-width: 1280px; margin: 0 auto; align-items: flex-start;
+}
+.kaart-vlak {
+  flex: 1; min-width: 0; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+}
+.kaart-kop {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-bottom: 1px solid var(--line);
+  font-weight: 600; font-size: 13px;
+}
+.live-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--ok);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+.kaart-noot { margin-left: auto; font-weight: 400; font-size: 11.5px; color: var(--faint); }
+.kaart-svg { display: block; width: 100%; height: auto; background: var(--ground); }
+.kaart-raster { stroke: var(--line); stroke-width: 0.5; opacity: 0.5; }
+.kaart-route { fill: none; stroke: var(--line-strong); stroke-width: 2; stroke-dasharray: 1 5; stroke-linecap: round; }
+.kaart-file { stroke: var(--crit); stroke-width: 4; stroke-dasharray: 8 6; opacity: 0.75; }
+.kaart-file-label { fill: var(--crit); font: 700 12px ui-monospace, Consolas, monospace; text-anchor: middle; }
+.kaart-plaats { fill: var(--surface); stroke: var(--faint); stroke-width: 2; }
+.kaart-plaats-label { fill: var(--muted); font: 600 11px "Segoe UI", sans-serif; }
+.kaart-voertuig { cursor: pointer; }
+.kaart-voertuig .kv-ring { fill: none; stroke-width: 2; opacity: 0.4; }
+.kaart-voertuig .kv-kern { stroke-width: 2; }
+.kaart-voertuig .kv-tekst { fill: #fff; font: 700 10px "Segoe UI", sans-serif; text-anchor: middle; }
+.kaart-voertuig .kv-kenteken { fill: var(--muted); font: 600 10px ui-monospace, Consolas, monospace; text-anchor: middle; }
+.kaart-voertuig.vs-onderweg .kv-kern { fill: var(--info); stroke: var(--info); }
+.kaart-voertuig.vs-onderweg .kv-ring { stroke: var(--info); }
+.kaart-voertuig.vs-probleem .kv-kern { fill: var(--crit); stroke: var(--crit); }
+.kaart-voertuig.vs-probleem .kv-ring { stroke: var(--crit); }
+.kaart-voertuig.vs-afgerond .kv-kern { fill: var(--ok); stroke: var(--ok); }
+.kaart-voertuig.vs-afgerond .kv-ring { stroke: var(--ok); }
+.kaart-voertuig.vs-gepland .kv-kern { fill: var(--faint); stroke: var(--faint); }
+.kaart-voertuig.vs-gepland .kv-ring { stroke: var(--faint); }
+.kaart-voertuig.geselecteerd .kv-ring { opacity: 1; stroke-width: 3; }
+.kaart-legenda {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  padding: 10px 16px; border-top: 1px solid var(--line);
+  font-size: 11.5px; color: var(--muted);
+}
+.legenda-item { display: inline-flex; align-items: center; gap: 6px; }
+.legenda-item i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.legenda-item i.vs-onderweg { background: var(--info); }
+.legenda-item i.vs-probleem { background: var(--crit); }
+.legenda-item i.vs-afgerond { background: var(--ok); }
+.legenda-item i.vs-gepland { background: var(--faint); }
+.legenda-item i.legenda-file { background: var(--crit); border-radius: 2px; height: 4px; width: 16px; }
+.kaart-zij { width: 300px; flex: none; display: flex; flex-direction: column; gap: 12px; }
+.kaart-kies { margin: 0; color: var(--faint); font-size: 12.5px; }
+.zij-kop { margin: 0 0 10px; font-size: 13.5px; }
+.verkeer-lijst { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.verkeer-lijst li { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
+.weg-schild {
+  background: var(--crit); color: #fff; font: 700 11px ui-monospace, Consolas, monospace;
+  border-radius: 4px; padding: 3px 7px; margin-top: 1px;
+}
+.vk-omschrijving { font-size: 12.5px; }
+.vk-vertraging { font-size: 11.5px; color: var(--crit); font-weight: 700; }
+.eta-chip {
+  font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 3px 10px;
+  background: var(--warn-soft); color: var(--warn); font-variant-numeric: tabular-nums;
+}
+.eta-chip.te-laat { background: var(--crit-soft); color: var(--crit); }
+.eta-te-laat { color: var(--crit); font-weight: 600; }
+
+/* ── Uren ────────────────────────────────── */
+.uren-main, .facturen-main { padding: 14px 16px 40px; max-width: 1280px; margin: 0 auto; }
+.uren-noot { margin: 0 0 14px; font-size: 12px; color: var(--faint); max-width: 70ch; }
+.table-scroll { overflow-x: auto; }
+.uren-tabel { width: 100%; border-collapse: collapse; font-size: 13px; }
+.uren-tabel th {
+  text-align: left; font: 600 11px ui-monospace, Consolas, monospace;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint);
+  padding: 8px 12px; border-bottom: 1px solid var(--line-strong);
+}
+.uren-tabel td { padding: 10px 12px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.uren-tabel tr:last-child td { border-bottom: none; }
+.avatar-klein { width: 26px; height: 26px; font-size: 10px; display: inline-grid; vertical-align: middle; margin-right: 6px; }
+.klok-chip {
+  font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 3px 10px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.klok-chip.k-rijden { background: var(--info-soft); color: var(--info); }
+.klok-chip.k-werk { background: var(--warn-soft); color: var(--warn); }
+.klok-chip.k-pauze { background: var(--surface-2); color: var(--muted); }
+.klok-chip.k-uit { background: var(--surface-2); color: var(--faint); }
+
+/* ── Klok-kaart (chauffeur) ──────────────── */
+.klok-kop { display: flex; align-items: center; justify-content: space-between; }
+.klok-kop h4 { margin: 0; font-size: 13.5px; }
+.klok-totalen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+.klok-totalen div { text-align: center; background: var(--surface-2); border-radius: 8px; padding: 8px 4px; }
+.klok-totalen b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; }
+.klok-totalen span { font-size: 10.5px; color: var(--muted); }
+.klok-knoppen { display: flex; flex-wrap: wrap; gap: 6px; }
+.klok-knoppen .btn { flex: 1; min-width: 110px; }
+.klok-noot { margin: 10px 0 0; font-size: 11px; color: var(--faint); }
+
+/* ── Facturen ────────────────────────────── */
+.facturen-kop { margin-bottom: 4px; }
+.facturen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 14px; }
+.factuur-kop { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.factuur-regels { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.factuur-regels td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.factuur-regels td.bedrag { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 12px; }
+.factuur-regels tfoot td { border-bottom: none; padding: 5px 0; color: var(--muted); }
+.factuur-regels tfoot td.bedrag { color: var(--ink); }
+.factuur-totaal td { font-weight: 700; color: var(--ink) !important; border-top: 2px solid var(--line-strong) !important; }
+
+/* ── Adresinfo ───────────────────────────── */
+.adres-info h4 { margin: 0 0 2px; font-size: 12.5px; }
+.adres-instructies {
+  width: 100%; min-height: 70px; resize: vertical;
+  font: inherit; font-size: 12.5px; color: var(--ink);
+  background: var(--ground); border: 1px solid var(--line-strong); border-radius: 6px;
+  padding: 7px 9px; margin-top: 6px;
+}
+.adres-instructies:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+.adres-acties { display: flex; gap: 6px; margin-top: 8px; }
+.adres-upload { cursor: pointer; }
+.adres-fotos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.adres-fotos figure { margin: 0; width: 132px; }
+.adres-fotos img {
+  width: 100%; height: 84px; object-fit: cover;
+  border-radius: 6px; border: 1px solid var(--line-strong);
+}
+.adres-fotos figcaption { font-size: 10.5px; color: var(--faint); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chauffeur-adres-info {
+  background: var(--info-soft); border-radius: 10px; padding: 10px 12px; margin-top: 10px;
+}
+.chauffeur-adres-info h4 { margin: 0 0 4px; font-size: 12.5px; color: var(--info); }
+.chauffeur-adres-info p { margin: 0; font-size: 13px; }
+
+/* ── Assistent ───────────────────────────── */
+.assistent-knop {
+  position: fixed; left: 16px; bottom: 16px; z-index: 45;
+  background: var(--accent); color: #fff; border: none; cursor: pointer;
+  border-radius: 999px; padding: 11px 18px; font-weight: 700; font-size: 13.5px;
+  box-shadow: var(--shadow-big);
+}
+.assistent-knop:hover { filter: brightness(1.06); }
+.assistent-knop:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.assistent-paneel {
+  position: fixed; left: 16px; bottom: 68px; z-index: 45;
+  width: min(380px, calc(100vw - 32px)); height: min(480px, 70vh);
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px;
+  box-shadow: var(--shadow-big);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.assistent-kop {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-bottom: 1px solid var(--line);
+}
+.assistent-kop b { font-size: 13.5px; }
+.assistent-demo {
+  flex: 1; font-size: 10px; color: var(--warn); text-transform: uppercase;
+  letter-spacing: 0.1em; font-weight: 700;
+}
+.assistent-berichten {
+  flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.bericht {
+  max-width: 85%; padding: 8px 12px; border-radius: 12px;
+  font-size: 12.5px; white-space: pre-wrap; line-height: 1.5;
+}
+.bericht.gebruiker { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.bericht.assistent { align-self: flex-start; background: var(--surface-2); border-bottom-left-radius: 4px; }
+.assistent-invoer { display: flex; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.assistent-invoer input {
+  flex: 1; font: inherit; font-size: 13px; color: var(--ink);
+  background: var(--ground); border: 1px solid var(--line-strong); border-radius: 8px;
+  padding: 8px 11px;
+}
+.assistent-invoer input:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+@media (max-width: 900px) {
+  .kaart-main { flex-direction: column; }
+  .kaart-zij { width: 100%; }
+}
+
+/* Labels vangen geen klikken af — de marker eronder blijft klikbaar. */
+.kaart-voertuig text { pointer-events: none; }

@@ -1,5 +1,7 @@
 import { formatteerKenteken, type TaakEventType } from "@sharzi/domain";
-import { eventsVanTaak, statusVanTaak, zendingVan, type AppState } from "../data/state";
+import { useState, type ChangeEvent } from "react";
+import { adresSleutel, type AdresFoto } from "../data/bron";
+import { adresInfoVan, eventsVanTaak, statusVanTaak, zendingVan, type AppState } from "../data/state";
 import { statusLabel, t } from "../i18n";
 import { tijd, venster } from "../utils";
 
@@ -8,13 +10,16 @@ interface Props {
   taakId: string;
   onSluit: () => void;
   onSimuleer: (taakId: string, type: TaakEventType) => void;
+  onZetInstructies: (sleutel: string, instructies: string) => void;
+  onVoegFotoToe: (sleutel: string, foto: AdresFoto) => void;
 }
 
-export function DetailPaneel({ state, taakId, onSluit, onSimuleer }: Props) {
+export function DetailPaneel({
+  state, taakId, onSluit, onSimuleer, onZetInstructies, onVoegFotoToe,
+}: Props) {
   const taak = state.taken.find((tk) => tk.id === taakId);
-  if (!taak) return null;
-  const rit = state.ritten.find((r) => r.id === taak.ritId);
-  if (!rit) return null;
+  const rit = taak && state.ritten.find((r) => r.id === taak.ritId);
+  if (!taak || !rit) return null;
 
   const s = statusVanTaak(state, taakId);
   const events = [...eventsVanTaak(state, taakId)].reverse();
@@ -60,6 +65,14 @@ export function DetailPaneel({ state, taakId, onSluit, onSimuleer }: Props) {
               {" · "}{rit.voertuig.omschrijving}
             </dd>
           </dl>
+
+          <AdresInfoBewerker
+            state={state}
+            taakId={taakId}
+            onZetInstructies={onZetInstructies}
+            onVoegFotoToe={onVoegFotoToe}
+          />
+
           <div className="events">
             <h4>{t("detail.eventlog")}</h4>
             <p className="events-note">{t("detail.eventlogNoot")}</p>
@@ -81,6 +94,71 @@ export function DetailPaneel({ state, taakId, onSluit, onSimuleer }: Props) {
           </div>
         </div>
       </aside>
+    </div>
+  );
+}
+
+function AdresInfoBewerker({
+  state, taakId, onZetInstructies, onVoegFotoToe,
+}: {
+  state: AppState;
+  taakId: string;
+  onZetInstructies: (sleutel: string, instructies: string) => void;
+  onVoegFotoToe: (sleutel: string, foto: AdresFoto) => void;
+}) {
+  const taak = state.taken.find((tk) => tk.id === taakId)!;
+  const sleutel = adresSleutel(taak.adres);
+  const info = adresInfoVan(state, taak.adres);
+  const [concept, setConcept] = useState(info?.instructies ?? "");
+
+  function fotoGekozen(e: ChangeEvent<HTMLInputElement>) {
+    const bestand = e.target.files?.[0];
+    if (!bestand) return;
+    const lezer = new FileReader();
+    lezer.onload = () => {
+      onVoegFotoToe(sleutel, {
+        id: crypto.randomUUID(),
+        label: bestand.name,
+        dataUrl: String(lezer.result),
+      });
+    };
+    lezer.readAsDataURL(bestand);
+    e.target.value = "";
+  }
+
+  return (
+    <div className="adres-info">
+      <h4>{t("adres.titel")}</h4>
+      <p className="events-note">{t("adres.noot")}</p>
+      <textarea
+        className="adres-instructies"
+        value={concept}
+        placeholder={t("adres.placeholder")}
+        onChange={(e) => setConcept(e.target.value)}
+      />
+      <div className="adres-acties">
+        <button
+          className="btn"
+          disabled={concept === (info?.instructies ?? "")}
+          onClick={() => onZetInstructies(sleutel, concept)}
+        >
+          {t("adres.opslaan")}
+        </button>
+        <label className="btn adres-upload">
+          {t("adres.fotoToevoegen")}
+          <input type="file" accept="image/*" onChange={fotoGekozen} hidden />
+        </label>
+      </div>
+      {info && info.fotos.length > 0 && (
+        <div className="adres-fotos">
+          {info.fotos.map((foto) => (
+            <figure key={foto.id}>
+              <img src={foto.dataUrl} alt={foto.label} />
+              <figcaption>{foto.label}</figcaption>
+            </figure>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

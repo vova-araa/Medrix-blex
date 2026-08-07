@@ -2,14 +2,16 @@ import {
   ritStatus,
   taakStatus,
   voegEventToe,
+  type Adres,
   type Rit,
   type RitStatus,
   type Taak,
   type TaakEvent,
   type TaakStatus,
+  type WerktijdEvent,
   type Zending,
 } from "@sharzi/domain";
-import type { DagSnapshot } from "./bron";
+import { adresSleutel, type AdresFoto, type AdresInfo, type DagSnapshot } from "./bron";
 
 export interface AppState extends DagSnapshot {
   offline: boolean;
@@ -20,10 +22,14 @@ export type Actie =
   | { type: "dag_geladen"; snapshot: DagSnapshot }
   | { type: "plan_zending"; zendingId: string; taak: Taak; event: TaakEvent }
   | { type: "registreer"; event: TaakEvent }
-  | { type: "zet_offline"; offline: boolean };
+  | { type: "zet_offline"; offline: boolean }
+  | { type: "werktijd_event"; event: WerktijdEvent }
+  | { type: "adres_instructies"; sleutel: string; instructies: string }
+  | { type: "adres_foto"; sleutel: string; foto: AdresFoto };
 
 export const leegState: AppState = {
-  ritten: [], taken: [], events: [], zendingen: {}, ongepland: [],
+  ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
+  adresInfo: {}, werktijden: [],
   offline: false, outbox: 0,
 };
 
@@ -46,6 +52,28 @@ export function reducer(state: AppState, actie: Actie): AppState {
       };
     case "zet_offline":
       return { ...state, offline: actie.offline, outbox: actie.offline ? state.outbox : 0 };
+    case "werktijd_event":
+      return { ...state, werktijden: [...state.werktijden, actie.event] };
+    case "adres_instructies": {
+      const bestaand = state.adresInfo[actie.sleutel] ?? { instructies: "", fotos: [] };
+      return {
+        ...state,
+        adresInfo: {
+          ...state.adresInfo,
+          [actie.sleutel]: { ...bestaand, instructies: actie.instructies },
+        },
+      };
+    }
+    case "adres_foto": {
+      const bestaand = state.adresInfo[actie.sleutel] ?? { instructies: "", fotos: [] };
+      return {
+        ...state,
+        adresInfo: {
+          ...state.adresInfo,
+          [actie.sleutel]: { ...bestaand, fotos: [...bestaand.fotos, actie.foto] },
+        },
+      };
+    }
   }
 }
 
@@ -88,4 +116,12 @@ export function ritVanChauffeur(state: AppState, chauffeur: string): Rit | undef
 
 export function zendingVan(state: AppState, taak: Taak): Zending | undefined {
   return taak.zendingId ? state.zendingen[taak.zendingId] : undefined;
+}
+
+export function werktijdenVan(state: AppState, chauffeur: string): WerktijdEvent[] {
+  return state.werktijden.filter((e) => e.chauffeur === chauffeur);
+}
+
+export function adresInfoVan(state: AppState, adres: Adres): AdresInfo | undefined {
+  return state.adresInfo[adresSleutel(adres)];
 }

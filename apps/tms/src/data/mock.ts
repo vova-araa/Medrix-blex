@@ -1,5 +1,7 @@
-import type { Adres, Rit, Taak, TaakEvent, TaakEventType, Zending } from "@sharzi/domain";
-import type { DagSnapshot, DataBron } from "./bron";
+import type {
+  Adres, Order, Rit, Taak, TaakEvent, TaakEventType, WerktijdEvent, WerktijdEventType, Zending,
+} from "@sharzi/domain";
+import type { AdresInfo, DagSnapshot, DataBron } from "./bron";
 
 // Demodag voor Blex: 2026-08-07. Alle tijden staan in UTC (CLAUDE.md §5.3);
 // Europe/Amsterdam is die dag UTC+2, dus 06:30 lokaal = 04:30Z.
@@ -154,6 +156,77 @@ const events: TaakEvent[] = [
   ev("T-09", "vertrokken", "04:42", "A. Ionescu"),
 ];
 
+const orders: Record<string, Order> = {
+  "O-1001": { id: "O-1001", tenantId: TENANT, opdrachtgever: "Jumbo Supermarkten BV", referentie: "JMB-88412" },
+  "O-1002": { id: "O-1002", tenantId: TENANT, opdrachtgever: "Van Dijk Agro BV", referentie: "VDA-2231" },
+  "O-1003": { id: "O-1003", tenantId: TENANT, opdrachtgever: "Brouwerij De Kroon", referentie: "KRN-0907" },
+  "O-1004": { id: "O-1004", tenantId: TENANT, opdrachtgever: "Kwekerij Maasbree", referentie: "KWM-4410" },
+  "O-1005": { id: "O-1005", tenantId: TENANT, opdrachtgever: "Bouwgroep Limburg BV", referentie: "BGL-7738" },
+  "O-1006": { id: "O-1006", tenantId: TENANT, opdrachtgever: "Plus Retail", referentie: "PLS-1204" },
+  "O-1007": { id: "O-1007", tenantId: TENANT, opdrachtgever: "Bouwgroep Limburg BV", referentie: "BGL-7801" },
+  "O-1008": { id: "O-1008", tenantId: TENANT, opdrachtgever: "Van Dijk Agro BV", referentie: "VDA-2240" },
+  "O-1009": { id: "O-1009", tenantId: TENANT, opdrachtgever: "Jumbo Supermarkten BV", referentie: "JMB-88430" },
+};
+
+// Voorbeeldfoto als inline SVG — echte uploads komen via de adresbibliotheek.
+const voorbeeldFoto = (tekst: string) =>
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200">` +
+    `<rect width="320" height="200" fill="#5c6674"/>` +
+    `<rect x="30" y="70" width="200" height="90" fill="#8a93a1"/>` +
+    `<rect x="240" y="90" width="50" height="70" fill="#464f5e"/>` +
+    `<text x="16" y="34" fill="#fff" font-family="sans-serif" font-size="16">${tekst}</text></svg>`
+  );
+
+const adresInfo: Record<string, AdresInfo> = {
+  "DC Jumbo|Veghel": {
+    instructies:
+      "Melden bij portier, dock 12–18. Max. hoogte 4,0 m op het terrein. " +
+      "Pallets via dock, emballage retour direct meenemen. Wachttijd na 20 min melden.",
+    fotos: [{ id: "F-001", label: "Ingang dock 12–18", dataUrl: voorbeeldFoto("DC Jumbo — dock 12-18") }],
+  },
+  "Brouwerij De Kroon|Lieshout": {
+    instructies:
+      "Achterom via de Sluisweg, poort 3. Fusten alleen met heftruck van de brouwerij lossen. " +
+      "Niet parkeren voor de expeditie-deur.",
+    fotos: [{ id: "F-002", label: "Poort 3, Sluisweg", dataUrl: voorbeeldFoto("De Kroon — poort 3") }],
+  },
+};
+
+let wtTeller = 0;
+const wt = (chauffeur: string, type: WerktijdEventType, tijd: string): WerktijdEvent => ({
+  id: `W-${String(++wtTeller).padStart(3, "0")}`,
+  tenantId: TENANT,
+  chauffeur,
+  type,
+  tijdstip: dag(tijd),
+});
+
+const werktijden: WerktijdEvent[] = [
+  wt("J. Peeters", "ingeklokt", "03:40"),
+  wt("J. Peeters", "rijden_gestart", "03:50"),
+  wt("J. Peeters", "werk_gestart", "04:28"),
+  wt("J. Peeters", "rijden_gestart", "05:01"),
+  wt("J. Peeters", "werk_gestart", "05:56"),
+  wt("J. Peeters", "rijden_gestart", "07:01"),
+  wt("J. Peeters", "werk_gestart", "07:57"),
+
+  wt("M. Kowalski", "ingeklokt", "03:50"),
+  wt("M. Kowalski", "werk_gestart", "04:42"),
+  wt("M. Kowalski", "rijden_gestart", "05:16"),
+  wt("M. Kowalski", "werk_gestart", "06:42"),
+  wt("M. Kowalski", "pauze_gestart", "07:30"),
+
+  wt("A. Ionescu", "ingeklokt", "03:30"),
+  wt("A. Ionescu", "rijden_gestart", "03:40"),
+  wt("A. Ionescu", "werk_gestart", "03:58"),
+  wt("A. Ionescu", "rijden_gestart", "04:42"),
+
+  wt("S. de Boer", "ingeklokt", "05:40"),
+  wt("S. de Boer", "werk_gestart", "06:00"),
+];
+
 export class MockDataBron implements DataBron {
   laadDag(_datum: string): Promise<DagSnapshot> {
     return Promise.resolve({
@@ -161,7 +234,10 @@ export class MockDataBron implements DataBron {
       taken,
       events,
       zendingen,
+      orders,
       ongepland: ["SHZ-114-021", "SHZ-114-022", "SHZ-114-023", "SHZ-114-024"],
+      adresInfo,
+      werktijden,
     });
   }
 }

@@ -1,8 +1,13 @@
-import type { Taak, TaakEvent, TaakEventType } from "@sharzi/domain";
+import type { Taak, TaakEvent, TaakEventType, WerktijdEventType } from "@sharzi/domain";
 import { useEffect, useReducer, useRef, useState } from "react";
+import { Assistent } from "./components/Assistent";
 import { BedrijfView } from "./components/BedrijfView";
 import { ChauffeurView } from "./components/ChauffeurView";
 import { DetailPaneel } from "./components/DetailPaneel";
+import { FacturenView } from "./components/FacturenView";
+import { KaartView } from "./components/KaartView";
+import { UrenView } from "./components/UrenView";
+import type { AdresFoto } from "./data/bron";
 import { MockDataBron } from "./data/mock";
 import {
   gebruikteLaadmeters,
@@ -17,16 +22,29 @@ import { laadmeters } from "./utils";
 const TENANT = "blex";
 const bron = new MockDataBron();
 
+// De demodag heeft een gesimuleerde klok die live doorloopt (1 min per 2 s),
+// zodat posities en ETA's bewegen. Met echte data wordt dit gewoon de klok.
+const SIM_START = Date.parse("2026-08-07T08:42:00Z");
+
+type BedrijfTab = "planbord" | "kaart" | "uren" | "facturen";
+const BEDRIJF_TABS: BedrijfTab[] = ["planbord", "kaart", "uren", "facturen"];
+
 export default function App() {
   const [state, dispatch] = useReducer(reducer, leegState);
   const [rol, setRol] = useState<"bedrijf" | "chauffeur">("bedrijf");
+  const [tab, setTab] = useState<BedrijfTab>("planbord");
   const [actieveChauffeur, setActieveChauffeur] = useState("J. Peeters");
   const [geselecteerdeTaak, setGeselecteerdeTaak] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [simMs, setSimMs] = useState(SIM_START);
   const toastTimer = useRef<number | undefined>(undefined);
+
+  const nu = new Date(simMs).toISOString();
 
   useEffect(() => {
     bron.laadDag("2026-08-07").then((snapshot) => dispatch({ type: "dag_geladen", snapshot }));
+    const timer = window.setInterval(() => setSimMs((ms) => ms + 60_000), 2000);
+    return () => window.clearInterval(timer);
   }, []);
 
   function meld(bericht: string) {
@@ -54,8 +72,8 @@ export default function App() {
     const bestaand = takenVanRit(state, ritId);
     const laatsteEind = bestaand.length
       ? Math.max(...bestaand.map((tk) => Date.parse(tk.geplandTot)))
-      : Date.now();
-    const start = new Date(Math.max(laatsteEind, Date.now()) + 30 * 60_000);
+      : simMs;
+    const start = new Date(Math.max(laatsteEind, simMs) + 30 * 60_000);
     const eind = new Date(start.getTime() + 45 * 60_000);
 
     // Client genereert UUID's (CLAUDE.md §7.2) — nooit wachten op een server-id.
@@ -74,7 +92,7 @@ export default function App() {
       tenantId: TENANT,
       taakId: taak.id,
       type: "taak_aangemaakt",
-      tijdstip: new Date().toISOString(),
+      tijdstip: nu,
       wie: "planning",
       apparaat: "tms-web",
     };
@@ -92,7 +110,7 @@ export default function App() {
       tenantId: TENANT,
       taakId,
       type,
-      tijdstip: new Date().toISOString(),
+      tijdstip: nu,
       wie,
       apparaat,
     };
@@ -100,7 +118,6 @@ export default function App() {
     if (state.offline) {
       meld(t("toast.outbox", { event: t(`event.${type}`) }));
     } else {
-      // Status na dit event: het event zelf bepaalt de nieuwe status.
       const na = statusVanTaak({ ...state, events: [...state.events, event] }, taakId);
       meld(t("toast.geregistreerd", { event: t(`event.${type}`), status: statusLabel(na) }));
     }
@@ -114,6 +131,20 @@ export default function App() {
     const taak = state.taken.find((tk) => tk.id === taakId);
     const rit = taak && state.ritten.find((r) => r.id === taak.ritId);
     registreer(taakId, type, rit?.chauffeur || "planning", "tms-web");
+  }
+
+  function werktijdEvent(type: WerktijdEventType) {
+    dispatch({
+      type: "werktijd_event",
+      event: {
+        id: crypto.randomUUID(),
+        tenantId: TENANT,
+        chauffeur: actieveChauffeur,
+        type,
+        tijdstip: nu,
+      },
+    });
+    meld(t("toast.klok", { actie: t(`klok.event.${type}`) }));
   }
 
   function zetOffline(offline: boolean) {
@@ -136,27 +167,49 @@ export default function App() {
             {t("rol.chauffeur")}
           </button>
         </div>
+        {rol === "bedrijf" && (
+          <nav className="sub-tabs">
+            {BEDRIJF_TABS.map((naam) => (
+              <button
+                key={naam}
+                className={tab === naam ? "active" : ""}
+                onClick={() => setTab(naam)}
+              >
+                {t(`nav.${naam}`)}
+              </button>
+            ))}
+          </nav>
+        )}
         <div className="spacer" />
         <span className="date">
           {new Intl.DateTimeFormat("nl-NL", {
-            weekday: "short", day: "numeric", month: "short", year: "numeric",
+            weekday: "short", day: "numeric", month: "short",
+            hour: "2-digit", minute: "2-digit",
             timeZone: "Europe/Amsterdam",
-          }).format(new Date("2026-08-07T10:00:00Z"))}
+          }).format(new Date(simMs))}
         </span>
       </div>
 
-      {rol === "bedrijf" ? (
+      {rol === "bedrijf" && tab === "planbord" && (
         <BedrijfView
           state={state}
+          nu={nu}
           onPlanZending={planZending}
           onSelecteerTaak={setGeselecteerdeTaak}
         />
-      ) : (
+      )}
+      {rol === "bedrijf" && tab === "kaart" && <KaartView state={state} nu={nu} />}
+      {rol === "bedrijf" && tab === "uren" && <UrenView state={state} nu={nu} />}
+      {rol === "bedrijf" && tab === "facturen" && <FacturenView state={state} />}
+
+      {rol === "chauffeur" && (
         <ChauffeurView
           state={state}
+          nu={nu}
           actieveChauffeur={actieveChauffeur}
           onKiesChauffeur={setActieveChauffeur}
           onRegistreer={registreerAlsChauffeur}
+          onWerktijdEvent={werktijdEvent}
           onZetOffline={zetOffline}
         />
       )}
@@ -167,8 +220,18 @@ export default function App() {
           taakId={geselecteerdeTaak}
           onSluit={() => setGeselecteerdeTaak(null)}
           onSimuleer={simuleerVanuitPlanning}
+          onZetInstructies={(sleutel, instructies) => {
+            dispatch({ type: "adres_instructies", sleutel, instructies });
+            meld(t("toast.adresOpgeslagen"));
+          }}
+          onVoegFotoToe={(sleutel, foto: AdresFoto) => {
+            dispatch({ type: "adres_foto", sleutel, foto });
+            meld(t("toast.fotoToegevoegd"));
+          }}
         />
       )}
+
+      {rol === "bedrijf" && <Assistent state={state} nu={nu} />}
 
       {toast && <div className="toast show" role="status">{toast}</div>}
     </div>

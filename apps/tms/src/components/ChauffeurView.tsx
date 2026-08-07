@@ -1,9 +1,16 @@
-import { formatteerKenteken, type TaakEventType } from "@sharzi/domain";
 import {
+  formatteerKenteken,
+  urenTotalen,
+  type TaakEventType,
+  type WerktijdEventType,
+} from "@sharzi/domain";
+import {
+  adresInfoVan,
   huidigeTaak,
   ritVanChauffeur,
   statusVanTaak,
   takenVanRit,
+  werktijdenVan,
   zendingVan,
   type AppState,
 } from "../data/state";
@@ -12,14 +19,16 @@ import { initialen, tijd, venster } from "../utils";
 
 interface Props {
   state: AppState;
+  nu: string;
   actieveChauffeur: string;
   onKiesChauffeur: (naam: string) => void;
   onRegistreer: (taakId: string, type: TaakEventType) => void;
+  onWerktijdEvent: (type: WerktijdEventType) => void;
   onZetOffline: (offline: boolean) => void;
 }
 
 export function ChauffeurView({
-  state, actieveChauffeur, onKiesChauffeur, onRegistreer, onZetOffline,
+  state, nu, actieveChauffeur, onKiesChauffeur, onRegistreer, onWerktijdEvent, onZetOffline,
 }: Props) {
   const chauffeurs = state.ritten.map((r) => r.chauffeur).filter(Boolean);
   const rit = ritVanChauffeur(state, actieveChauffeur);
@@ -58,6 +67,13 @@ export function ChauffeurView({
             {t("chauffeur.offlineToggle")}
           </label>
         </div>
+
+        <KlokKaart
+          state={state}
+          nu={nu}
+          chauffeur={actieveChauffeur}
+          onWerktijdEvent={onWerktijdEvent}
+        />
 
         {rit && (
           <div className="ph-card">
@@ -139,6 +155,61 @@ export function ChauffeurView({
   );
 }
 
+const urenTekst = (minuten: number) =>
+  `${Math.floor(minuten / 60)}:${String(minuten % 60).padStart(2, "0")}`;
+
+function KlokKaart({
+  state, nu, chauffeur, onWerktijdEvent,
+}: {
+  state: AppState;
+  nu: string;
+  chauffeur: string;
+  onWerktijdEvent: (type: WerktijdEventType) => void;
+}) {
+  const totalen = urenTotalen(werktijdenVan(state, chauffeur), nu);
+
+  const knoppen: Array<[WerktijdEventType, string]> =
+    totalen.actief === null
+      ? [["ingeklokt", t("klok.inklokken")]]
+      : [
+          ...(totalen.actief !== "rijden" ? [["rijden_gestart", t("klok.rijden")] as [WerktijdEventType, string]] : []),
+          ...(totalen.actief !== "werk" ? [["werk_gestart", t("klok.werk")] as [WerktijdEventType, string]] : []),
+          ...(totalen.actief !== "pauze" ? [["pauze_gestart", t("klok.pauze")] as [WerktijdEventType, string]] : []),
+          ["uitgeklokt", t("klok.uitklokken")],
+        ];
+
+  return (
+    <div className="ph-card klok-kaart">
+      <div className="klok-kop">
+        <h4>{t("klok.titel")}</h4>
+        {totalen.actief ? (
+          <span className={`klok-chip k-${totalen.actief}`}>{t(`uren.actief.${totalen.actief}`)}</span>
+        ) : (
+          <span className="klok-chip k-uit">{t("uren.actief.uit")}</span>
+        )}
+      </div>
+      <div className="klok-totalen">
+        <div><b>{urenTekst(totalen.dienstMinuten)}</b><span>{t("uren.dienst")}</span></div>
+        <div><b>{urenTekst(totalen.rijMinuten)}</b><span>{t("uren.rijden")}</span></div>
+        <div><b>{urenTekst(totalen.werkMinuten)}</b><span>{t("uren.werk")}</span></div>
+        <div><b>{urenTekst(totalen.pauzeMinuten)}</b><span>{t("uren.pauze")}</span></div>
+      </div>
+      <div className="klok-knoppen">
+        {knoppen.map(([type, label]) => (
+          <button
+            key={type}
+            className={`btn${type === "ingeklokt" ? " primary" : type === "uitgeklokt" ? " secundair" : ""}`}
+            onClick={() => onWerktijdEvent(type)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <p className="klok-noot">{t("klok.avgNoot")}</p>
+    </div>
+  );
+}
+
 function HuidigeTaakKaart({
   state, taakId, onRegistreer,
 }: {
@@ -150,6 +221,7 @@ function HuidigeTaakKaart({
   if (!taak) return null;
   const s = statusVanTaak(state, taakId);
   const zending = zendingVan(state, taak);
+  const adresInfo = adresInfoVan(state, taak.adres);
 
   const acties: Array<[TaakEventType, string, string]> = {
     gepland: [["vertrokken", t("chauffeur.actie.vertrek"), "primary"]] as Array<[TaakEventType, string, string]>,
@@ -173,6 +245,22 @@ function HuidigeTaakKaart({
       </p>
       {taak.adres.tijdvenster && (
         <span className="venster-groot">{t("chauffeur.venster", { venster: venster(taak.adres.tijdvenster) })}</span>
+      )}
+      {adresInfo && (adresInfo.instructies || adresInfo.fotos.length > 0) && (
+        <div className="chauffeur-adres-info">
+          <h4>{t("adres.chauffeurTitel")}</h4>
+          {adresInfo.instructies && <p>{adresInfo.instructies}</p>}
+          {adresInfo.fotos.length > 0 && (
+            <div className="adres-fotos">
+              {adresInfo.fotos.map((foto) => (
+                <figure key={foto.id}>
+                  <img src={foto.dataUrl} alt={foto.label} />
+                  <figcaption>{foto.label}</figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
+        </div>
       )}
       <div className="acties">
         {acties.map(([type, label, cls]) => (
