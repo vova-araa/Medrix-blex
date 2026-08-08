@@ -7,7 +7,8 @@ export type TaakEventType =
   | "aangekomen"
   | "geladen"
   | "gelost"
-  | "probleem_gemeld";
+  | "probleem_gemeld"
+  | "vervallen";
 
 export interface TaakEvent {
   id: string;
@@ -24,7 +25,8 @@ export type TaakStatus =
   | "onderweg"
   | "bezig"
   | "afgerond"
-  | "probleem";
+  | "probleem"
+  | "vervallen";
 
 const STATUS_VAN_EVENT: Record<TaakEventType, TaakStatus> = {
   taak_aangemaakt: "gepland",
@@ -33,6 +35,7 @@ const STATUS_VAN_EVENT: Record<TaakEventType, TaakStatus> = {
   geladen: "afgerond",
   gelost: "afgerond",
   probleem_gemeld: "probleem",
+  vervallen: "vervallen",
 };
 
 export function taakStatus(events: readonly TaakEvent[]): TaakStatus {
@@ -53,9 +56,11 @@ export function voegEventToe(
 export type RitStatus = "gepland" | "onderweg" | "afgerond" | "probleem";
 
 export function ritStatus(taakStatussen: readonly TaakStatus[]): RitStatus {
-  if (taakStatussen.length === 0) return "gepland";
-  if (taakStatussen.includes("probleem")) return "probleem";
-  if (taakStatussen.every((s) => s === "afgerond")) return "afgerond";
-  if (taakStatussen.some((s) => s !== "gepland")) return "onderweg";
+  // Vervallen taken (bijv. 0-CMR) tellen niet mee voor de ritvoortgang.
+  const relevant = taakStatussen.filter((s) => s !== "vervallen");
+  if (relevant.length === 0) return taakStatussen.length > 0 ? "afgerond" : "gepland";
+  if (relevant.includes("probleem")) return "probleem";
+  if (relevant.every((s) => s === "afgerond")) return "afgerond";
+  if (relevant.some((s) => s !== "gepland")) return "onderweg";
   return "gepland";
 }

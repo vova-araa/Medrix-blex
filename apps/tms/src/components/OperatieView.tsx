@@ -1,6 +1,7 @@
 import { formatteerKenteken } from "@sharzi/domain";
 import { meldingen, STANDTIJD_GRENS_MIN } from "../data/meldingen";
 import {
+  actieveTakenVanRit,
   eventsVanTaak,
   statusVanRit,
   statusVanTaak,
@@ -72,7 +73,7 @@ export function OperatieView({ state, nu }: { state: AppState; nu: string }) {
               <tbody>
                 {actieveRitten.map((rit) => {
                   const rs = statusVanRit(state, rit.id);
-                  const taken = takenVanRit(state, rit.id);
+                  const taken = actieveTakenVanRit(state, rit.id);
                   const huidige = taken.find((tk) => statusVanTaak(state, tk.id) !== "afgerond");
                   const pos = voertuigPositie(state, rit, nu);
                   const eta = ritEta(state, rit.id, nu);

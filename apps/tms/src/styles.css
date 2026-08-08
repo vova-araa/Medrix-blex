@@ -897,3 +897,48 @@
   font: inherit; font-size: 13px; color: var(--ink);
   background: var(--ground); border: 1px solid var(--line-strong); border-radius: 6px; padding: 6px 8px;
 }
+
+/* ── CMR & km-stand (chauffeur) ──────────── */
+.cmr-sectie {
+  margin-top: 10px; border: 1px dashed var(--line-strong); border-radius: 8px; padding: 10px 12px;
+}
+.cmr-sectie h4 { margin: 0 0 2px; font-size: 12.5px; display: flex; align-items: center; gap: 6px; }
+.cmr-hint { margin: 2px 0 8px; font-size: 11.5px; color: var(--muted); }
+.cmr-subhint { font-size: 10.5px; color: var(--faint); font-weight: 400; }
+.cmr-velden { display: grid; gap: 8px; }
+.cmr-velden label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; font-weight: 600; color: var(--muted); }
+.cmr-velden input, .cmr-velden select {
+  font: inherit; font-size: 13px; color: var(--ink);
+  background: var(--ground); border: 1px solid var(--line-strong); border-radius: 6px; padding: 7px 9px;
+}
+.cmr-sectie.gescand {
+  display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start;
+  border-style: solid; border-color: var(--ok); background: var(--ok-soft); color: var(--ok);
+}
+.cmr-sectie.gescand b { display: block; font-size: 12.5px; }
+.cmr-sectie.gescand span { font-size: 11.5px; }
+.km-kaart h4 { margin: 0 0 2px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.km-uitleg { margin: 0 0 8px; font-size: 12px; color: var(--muted); }
+.km-rij { display: flex; gap: 8px; }
+.km-rij input {
+  flex: 1; font: inherit; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--ink);
+  background: var(--ground); border: 2px solid var(--warn); border-radius: 8px; padding: 9px 12px;
+}
+.km-rij input:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+.km-klaar { margin: 10px 0 0; text-align: center; font-size: 12.5px; color: var(--ok); font-weight: 600; }
+.stops-kop { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.stops-kop h4 { margin: 0; }
+.vstops li.vervallen .vdot { border-color: var(--line-strong); background: var(--surface-2); }
+.vstops li.vervallen .vs-titel, .vstops li.vervallen .vs-sub { color: var(--faint); text-decoration: line-through; }
+.vs-vervallen { text-decoration: none; font-weight: 400; font-size: 11px; color: var(--faint); }
+.vstops-leeg { color: var(--faint); font-size: 12px; display: block; }
+.stop.vervallen .dot { border-color: var(--line-strong); background: var(--surface-2); }
+.stop.vervallen .plaats { color: var(--faint); text-decoration: line-through; }
+.status-chip.s-vervallen { background: var(--surface-2); color: var(--faint); }
+.staaf.st-vervallen { background: var(--line-strong); }
+.status-stip.s-vervallen { background: var(--faint); }
+.trailer-select {
+  font: inherit; font-size: 13px; color: var(--ink);
+  background: var(--ground); border: 1px solid var(--line-strong); border-radius: 6px; padding: 6px 9px;
+}
+.trailer-toewijzing-kop { margin-top: 16px; }

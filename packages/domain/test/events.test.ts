@@ -54,7 +54,24 @@ describe("taakStatus", () => {
   });
 });
 
+describe("taakStatus vervallen", () => {
+  it("een 0-CMR laat een taak vervallen via een event, zonder de log te herschrijven", () => {
+    const log = [
+      ev("taak_aangemaakt", "2026-08-07T04:00:00Z"),
+      ev("vervallen", "2026-08-07T05:00:00Z"),
+    ];
+    expect(taakStatus(log)).toBe("vervallen");
+    expect(log).toHaveLength(2);
+  });
+});
+
 describe("ritStatus", () => {
+  it("vervallen taken tellen niet mee voor de ritvoortgang", () => {
+    expect(ritStatus(["afgerond", "vervallen"])).toBe("afgerond");
+    expect(ritStatus(["gepland", "vervallen"])).toBe("gepland");
+    expect(ritStatus(["vervallen", "vervallen"])).toBe("afgerond");
+  });
+
   it("een rit zonder taken is gepland", () => {
     expect(ritStatus([])).toBe("gepland");
   });

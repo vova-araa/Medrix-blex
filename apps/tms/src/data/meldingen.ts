@@ -1,8 +1,8 @@
 import type { Taak } from "@sharzi/domain";
 import {
+  actieveTakenVanRit,
   eventsVanTaak,
   statusVanTaak,
-  takenVanRit,
   type AppState,
 } from "./state";
 import { ritEta, vertragingOpLeg, wegenOpLeg, VERKEER } from "../kaart/simulatie";
@@ -31,7 +31,7 @@ const minutenSinds = (iso: string, nu: string) =>
   Math.floor((Date.parse(nu) - Date.parse(iso)) / 60_000);
 
 function huidigeTaakMetIndex(state: AppState, ritId: string): { taak: Taak; index: number } | null {
-  const taken = takenVanRit(state, ritId);
+  const taken = actieveTakenVanRit(state, ritId);
   const index = taken.findIndex((t) => statusVanTaak(state, t.id) !== "afgerond");
   return index >= 0 ? { taak: taken[index], index } : null;
 }
@@ -98,7 +98,7 @@ export function meldingen(state: AppState, nu: string): Melding[] {
           tijdstip: nu,
         });
       } else if (eta.vertragingMin > 0) {
-        const taken = takenVanRit(state, rit.id);
+        const taken = actieveTakenVanRit(state, rit.id);
         const vorige = index > 0 ? taken[index - 1].adres.plaats : "Venlo";
         const wegen = wegenOpLeg(vorige, taak.adres.plaats);
         const oorzaak = VERKEER.filter((v) => wegen.includes(v.weg))

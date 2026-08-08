@@ -2,7 +2,7 @@ import type {
   Adres, DockEvent, DockEventType, EmballageTransactie, Order, Rit, Taak, TaakEvent, TaakEventType,
   WerktijdEvent, WerktijdEventType, Zending,
 } from "@sharzi/domain";
-import type { AdresInfo, DagSnapshot, DataBron, Klant, Tarief, WagenparkItem } from "./bron";
+import type { AdresInfo, CmrRegistratie, DagSnapshot, DataBron, Klant, RitKm, Tarief, Trailer, WagenparkItem } from "./bron";
 
 // Demodag voor Blex: 2026-08-07. Alle tijden staan in UTC (CLAUDE.md §5.3);
 // Europe/Amsterdam is die dag UTC+2, dus 06:30 lokaal = 04:30Z.
@@ -298,6 +298,47 @@ const dockEvents: DockEvent[] = [
   dk("SHZ-114-023", "schade_gemeld", "06:05"),
 ];
 
+const trailers: Trailer[] = [
+  { kenteken: "OL84XF", landcode: "NL", omschrijving: "City-trailer, 13,6 m" },
+  { kenteken: "OK29TD", landcode: "NL", omschrijving: "Koeltrailer, 13,6 m" },
+  { kenteken: "OS61PB", landcode: "NL", omschrijving: "Schuifzeiltrailer, 13,6 m" },
+];
+
+// Toewijzing trailer → rit doet de administratie (Wagenpark-tab).
+const trailerVanRit: Record<string, string> = {
+  "R-260807-01": "OL84XF",
+  "R-260807-03": "OK29TD",
+};
+
+let cmrTeller = 0;
+const cmr = (
+  taakId: string, ritId: string, soort: CmrRegistratie["soort"],
+  tijd: string, wie: string, zendingId?: string, lading?: string
+): CmrRegistratie => ({
+  id: `C-${String(++cmrTeller).padStart(3, "0")}`,
+  tenantId: TENANT,
+  taakId, ritId, zendingId, soort,
+  nummer: `CMR-26-${String(4080 + cmrTeller)}`,
+  lading,
+  tijdstip: dag(tijd),
+  wie,
+});
+
+const cmrs: CmrRegistratie[] = [
+  cmr("T-01", "R-260807-01", "laad", "04:55", "J. Peeters", "SHZ-114-002"),
+  cmr("T-02", "R-260807-01", "los", "06:52", "J. Peeters", "SHZ-114-002"),
+  cmr("T-05", "R-260807-02", "laad", "05:09", "M. Kowalski", "SHZ-114-011"),
+  cmr("T-08", "R-260807-03", "laad", "04:35", "A. Ionescu", "SHZ-114-015",
+    "Deense karren: 38 stuks (CMR vermeldt alleen 'bloemen')"),
+];
+
+// Km-standen: begin altijd registreren; S. de Boer moet nog invoeren.
+const ritKm: Record<string, RitKm> = {
+  "R-260807-01": { start: 412_512 },
+  "R-260807-02": { start: 188_101 },
+  "R-260807-03": { start: 96_210 },
+};
+
 export class MockDataBron implements DataBron {
   laadDag(_datum: string): Promise<DagSnapshot> {
     return Promise.resolve({
@@ -314,6 +355,10 @@ export class MockDataBron implements DataBron {
       wagenpark,
       klanten,
       dockEvents,
+      trailers,
+      trailerVanRit,
+      cmrs,
+      ritKm,
     });
   }
 }

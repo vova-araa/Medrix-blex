@@ -26,13 +26,14 @@ export function DetailPaneel({
   const events = [...eventsVanTaak(state, taakId)].reverse();
   const zending = zendingVan(state, taak);
 
-  const volgende: TaakEventType[] = {
-    gepland: ["vertrokken" as const],
-    onderweg: ["aangekomen" as const],
-    bezig: [(taak.soort === "laden" ? "geladen" : "gelost") as TaakEventType, "probleem_gemeld" as const],
-    afgerond: [] as TaakEventType[],
-    probleem: ["aangekomen" as const],
-  }[s];
+  const volgende: TaakEventType[] = ({
+    gepland: ["vertrokken"],
+    onderweg: ["aangekomen"],
+    bezig: [taak.soort === "laden" ? "geladen" : "gelost", "probleem_gemeld"],
+    afgerond: [],
+    probleem: ["aangekomen"],
+    vervallen: [],
+  } as Record<string, TaakEventType[]>)[s];
 
   return (
     <div className="detail-overlay" onClick={(e) => { if (e.target === e.currentTarget) onSluit(); }}>

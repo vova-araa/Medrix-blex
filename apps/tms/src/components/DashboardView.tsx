@@ -10,9 +10,9 @@ import { Icoon, type IcoonNaam } from "./Icoon";
 // rij voor omzet (één reeks, één kleur) en status (statuskleur + icoon + label,
 // nooit kleur alleen). Waarden staan als tekst bij elke balk — geen legenda nodig.
 
-const STATUS_VOLGORDE: TaakStatus[] = ["afgerond", "bezig", "onderweg", "gepland", "probleem"];
+const STATUS_VOLGORDE: TaakStatus[] = ["afgerond", "bezig", "onderweg", "gepland", "probleem", "vervallen"];
 const STATUS_ICOON: Record<TaakStatus, IcoonNaam> = {
-  afgerond: "check", bezig: "timer", onderweg: "pijl", gepland: "klok", probleem: "waarschuwing",
+  afgerond: "check", bezig: "timer", onderweg: "pijl", gepland: "klok", probleem: "waarschuwing", vervallen: "kruis",
 };
 
 export function DashboardView({ state, nu }: { state: AppState; nu: string }) {

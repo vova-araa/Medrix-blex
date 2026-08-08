@@ -35,6 +35,35 @@ export interface Klant {
   telefoon: string;
 }
 
+/** Trailer uit het wagenpark; toewijzing aan ritten doet de administratie. */
+export interface Trailer {
+  kenteken: string;
+  landcode: string;
+  omschrijving: string;
+}
+
+export type CmrSoort = "laad" | "los" | "nul";
+
+/** Gescande CMR (vrachtbrief): laad-exemplaar, 3e exemplaar bij lossen, of 0-CMR. */
+export interface CmrRegistratie {
+  id: string;
+  tenantId: string;
+  taakId: string;
+  ritId: string;
+  zendingId?: string;
+  soort: CmrSoort;
+  nummer: string;
+  /** Door de chauffeur aangepaste ladingomschrijving als de CMR onduidelijk is. */
+  lading?: string;
+  tijdstip: string;
+  wie: string;
+}
+
+export interface RitKm {
+  start?: number;
+  eind?: number;
+}
+
 export interface WagenparkItem {
   kenteken: string;
   landcode: string;
@@ -60,6 +89,10 @@ export interface DagSnapshot {
   wagenpark: WagenparkItem[];
   klanten: Record<string, Klant>;
   dockEvents: DockEvent[];
+  trailers: Trailer[];
+  trailerVanRit: Record<string, string>;
+  cmrs: CmrRegistratie[];
+  ritKm: Record<string, RitKm>;
 }
 
 export interface DataBron {

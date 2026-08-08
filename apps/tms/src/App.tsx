@@ -20,7 +20,7 @@ import { OperatieView } from "./components/OperatieView";
 import { PortaalView } from "./components/PortaalView";
 import { UrenView } from "./components/UrenView";
 import { WagenparkView } from "./components/WagenparkView";
-import type { AdresFoto, Klant, Tarief } from "./data/bron";
+import type { AdresFoto, CmrSoort, Klant, Tarief } from "./data/bron";
 import { meldingen } from "./data/meldingen";
 import { MockDataBron } from "./data/mock";
 import { MODULES, type ModuleId } from "./data/modules";
@@ -195,6 +195,77 @@ export default function App() {
     meld(t("toast.klantAangemaakt", { klant: klant.naam }));
   }
 
+  function cmrRegistreer(taakId: string, soort: CmrSoort, nummer: string, lading?: string) {
+    const taak = state.taken.find((tk) => tk.id === taakId);
+    if (!taak) return;
+    dispatch({
+      type: "cmr_registreer",
+      cmr: {
+        id: crypto.randomUUID(),
+        tenantId: TENANT,
+        taakId,
+        ritId: taak.ritId,
+        zendingId: taak.zendingId,
+        soort, nummer, lading,
+        tijdstip: nu,
+        wie: actieveChauffeur,
+      },
+    });
+    meld(t("toast.cmr", { nummer }));
+  }
+
+  function nulCmr(taakId: string) {
+    const taak = state.taken.find((tk) => tk.id === taakId);
+    if (!taak) return;
+    dispatch({
+      type: "cmr_registreer",
+      cmr: {
+        id: crypto.randomUUID(),
+        tenantId: TENANT,
+        taakId,
+        ritId: taak.ritId,
+        zendingId: taak.zendingId,
+        soort: "nul",
+        nummer: "0-CMR",
+        tijdstip: nu,
+        wie: actieveChauffeur,
+      },
+    });
+    // 0-CMR: geen lading — de laadtaak én de bijbehorende losstop vervallen,
+    // als events, zodat de planner precies ziet wat er gebeurd is.
+    const teVervallen = [
+      taak,
+      ...state.taken.filter(
+        (tk) => tk.soort === "lossen" && tk.zendingId && tk.zendingId === taak.zendingId && tk.id !== taakId
+      ),
+    ];
+    for (const tk of teVervallen) {
+      dispatch({
+        type: "registreer",
+        event: {
+          id: crypto.randomUUID(),
+          tenantId: TENANT,
+          taakId: tk.id,
+          type: "vervallen",
+          tijdstip: nu,
+          wie: actieveChauffeur,
+          apparaat: "mobile",
+        },
+      });
+    }
+    meld(t("toast.nulCmr"));
+  }
+
+  function zetTrailer(ritId: string, kenteken: string) {
+    dispatch({ type: "zet_trailer", ritId, kenteken });
+    meld(kenteken ? t("toast.trailer", { kenteken }) : t("toast.trailerLos"));
+  }
+
+  function ritKm(ritId: string, veld: "start" | "eind", waarde: number) {
+    dispatch({ type: "rit_km", ritId, veld, waarde });
+    meld(t(veld === "start" ? "toast.kmStart" : "toast.kmEind", { km: waarde.toLocaleString("nl-NL") }));
+  }
+
   function dockEvent(zendingId: string, type: DockEventType, locatie?: string) {
     dispatch({
       type: "dock_event",
@@ -310,7 +381,7 @@ export default function App() {
       {rol === "bedrijf" && effectieveTab === "portaal" && (
         <PortaalView state={state} nu={nu} onAfspraak={() => meld(t("toast.afspraak"))} />
       )}
-      {rol === "bedrijf" && effectieveTab === "wagenpark" && <WagenparkView state={state} nu={nu} />}
+      {rol === "bedrijf" && effectieveTab === "wagenpark" && <WagenparkView state={state} nu={nu} onZetTrailer={zetTrailer} />}
       {rol === "bedrijf" && effectieveTab === "documenten" && <DocumentenView state={state} />}
       {rol === "bedrijf" && effectieveTab === "rapportage" && <DashboardView state={state} nu={nu} />}
       {rol === "bedrijf" && effectieveTab === "modules" && (
@@ -327,6 +398,10 @@ export default function App() {
           onWerktijdEvent={werktijdEvent}
           onZetOffline={zetOffline}
           onEmballage={registreerEmballage}
+          onCmr={cmrRegistreer}
+          onNulCmr={nulCmr}
+          onZetTrailer={zetTrailer}
+          onRitKm={ritKm}
         />
       )}
 

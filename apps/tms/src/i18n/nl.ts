@@ -25,6 +25,7 @@ export const nl = {
   "status.bezig": "Bezig",
   "status.afgerond": "Afgerond",
   "status.probleem": "Probleem",
+  "status.vervallen": "Vervallen",
 
   "taak.laden": "Laden",
   "taak.lossen": "Lossen",
@@ -36,6 +37,7 @@ export const nl = {
   "event.geladen": "Geladen",
   "event.gelost": "Gelost + POD",
   "event.probleem_gemeld": "Probleem gemeld",
+  "event.vervallen": "Vervallen (0-CMR)",
 
   "detail.gepland": "Gepland",
   "detail.tijdvenster": "Tijdvenster",
@@ -164,6 +166,7 @@ export const nl = {
   "portaal.stap.geladen": "Opgehaald",
   "portaal.stap.gelost": "Bezorgd — ontvangst bevestigd",
   "portaal.stap.probleem_gemeld": "Vertraging — we werken aan een oplossing",
+  "portaal.stap.vervallen": "Zending geannuleerd",
 
   "wagenpark.titel": "Wagenpark",
   "wagenpark.noot": "Beschikbaarheid en kosten van het materieel; waarschuwingen verschijnen 30 dagen vóór APK en 8.000 km vóór onderhoud.",
@@ -282,6 +285,53 @@ export const nl = {
 
   "toast.dock": "{event}: {zending}",
   "toast.emballage": "Emballage vastgelegd op saldo van {klant}",
+
+
+  "chauffeur.verbergGedane": "verberg gedane stops",
+  "chauffeur.allesVerborgen": "Alle stops zijn gedaan of verborgen.",
+
+  "cmr.laadTitel": "CMR scannen (laden)",
+  "cmr.laadHint": "Scan de vrachtbrief — de gegevens worden overgenomen aan de zending. Geen vracht? Kies 0 CMR.",
+  "cmr.losTitel": "3e exemplaar CMR scannen",
+  "cmr.losHint": "Scan het door de ontvanger getekende vervoerdersexemplaar. Pas daarna kun je gelost melden.",
+  "cmr.nummer": "CMR-nummer",
+  "cmr.nummerPlaceholder": "Scan of typ nummer…",
+  "cmr.ladingLabel": "Lading (aanvullen als de CMR onduidelijk is)",
+  "cmr.ladingPlaceholder": "Bijv. 6 pallets, 3.900 kg",
+  "cmr.trailer": "Trailer",
+  "cmr.geenTrailer": "— geen trailer —",
+  "cmr.trailerNoot": "Kentekens worden door de administratie beheerd; jij kiest alleen welke erachter hangt.",
+  "cmr.scanLaad": "CMR inscannen",
+  "cmr.scanLos": "3e exemplaar inscannen",
+  "cmr.nulKnop": "0 CMR — geen vracht",
+  "cmr.laadGescand": "CMR {nummer} gescand — gegevens overgenomen",
+  "cmr.losGescand": "3e exemplaar {nummer} gescand — POD compleet",
+  "cmr.nulGescand": "0 CMR geregistreerd — losstop vervallen",
+  "cmr.vervallenLabel": "vervallen (0-CMR)",
+
+  "km.startTitel": "Km-stand bij vertrek",
+  "km.startUitleg": "Voer de kilometerstand in voordat je de rit start — verplicht bij het begin van elke rit.",
+  "km.eindTitel": "Km-stand bij einde rit",
+  "km.eindUitleg": "Rit klaar — voer de eindstand in (start was {start} km).",
+  "km.placeholder": "Kilometerstand…",
+  "km.opslaan": "Km-stand vastleggen",
+  "km.eerstInvoeren": "Voer eerst de km-stand in voordat je vertrekt.",
+  "km.geregistreerd": "Geregistreerd: {start} → {eind} km ({gereden} km gereden).",
+
+  "trailer.titel": "Trailers",
+  "trailer.noot": "Kentekens en toewijzing worden hier door de administratie beheerd; de chauffeur kiest in de app alleen uit deze lijst.",
+  "trailer.kenteken": "Kenteken",
+  "trailer.omschrijving": "Omschrijving",
+  "trailer.toegewezen": "Toegewezen aan",
+  "trailer.vrij": "— vrij —",
+  "trailer.toewijzing": "Toewijzing per rit",
+
+  "toast.cmr": "CMR {nummer} gescand en gekoppeld aan de zending",
+  "toast.nulCmr": "0 CMR geregistreerd — laad- en losstop vervallen uit de rit",
+  "toast.trailer": "Trailer {kenteken} gekoppeld aan de rit",
+  "toast.trailerLos": "Trailer losgekoppeld van de rit",
+  "toast.kmStart": "Km-stand bij vertrek vastgelegd: {km} km",
+  "toast.kmEind": "Km-stand bij einde rit vastgelegd: {km} km",
 
   "toast.orderAangemaakt": "{zending} aangemaakt voor {opdrachtgever} — staat bij Ongepland",
   "toast.moduleAan": "Module {module} geactiveerd",

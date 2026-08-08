@@ -161,7 +161,7 @@ function RitKaart({
           <div className="stops">
             {taken.map((taakItem) => {
               const s = statusVanTaak(state, taakItem.id);
-              const cls = s === "afgerond" ? "done" : s === "probleem" ? "probleem" : s === "gepland" ? "" : "bezig";
+              const cls = s === "afgerond" ? "done" : s === "vervallen" ? "vervallen" : s === "probleem" ? "probleem" : s === "gepland" ? "" : "bezig";
               return (
                 <div className={`stop ${cls}`} key={taakItem.id}>
                   <button

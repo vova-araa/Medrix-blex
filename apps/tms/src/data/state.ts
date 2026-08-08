@@ -16,7 +16,7 @@ import {
 } from "@sharzi/domain";
 import {
   adresSleutel,
-  type AdresFoto, type AdresInfo, type DagSnapshot, type Klant, type Tarief,
+  type AdresFoto, type AdresInfo, type CmrRegistratie, type DagSnapshot, type Klant, type Tarief,
 } from "./bron";
 import { STANDAARD_ACTIEF, type ModuleId } from "./modules";
 
@@ -39,12 +39,15 @@ export type Actie =
   | { type: "zet_module"; module: ModuleId; actief: boolean }
   | { type: "emballage_transactie"; transactie: EmballageTransactie }
   | { type: "nieuwe_klant"; klant: Klant; tarief: Tarief }
-  | { type: "dock_event"; event: DockEvent };
+  | { type: "dock_event"; event: DockEvent }
+  | { type: "cmr_registreer"; cmr: CmrRegistratie }
+  | { type: "zet_trailer"; ritId: string; kenteken: string }
+  | { type: "rit_km"; ritId: string; veld: "start" | "eind"; waarde: number };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
   adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
-  klanten: {}, dockEvents: [],
+  klanten: {}, dockEvents: [], trailers: [], trailerVanRit: {}, cmrs: [], ritKm: {},
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
 };
@@ -116,6 +119,17 @@ export function reducer(state: AppState, actie: Actie): AppState {
       };
     case "dock_event":
       return { ...state, dockEvents: [...state.dockEvents, actie.event] };
+    case "cmr_registreer":
+      return { ...state, cmrs: [...state.cmrs, actie.cmr] };
+    case "zet_trailer":
+      return { ...state, trailerVanRit: { ...state.trailerVanRit, [actie.ritId]: actie.kenteken } };
+    case "rit_km": {
+      const huidig = state.ritKm[actie.ritId] ?? {};
+      return {
+        ...state,
+        ritKm: { ...state.ritKm, [actie.ritId]: { ...huidig, [actie.veld]: actie.waarde } },
+      };
+    }
   }
 }
 
@@ -148,8 +162,15 @@ export function gebruikteLaadmeters(state: AppState, ritId: string): number {
   return Math.round(som * 10) / 10;
 }
 
+/** Actieve taken: vervallen taken (0-CMR) doen niet meer mee in de route. */
+export function actieveTakenVanRit(state: AppState, ritId: string): Taak[] {
+  return takenVanRit(state, ritId).filter((t) => statusVanTaak(state, t.id) !== "vervallen");
+}
+
 export function huidigeTaak(state: AppState, ritId: string): Taak | undefined {
-  return takenVanRit(state, ritId).find((t) => statusVanTaak(state, t.id) !== "afgerond");
+  return actieveTakenVanRit(state, ritId).find(
+    (t) => statusVanTaak(state, t.id) !== "afgerond"
+  );
 }
 
 export function ritVanChauffeur(state: AppState, chauffeur: string): Rit | undefined {
@@ -170,4 +191,8 @@ export function adresInfoVan(state: AppState, adres: Adres): AdresInfo | undefin
 
 export function dockEventsVanZending(state: AppState, zendingId: string): DockEvent[] {
   return state.dockEvents.filter((e) => e.zendingId === zendingId);
+}
+
+export function cmrsVanTaak(state: AppState, taakId: string): CmrRegistratie[] {
+  return state.cmrs.filter((c) => c.taakId === taakId);
 }

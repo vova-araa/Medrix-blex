@@ -1,8 +1,8 @@
 import type { Rit, Taak } from "@sharzi/domain";
 import {
+  actieveTakenVanRit,
   eventsVanTaak,
   statusVanTaak,
-  takenVanRit,
   type AppState,
 } from "../data/state";
 import { kmTussen, PLAATS_COORDS } from "./coords";
@@ -79,7 +79,7 @@ export interface RitEta {
 
 /** ETA voor de eerstvolgende taak van een rit, met gesimuleerde vertraging. */
 export function ritEta(state: AppState, ritId: string, nuIso: string): RitEta | null {
-  const taken = takenVanRit(state, ritId);
+  const taken = actieveTakenVanRit(state, ritId);
   const index = taken.findIndex((t) => statusVanTaak(state, t.id) !== "afgerond");
   if (index < 0) return null;
   const huidige = taken[index];
@@ -113,7 +113,7 @@ const opPlaats = (plaats: string, naar: string | null = null): VoertuigPositie =
 
 /** Gesimuleerde live positie: interpolatie op de huidige leg. */
 export function voertuigPositie(state: AppState, rit: Rit, nuIso: string): VoertuigPositie {
-  const taken = takenVanRit(state, rit.id);
+  const taken = actieveTakenVanRit(state, rit.id);
   if (taken.length === 0) return opPlaats("Venlo");
 
   const index = taken.findIndex((t) => statusVanTaak(state, t.id) !== "afgerond");
@@ -151,7 +151,7 @@ export function voertuigPositie(state: AppState, rit: Rit, nuIso: string): Voert
 
 /** Vandaag afgelegde kilometers: som van legs waarop is vertrokken. */
 export function kmVandaag(state: AppState, ritId: string): number {
-  const taken = takenVanRit(state, ritId);
+  const taken = actieveTakenVanRit(state, ritId);
   let km = 0;
   taken.forEach((taakItem, index) => {
     const gestart = eventsVanTaak(state, taakItem.id).some((e) => e.type === "vertrokken");
