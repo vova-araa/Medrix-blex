@@ -339,6 +339,15 @@ const ritKm: Record<string, RitKm> = {
   "R-260807-03": { start: 96_210 },
 };
 
+// Rijtijd eerder deze week (ma t/m gisteren): S. de Boer zit vlak bij de
+// 56-uursgrens — handig om de inplanblokkade te demonstreren.
+const weekRijMinuten: Record<string, number> = {
+  "J. Peeters": 35 * 60 + 30,
+  "M. Kowalski": 41 * 60,
+  "A. Ionescu": 33 * 60,
+  "S. de Boer": 55 * 60,
+};
+
 export class MockDataBron implements DataBron {
   laadDag(_datum: string): Promise<DagSnapshot> {
     return Promise.resolve({
@@ -359,6 +368,7 @@ export class MockDataBron implements DataBron {
       trailerVanRit,
       cmrs,
       ritKm,
+      weekRijMinuten,
     });
   }
 }

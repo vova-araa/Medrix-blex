@@ -333,6 +333,28 @@ export const nl = {
   "toast.kmStart": "Km-stand bij vertrek vastgelegd: {km} km",
   "toast.kmEind": "Km-stand bij einde rit vastgelegd: {km} km",
 
+
+  "rijtijd.titel": "Rij- en rusttijden (EU 561/2006)",
+  "rijtijd.noot": "Afgeleid uit de werktijd-events: max. 9 u rijden per dag, 45 min pauze na 4,5 u onafgebroken rijden, max. 56 u per week. Inplannen boven deze grenzen wordt geblokkeerd.",
+  "rijtijd.vandaag": "Gereden vandaag",
+  "rijtijd.nogDag": "Nog beschikbaar",
+  "rijtijd.blok": "Tot pauze",
+  "rijtijd.week": "Week",
+  "rijtijd.status": "Status",
+  "rijtijd.ok": "Binnen de regels",
+  "rijtijd.bijnaOp": "Bijna op",
+  "rijtijd.pauzeNu": "Pauze verplicht",
+  "rijtijd.pauzeVerplicht": "pauze verplicht",
+  "rijtijd.blokOver": "nog {tijd}",
+  "rijtijd.reden.dagrijtijd": "de dagrijtijd (max. 9 u)",
+  "rijtijd.reden.weekrijtijd": "de weekrijtijd (max. 56 u)",
+  "rijtijd.appRegel": "Rijtijd vandaag {vandaag} · nog {over} · pauze over {pauzeOver}",
+  "rijtijd.appPauze": "Al {blok} onafgebroken gereden — houd nu 45 min pauze",
+
+  "operatie.bron.rijtijden": "Rijtijdenbewaking",
+
+  "toast.rijtijdBlokkade": "Kan niet inplannen: {chauffeur} heeft ±{minuten} min extra rijtijd nodig, maar dat past niet binnen {reden}. Nog {dagOver} min vandaag, {weekOver} u deze week.",
+
   "toast.orderAangemaakt": "{zending} aangemaakt voor {opdrachtgever} — staat bij Ongepland",
   "toast.moduleAan": "Module {module} geactiveerd",
   "toast.moduleUit": "Module {module} uitgezet — tab verdwijnt uit de navigatie",

@@ -1,5 +1,7 @@
-import type {
-  DockEventType, EmballageSoort, Order, Taak, TaakEvent, TaakEventType, WerktijdEventType, Zending,
+import {
+  kanInplannen,
+  type DockEventType, type EmballageSoort, type Order, type Taak, type TaakEvent,
+  type TaakEventType, type WerktijdEventType, type Zending,
 } from "@sharzi/domain";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { Assistent } from "./components/Assistent";
@@ -25,12 +27,15 @@ import { meldingen } from "./data/meldingen";
 import { MockDataBron } from "./data/mock";
 import { MODULES, type ModuleId } from "./data/modules";
 import {
+  actieveTakenVanRit,
   gebruikteLaadmeters,
   leegState,
   reducer,
+  rijtijdVan,
   statusVanTaak,
   takenVanRit,
 } from "./data/state";
+import { geschatteRijMinuten } from "./kaart/simulatie";
 import { statusLabel, t } from "./i18n";
 import { laadmeters } from "./utils";
 
@@ -88,6 +93,31 @@ export default function App() {
         kenteken: rit.voertuig.kentekenGenormaliseerd,
       }));
       return;
+    }
+
+    // Rij- en rusttijdencontrole (EU 561/2006): past deze extra rit nog
+    // binnen de dag- en weekrijtijd van de chauffeur?
+    if (rit.chauffeur) {
+      const actief = actieveTakenVanRit(state, ritId);
+      const laatstePlaats = actief.length
+        ? actief[actief.length - 1].adres.plaats
+        : "Venlo";
+      const extraMinuten = geschatteRijMinuten(laatstePlaats, zending.naar.plaats);
+      const rijtijd = rijtijdVan(state, rit.chauffeur, nu);
+      const controle = kanInplannen(rijtijd, extraMinuten);
+      if (!controle.kan) {
+        const reden = controle.redenen
+          .map((r) => t(`rijtijd.reden.${r}`))
+          .join(" én ");
+        meld(t("toast.rijtijdBlokkade", {
+          chauffeur: rit.chauffeur,
+          minuten: extraMinuten,
+          reden,
+          dagOver: rijtijd.dagResterendMinuten,
+          weekOver: Math.floor(rijtijd.weekResterendMinuten / 60) + ":" + String(rijtijd.weekResterendMinuten % 60).padStart(2, "0"),
+        }));
+        return;
+      }
     }
 
     const bestaand = takenVanRit(state, ritId);

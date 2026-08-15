@@ -93,6 +93,8 @@ export interface DagSnapshot {
   trailerVanRit: Record<string, string>;
   cmrs: CmrRegistratie[];
   ritKm: Record<string, RitKm>;
+  /** Rijtijd eerder deze week (vóór vandaag) per chauffeur, in minuten. */
+  weekRijMinuten: Record<string, number>;
 }
 
 export interface DataBron {

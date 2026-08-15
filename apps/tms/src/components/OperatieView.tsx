@@ -17,6 +17,7 @@ const BRON_ICOON: Record<string, IcoonNaam> = {
   chauffeursapp: "truck",
   standtijd: "timer",
   ai: "assistent",
+  rijtijden: "stuur",
 };
 
 export function OperatieView({ state, nu }: { state: AppState; nu: string }) {

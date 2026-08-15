@@ -942,3 +942,16 @@
   background: var(--ground); border: 1px solid var(--line-strong); border-radius: 6px; padding: 6px 9px;
 }
 .trailer-toewijzing-kop { margin-top: 16px; }
+
+/* ── Rij- en rusttijden ──────────────────── */
+.rijtijd-cel { display: flex; flex-direction: column; gap: 3px; min-width: 90px; }
+.rijtijd-bar { width: 90px; }
+.klok-chip.rt-ok { background: var(--ok-soft); color: var(--ok); }
+.klok-chip.rt-warn { background: var(--warn-soft); color: var(--warn); }
+.klok-chip.rt-kritiek { background: var(--crit-soft); color: var(--crit); }
+.rijtijd-regel {
+  margin: 10px 0 0; font-size: 11.5px; color: var(--muted);
+  display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums;
+}
+.rijtijd-regel.warn { color: var(--warn); font-weight: 600; }
+.rijtijd-regel.kritiek { color: var(--crit); font-weight: 700; }

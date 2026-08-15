@@ -1,4 +1,5 @@
 import {
+  rijtijdStatus,
   ritStatus,
   taakStatus,
   voegEventToe,
@@ -10,6 +11,7 @@ import {
   type RitStatus,
   type Taak,
   type TaakEvent,
+  type RijtijdStatus,
   type TaakStatus,
   type WerktijdEvent,
   type Zending,
@@ -48,6 +50,7 @@ export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
   adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
   klanten: {}, dockEvents: [], trailers: [], trailerVanRit: {}, cmrs: [], ritKm: {},
+  weekRijMinuten: {},
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
 };
@@ -195,4 +198,12 @@ export function dockEventsVanZending(state: AppState, zendingId: string): DockEv
 
 export function cmrsVanTaak(state: AppState, taakId: string): CmrRegistratie[] {
   return state.cmrs.filter((c) => c.taakId === taakId);
+}
+
+export function rijtijdVan(state: AppState, chauffeur: string, nu: string): RijtijdStatus {
+  return rijtijdStatus(
+    werktijdenVan(state, chauffeur),
+    nu,
+    state.weekRijMinuten[chauffeur] ?? 0
+  );
 }

@@ -1,7 +1,9 @@
 import type { Taak } from "@sharzi/domain";
+import { RIJTIJD_REGELS } from "@sharzi/domain";
 import {
   actieveTakenVanRit,
   eventsVanTaak,
+  rijtijdVan,
   statusVanTaak,
   type AppState,
 } from "./state";
@@ -20,7 +22,7 @@ export type MeldingErnst = "kritiek" | "waarschuwing";
 export interface Melding {
   id: string;
   ernst: MeldingErnst;
-  bron: "chauffeursapp" | "standtijd" | "ai";
+  bron: "chauffeursapp" | "standtijd" | "ai" | "rijtijden";
   titel: string;
   omschrijving: string;
   ritId: string;
@@ -36,8 +38,60 @@ function huidigeTaakMetIndex(state: AppState, ritId: string): { taak: Taak; inde
   return index >= 0 ? { taak: taken[index], index } : null;
 }
 
+const urenTekst = (minuten: number) =>
+  `${Math.floor(minuten / 60)}:${String(minuten % 60).padStart(2, "0")}`;
+
 export function meldingen(state: AppState, nu: string): Melding[] {
   const lijst: Melding[] = [];
+
+  // 4. Rij- en rusttijdenbewaking (EU 561/2006).
+  for (const rit of state.ritten) {
+    if (!rit.chauffeur) continue;
+    const rijtijd = rijtijdVan(state, rit.chauffeur, nu);
+    if (rijtijd.pauzeNodig) {
+      lijst.push({
+        id: `M-blok-${rit.chauffeur}`,
+        ernst: "kritiek",
+        bron: "rijtijden",
+        titel: `${rit.chauffeur} moet nu pauze houden`,
+        omschrijving: `Al ${urenTekst(rijtijd.blokRijMinuten)} onafgebroken gereden — na ${urenTekst(RIJTIJD_REGELS.blokRijMinuten)} is ${RIJTIJD_REGELS.pauzeNaBlokMinuten} min pauze verplicht.`,
+        ritId: rit.id,
+        tijdstip: nu,
+      });
+    } else if (rijtijd.blokResterendMinuten <= 30 && rijtijd.blokRijMinuten > 0) {
+      lijst.push({
+        id: `M-blok-${rit.chauffeur}`,
+        ernst: "waarschuwing",
+        bron: "rijtijden",
+        titel: `${rit.chauffeur} moet binnen ${rijtijd.blokResterendMinuten} min pauzeren`,
+        omschrijving: `${urenTekst(rijtijd.blokRijMinuten)} onafgebroken gereden; plan een pauzeplek in.`,
+        ritId: rit.id,
+        tijdstip: nu,
+      });
+    }
+    if (rijtijd.dagResterendMinuten <= 60) {
+      lijst.push({
+        id: `M-dag-${rit.chauffeur}`,
+        ernst: "waarschuwing",
+        bron: "rijtijden",
+        titel: `${rit.chauffeur} heeft nog ${rijtijd.dagResterendMinuten} min dagrijtijd`,
+        omschrijving: `Vandaag ${urenTekst(rijtijd.dagRijMinuten)} gereden van maximaal ${urenTekst(RIJTIJD_REGELS.maxDagRijMinuten)}.`,
+        ritId: rit.id,
+        tijdstip: nu,
+      });
+    }
+    if (rijtijd.weekResterendMinuten <= 120) {
+      lijst.push({
+        id: `M-week-${rit.chauffeur}`,
+        ernst: "waarschuwing",
+        bron: "rijtijden",
+        titel: `${rit.chauffeur} nadert de weekgrens`,
+        omschrijving: `Deze week ${urenTekst(rijtijd.weekRijMinuten)} gereden van maximaal ${urenTekst(RIJTIJD_REGELS.maxWeekRijMinuten)} — nog ${urenTekst(rijtijd.weekResterendMinuten)} beschikbaar.`,
+        ritId: rit.id,
+        tijdstip: nu,
+      });
+    }
+  }
 
   for (const rit of state.ritten) {
     const huidig = huidigeTaakMetIndex(state, rit.id);

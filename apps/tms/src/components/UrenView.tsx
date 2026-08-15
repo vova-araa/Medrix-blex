@@ -1,8 +1,9 @@
-import { urenTotalen } from "@sharzi/domain";
-import { werktijdenVan, type AppState } from "../data/state";
+import { RIJTIJD_REGELS, urenTotalen } from "@sharzi/domain";
+import { rijtijdVan, werktijdenVan, type AppState } from "../data/state";
 import { t } from "../i18n";
 import { kmVandaag } from "../kaart/simulatie";
 import { initialen, tijd } from "../utils";
+import { Icoon } from "./Icoon";
 
 const uren = (minuten: number) =>
   `${Math.floor(minuten / 60)}:${String(minuten % 60).padStart(2, "0")}`;
@@ -17,6 +18,59 @@ export function UrenView({ state, nu }: Props) {
 
   return (
     <div className="uren-main">
+      <div className="ph-card uren-kaart">
+        <h3 className="zij-kop"><Icoon naam="stuur" maat={15} /> {t("rijtijd.titel")}</h3>
+        <p className="uren-noot">{t("rijtijd.noot")}</p>
+        <div className="table-scroll">
+          <table className="uren-tabel">
+            <thead>
+              <tr>
+                <th>{t("uren.chauffeur")}</th>
+                <th>{t("rijtijd.vandaag")}</th>
+                <th>{t("rijtijd.nogDag")}</th>
+                <th>{t("rijtijd.blok")}</th>
+                <th>{t("rijtijd.week")}</th>
+                <th>{t("rijtijd.status")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {chauffeurs.map((naam) => {
+                const rijtijd = rijtijdVan(state, naam, nu);
+                const dagPct = Math.min(100, Math.round((rijtijd.dagRijMinuten / RIJTIJD_REGELS.maxDagRijMinuten) * 100));
+                const chip = rijtijd.pauzeNodig
+                  ? { cls: "rt-kritiek", tekst: t("rijtijd.pauzeNu") }
+                  : rijtijd.blokResterendMinuten <= 30 || rijtijd.dagResterendMinuten <= 60 || rijtijd.weekResterendMinuten <= 120
+                    ? { cls: "rt-warn", tekst: t("rijtijd.bijnaOp") }
+                    : { cls: "rt-ok", tekst: t("rijtijd.ok") };
+                return (
+                  <tr key={naam}>
+                    <td>
+                      <span className="avatar avatar-klein">{initialen(naam)}</span> {naam}
+                    </td>
+                    <td>
+                      <div className="rijtijd-cel">
+                        <span>{uren(rijtijd.dagRijMinuten)}</span>
+                        <div className="lm-bar rijtijd-bar">
+                          <div className={`lm-fill${dagPct >= 90 ? " vol" : ""}`} style={{ width: `${dagPct}%` }} />
+                        </div>
+                      </div>
+                    </td>
+                    <td><b>{uren(rijtijd.dagResterendMinuten)}</b></td>
+                    <td>
+                      {rijtijd.pauzeNodig
+                        ? t("rijtijd.pauzeVerplicht")
+                        : t("rijtijd.blokOver", { tijd: uren(rijtijd.blokResterendMinuten) })}
+                    </td>
+                    <td>{uren(rijtijd.weekRijMinuten)} / {uren(RIJTIJD_REGELS.maxWeekRijMinuten)}</td>
+                    <td><span className={`klok-chip ${chip.cls}`}>{chip.tekst}</span></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div className="ph-card uren-kaart">
         <h3 className="zij-kop">{t("uren.titel")}</h3>
         <p className="uren-noot">{t("uren.avgNoot")}</p>

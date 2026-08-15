@@ -12,6 +12,7 @@ import {
   adresInfoVan,
   cmrsVanTaak,
   huidigeTaak,
+  rijtijdVan,
   ritVanChauffeur,
   statusVanTaak,
   takenVanRit,
@@ -278,6 +279,7 @@ function KlokKaart({
   onWerktijdEvent: (type: WerktijdEventType) => void;
 }) {
   const totalen = urenTotalen(werktijdenVan(state, chauffeur), nu);
+  const rijtijd = rijtijdVan(state, chauffeur, nu);
 
   const knoppen: Array<[WerktijdEventType, string, IcoonNaam]> =
     totalen.actief === null
@@ -316,6 +318,16 @@ function KlokKaart({
           </button>
         ))}
       </div>
+      <p className={`rijtijd-regel${rijtijd.pauzeNodig ? " kritiek" : rijtijd.blokResterendMinuten <= 30 ? " warn" : ""}`}>
+        <Icoon naam="stuur" maat={12} />{" "}
+        {rijtijd.pauzeNodig
+          ? t("rijtijd.appPauze", { blok: urenTekst(rijtijd.blokRijMinuten) })
+          : t("rijtijd.appRegel", {
+              vandaag: urenTekst(rijtijd.dagRijMinuten),
+              over: urenTekst(rijtijd.dagResterendMinuten),
+              pauzeOver: urenTekst(rijtijd.blokResterendMinuten),
+            })}
+      </p>
       <p className="klok-noot">{t("klok.avgNoot")}</p>
     </div>
   );

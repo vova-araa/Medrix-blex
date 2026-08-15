@@ -149,6 +149,14 @@ export function voertuigPositie(state: AppState, rit: Rit, nuIso: string): Voert
   };
 }
 
+/** Geschatte rijtijd tussen twee plaatsen, in minuten (gem. 65 km/u). */
+export function geschatteRijMinuten(vanPlaats: string, naarPlaats: string): number {
+  const van = PLAATS_COORDS[vanPlaats];
+  const naar = PLAATS_COORDS[naarPlaats];
+  if (!van || !naar) return 45;
+  return Math.max(10, Math.round((kmTussen(van, naar) / 65) * 60));
+}
+
 /** Vandaag afgelegde kilometers: som van legs waarop is vertrokken. */
 export function kmVandaag(state: AppState, ritId: string): number {
   const taken = actieveTakenVanRit(state, ritId);
