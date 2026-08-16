@@ -1,6 +1,8 @@
 import { formatteerGeld, formatteerKenteken } from "@sharzi/domain";
 import { takenVanRit, type AppState } from "../data/state";
 import { t } from "../i18n";
+import { tijd } from "../utils";
+import { Icoon } from "./Icoon";
 
 const DAG_MS = 24 * 60 * 60 * 1000;
 
@@ -16,6 +18,11 @@ export function WagenparkView({ state, nu, onZetTrailer }: Props) {
       <div className="ph-card uren-kaart">
         <h3 className="zij-kop">{t("wagenpark.titel")}</h3>
         <p className="uren-noot">{t("wagenpark.noot")}</p>
+        {state.wagenparkSync && (
+          <p className="koppeling-bron">
+            <Icoon naam="edi" maat={12} /> {t("wagenpark.bron", { tijd: tijd(state.wagenparkSync) })}
+          </p>
+        )}
         <div className="table-scroll">
           <table className="uren-tabel">
             <thead>

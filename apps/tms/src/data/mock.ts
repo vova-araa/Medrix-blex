@@ -2,7 +2,8 @@ import type {
   Adres, DockEvent, DockEventType, EmballageTransactie, Order, Rit, Taak, TaakEvent, TaakEventType,
   WerktijdEvent, WerktijdEventType, Zending,
 } from "@sharzi/domain";
-import type { AdresInfo, CmrRegistratie, DagSnapshot, DataBron, Klant, RitKm, Tarief, Trailer, WagenparkItem } from "./bron";
+import { FixtureTruckAndTrailerClient } from "@sharzi/integratie-truck-and-trailer";
+import type { AdresInfo, CmrRegistratie, DagSnapshot, DataBron, Klant, RitKm, Tarief } from "./bron";
 
 // Demodag voor Blex: 2026-08-07. Alle tijden staan in UTC (CLAUDE.md §5.3);
 // Europe/Amsterdam is die dag UTC+2, dus 06:30 lokaal = 04:30Z.
@@ -261,13 +262,6 @@ const tarieven: Record<string, Tarief> = {
   "Plus Retail": { basisCenten: 4800, perLaadmeterCenten: 1800 },
 };
 
-const wagenpark: WagenparkItem[] = [
-  { kenteken: "43BKL7", landcode: "NL", omschrijving: "Trekker + city-trailer", kmStand: 412_680, apkTot: "2026-09-02", volgendeOnderhoudKm: 420_000, verbruikL100: 27.4, kostenPerMaandCenten: 312_500 },
-  { kenteken: "87TDF3", landcode: "NL", omschrijving: "Bakwagen", kmStand: 188_240, apkTot: "2027-03-15", volgendeOnderhoudKm: 195_000, verbruikL100: 21.1, kostenPerMaandCenten: 218_000 },
-  { kenteken: "12PGH9", landcode: "NL", omschrijving: "Bakwagen met laadklep", kmStand: 96_410, apkTot: "2026-08-21", volgendeOnderhoudKm: 100_000, verbruikL100: 22.8, kostenPerMaandCenten: 224_500 },
-  { kenteken: "66KLM2", landcode: "NL", omschrijving: "Bakwagen", kmStand: 240_155, apkTot: "2026-11-30", volgendeOnderhoudKm: 245_000, verbruikL100: 21.9, kostenPerMaandCenten: 209_000 },
-];
-
 const klanten: Record<string, Klant> = {
   "Jumbo Supermarkten BV": { naam: "Jumbo Supermarkten BV", contactpersoon: "R. van den Berg", email: "transport@jumbo.example", telefoon: "088 001 1201" },
   "Van Dijk Agro BV": { naam: "Van Dijk Agro BV", contactpersoon: "K. van Dijk", email: "planning@vandijkagro.example", telefoon: "0492 33 41 20" },
@@ -296,12 +290,6 @@ const dockEvents: DockEvent[] = [
   dk("SHZ-114-023", "aangemeld", "03:50"),
   dk("SHZ-114-023", "ingescand", "05:40", "B1"),
   dk("SHZ-114-023", "schade_gemeld", "06:05"),
-];
-
-const trailers: Trailer[] = [
-  { kenteken: "OL84XF", landcode: "NL", omschrijving: "City-trailer, 13,6 m" },
-  { kenteken: "OK29TD", landcode: "NL", omschrijving: "Koeltrailer, 13,6 m" },
-  { kenteken: "OS61PB", landcode: "NL", omschrijving: "Schuifzeiltrailer, 13,6 m" },
 ];
 
 // Toewijzing trailer → rit doet de administratie (Wagenpark-tab).
@@ -349,8 +337,12 @@ const weekRijMinuten: Record<string, number> = {
 };
 
 export class MockDataBron implements DataBron {
-  laadDag(_datum: string): Promise<DagSnapshot> {
-    return Promise.resolve({
+  // Vloot en trailers komen door de Truck & Trailer-koppeling binnen
+  // (fixture-client tot de echte API-afspraken er zijn — zie
+  // directives/connector_truck_and_trailer.md).
+  async laadDag(_datum: string): Promise<DagSnapshot> {
+    const vloot = await new FixtureTruckAndTrailerClient().haalVloot();
+    return {
       ritten,
       taken,
       events,
@@ -361,14 +353,15 @@ export class MockDataBron implements DataBron {
       werktijden,
       emballage,
       tarieven,
-      wagenpark,
+      wagenpark: vloot.voertuigen,
       klanten,
       dockEvents,
-      trailers,
+      trailers: vloot.trailers,
       trailerVanRit,
       cmrs,
       ritKm,
       weekRijMinuten,
-    });
+      wagenparkSync: vloot.syncTijdstip,
+    };
   }
 }

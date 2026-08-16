@@ -170,6 +170,7 @@ export const nl = {
 
   "wagenpark.titel": "Wagenpark",
   "wagenpark.noot": "Beschikbaarheid en kosten van het materieel; waarschuwingen verschijnen 30 dagen vóór APK en 8.000 km vóór onderhoud.",
+  "wagenpark.bron": "Bron: Truck & Trailer-koppeling · laatst gesynchroniseerd {tijd} (voorbeelddata tot de API-afspraken met Blex rond zijn)",
   "wagenpark.voertuig": "Voertuig",
   "wagenpark.kmStand": "Km-stand",
   "wagenpark.apk": "APK tot",

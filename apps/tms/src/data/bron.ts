@@ -95,6 +95,8 @@ export interface DagSnapshot {
   ritKm: Record<string, RitKm>;
   /** Rijtijd eerder deze week (vóór vandaag) per chauffeur, in minuten. */
   weekRijMinuten: Record<string, number>;
+  /** Tijdstip van de laatste wagenpark-sync uit de Truck & Trailer-koppeling. */
+  wagenparkSync: string;
 }
 
 export interface DataBron {

@@ -50,7 +50,7 @@ export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
   adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
   klanten: {}, dockEvents: [], trailers: [], trailerVanRit: {}, cmrs: [], ritKm: {},
-  weekRijMinuten: {},
+  weekRijMinuten: {}, wagenparkSync: "",
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
 };
