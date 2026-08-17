@@ -356,6 +356,26 @@ export const nl = {
 
   "toast.rijtijdBlokkade": "Kan niet inplannen: {chauffeur} heeft ±{minuten} min extra rijtijd nodig, maar dat past niet binnen {reden}. Nog {dagOver} min vandaag, {weekOver} u deze week.",
 
+
+  "autoplan.knop": "Automatisch plannen",
+  "autoplan.eyebrow": "Automatische planner",
+  "autoplan.titel": "Planvoorstel",
+  "autoplan.noot": "Voorstellen houden rekening met laadmeters, tijdvensters en de actuele rij- en rusttijden (tacho, dag- en weekuren), inclusief verplichte pauzes. Jij beslist — vink uit wat je anders wilt.",
+  "autoplan.geenVoorstellen": "Geen enkele zending kon automatisch worden ingepland — zie hieronder waarom.",
+  "autoplan.aankomst": "Verwachte aankomst {tijd}",
+  "autoplan.binnenVenster": "binnen venster {venster}",
+  "autoplan.pauze": "45 min pauze ingepland",
+  "autoplan.onplanbaar": "Hier spring jij bij ({aantal})",
+  "autoplan.onplanbaarNoot": "Deze zendingen passen niet binnen de regels — handmatig oplossen: charter inhuren, venster verzetten of naar morgen schuiven.",
+  "autoplan.reden.capaciteit": "past qua laadmeters op geen enkel voertuig",
+  "autoplan.reden.dagrijtijd": "dagrijtijd van alle kandidaten ontoereikend",
+  "autoplan.reden.weekrijtijd": "weekrijtijd (56 u) van alle kandidaten ontoereikend",
+  "autoplan.reden.venster": "tijdvenster niet meer haalbaar",
+  "autoplan.reden.geen_chauffeurs": "geen chauffeurs beschikbaar",
+  "autoplan.accepteer": "Accepteer selectie ({aantal})",
+
+  "toast.autoplan": "{aantal} zending(en) automatisch gepland — taken aangemaakt met events",
+
   "toast.orderAangemaakt": "{zending} aangemaakt voor {opdrachtgever} — staat bij Ongepland",
   "toast.moduleAan": "Module {module} geactiveerd",
   "toast.moduleUit": "Module {module} uitgezet — tab verdwijnt uit de navigatie",

@@ -7,3 +7,4 @@ export * from "./facturatie";
 export * from "./emballage";
 export * from "./dock";
 export * from "./rijtijden";
+export * from "./autoplanner";

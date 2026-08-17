@@ -1,10 +1,13 @@
 import {
+  automatischPlan,
   kanInplannen,
-  type DockEventType, type EmballageSoort, type Order, type Taak, type TaakEvent,
+  type DockEventType, type EmballageSoort, type Order, type PlanResultaat,
+  type PlanVoorstel, type Taak, type TaakEvent,
   type TaakEventType, type WerktijdEventType, type Zending,
 } from "@sharzi/domain";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { Assistent } from "./components/Assistent";
+import { AutoPlanView } from "./components/AutoPlanView";
 import { BedrijfView } from "./components/BedrijfView";
 import { ChauffeurView } from "./components/ChauffeurView";
 import { DashboardView } from "./components/DashboardView";
@@ -55,6 +58,7 @@ export default function App() {
   const [actieveChauffeur, setActieveChauffeur] = useState("J. Peeters");
   const [geselecteerdeTaak, setGeselecteerdeTaak] = useState<string | null>(null);
   const [orderFormOpen, setOrderFormOpen] = useState(false);
+  const [autoPlanResultaat, setAutoPlanResultaat] = useState<PlanResultaat | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [simMs, setSimMs] = useState(SIM_START);
   const toastTimer = useRef<number | undefined>(undefined);
@@ -296,6 +300,68 @@ export default function App() {
     meld(t(veld === "start" ? "toast.kmStart" : "toast.kmEind", { km: waarde.toLocaleString("nl-NL") }));
   }
 
+  function startAutoPlan() {
+    const opdrachten = state.ongepland.map((id) => {
+      const zending = state.zendingen[id];
+      return {
+        id,
+        laadmeters: zending.laadmeters,
+        vanPlaats: zending.van.plaats,
+        naarPlaats: zending.naar.plaats,
+        vensterVan: zending.naar.tijdvenster?.van,
+        vensterTot: zending.naar.tijdvenster?.tot,
+      };
+    });
+    const kandidaten = state.ritten
+      .filter((rit) => rit.chauffeur)
+      .map((rit) => {
+        const actief = actieveTakenVanRit(state, rit.id);
+        const laatste = actief.at(-1);
+        return {
+          ritId: rit.id,
+          chauffeur: rit.chauffeur,
+          huidigePlaats: laatste?.adres.plaats ?? "Venlo",
+          beschikbaarVanafIso: laatste
+            ? new Date(Math.max(Date.parse(laatste.geplandTot), simMs)).toISOString()
+            : nu,
+          resterendeLaadmeters:
+            Math.round((rit.voertuig.capaciteitLaadmeters - gebruikteLaadmeters(state, rit.id)) * 10) / 10,
+          rijtijd: rijtijdVan(state, rit.chauffeur, nu),
+        };
+      });
+    setAutoPlanResultaat(
+      automatischPlan(opdrachten, kandidaten, { nuIso: nu, reistijdMinuten: geschatteRijMinuten })
+    );
+  }
+
+  function accepteerAutoPlan(voorstellen: PlanVoorstel[]) {
+    for (const voorstel of voorstellen) {
+      const zending = state.zendingen[voorstel.opdrachtId];
+      if (!zending) continue;
+      const taak: Taak = {
+        id: crypto.randomUUID(),
+        tenantId: TENANT,
+        ritId: voorstel.ritId,
+        soort: "lossen",
+        adres: zending.naar,
+        zendingId: zending.id,
+        geplandVan: voorstel.aankomstIso,
+        geplandTot: new Date(Date.parse(voorstel.aankomstIso) + 30 * 60_000).toISOString(),
+      };
+      dispatch({ type: "plan_zending", zendingId: zending.id, taak, event: {
+        id: crypto.randomUUID(),
+        tenantId: TENANT,
+        taakId: taak.id,
+        type: "taak_aangemaakt",
+        tijdstip: nu,
+        wie: "autoplanner",
+        apparaat: "tms-web",
+      }});
+    }
+    setAutoPlanResultaat(null);
+    meld(t("toast.autoplan", { aantal: voorstellen.length }));
+  }
+
   function dockEvent(zendingId: string, type: DockEventType, locatie?: string) {
     dispatch({
       type: "dock_event",
@@ -396,6 +462,7 @@ export default function App() {
           nu={nu}
           onPlanZending={planZending}
           onSelecteerTaak={setGeselecteerdeTaak}
+          onAutoPlan={startAutoPlan}
         />
       )}
       {rol === "bedrijf" && effectieveTab === "operatie" && <OperatieView state={state} nu={nu} />}
@@ -451,6 +518,15 @@ export default function App() {
             dispatch({ type: "adres_foto", sleutel, foto });
             meld(t("toast.fotoToegevoegd"));
           }}
+        />
+      )}
+
+      {autoPlanResultaat && (
+        <AutoPlanView
+          state={state}
+          resultaat={autoPlanResultaat}
+          onSluit={() => setAutoPlanResultaat(null)}
+          onAccepteer={accepteerAutoPlan}
         />
       )}
 

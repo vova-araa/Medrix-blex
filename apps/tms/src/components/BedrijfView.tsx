@@ -18,9 +18,10 @@ interface Props {
   nu: string;
   onPlanZending: (zendingId: string, ritId: string) => void;
   onSelecteerTaak: (taakId: string) => void;
+  onAutoPlan: () => void;
 }
 
-export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak }: Props) {
+export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak, onAutoPlan }: Props) {
   const alleTaken = state.taken;
   const kpis: Array<{ ico: IcoonNaam; cls: string; n: string; label: string }> = [
     { ico: "truck", cls: "i-truck", n: String(state.ritten.filter((r) => statusVanRit(state, r.id) === "onderweg").length), label: t("kpi.rittenOnderweg") },
@@ -40,7 +41,7 @@ export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak }: Props
         ))}
       </div>
       <div className="bedrijf-main">
-        <OngeplandLijst state={state} />
+        <OngeplandLijst state={state} onAutoPlan={onAutoPlan} />
         <div className="fleet">
           {state.ritten.map((rit) => (
             <RitKaart
@@ -58,12 +59,19 @@ export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak }: Props
   );
 }
 
-function OngeplandLijst({ state }: { state: AppState }) {
+function OngeplandLijst({ state, onAutoPlan }: { state: AppState; onAutoPlan: () => void }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-head">
         <h2>{t("ongepland.titel")} <span className="count">{state.ongepland.length}</span></h2>
         <p>{t("ongepland.hint")}</p>
+        <button
+          className="btn primary knop-met-icoon autoplan-knop"
+          disabled={state.ongepland.length === 0}
+          onClick={onAutoPlan}
+        >
+          <Icoon naam="assistent" maat={14} /> {t("autoplan.knop")}
+        </button>
       </div>
       <div className="sidebar-list">
         {state.ongepland.length === 0 && <div className="rc-leeg">{t("ongepland.leeg")}</div>}
