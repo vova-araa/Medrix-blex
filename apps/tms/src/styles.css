@@ -980,6 +980,25 @@
 .av-venster { color: var(--ok); font-weight: 600; }
 .av-pauze { display: inline-flex; align-items: center; gap: 4px; color: var(--warn); font-weight: 600; }
 .av-motivatie { margin: 6px 0 0; padding-left: 16px; font-size: 11.5px; color: var(--muted); }
+.beleid-lijst { display: grid; gap: 8px; margin-top: 10px; }
+.beleid-rij { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.beleid-label { font-size: 12.5px; font-weight: 600; }
+.beleid-standen { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.beleid-knop {
+  border: 0; background: transparent; color: var(--muted); font: inherit;
+  font-size: 11.5px; padding: 5px 10px; cursor: pointer;
+}
+.beleid-knop + .beleid-knop { border-left: 1px solid var(--line); }
+.beleid-knop.actief { background: var(--accent); color: #fff; font-weight: 600; }
+.bericht-lijst { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
+.bericht { border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; }
+.bericht-tekst { font-size: 12.5px; margin-top: 5px; color: var(--muted); }
+.herstel-lijst { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
+.herstel-voorstel { border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; }
+.herstel-kop { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 13px; }
+.herstel-kop .mono { font-size: 11px; color: var(--faint); }
+.herstel-reden { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--warn); margin-top: 4px; }
+.herstel-voorstel .btn { margin-top: 8px; }
 .autoplan-rest { border: 1px dashed var(--warn); border-radius: 10px; padding: 12px 14px; }
 .autoplan-rest h4 { margin: 0 0 4px; font-size: 13px; display: flex; align-items: center; gap: 6px; color: var(--warn); }
 .autoplan-rest ul { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; display: grid; gap: 3px; }

@@ -100,6 +100,19 @@ describe("automatischPlan", () => {
     );
   });
 
+  it("gebruikt geleerde handelingstijden per plaats en benoemt ze in de motivatie", () => {
+    const geleerd = (plaats: string) => (plaats === "Venlo" ? 50 : undefined);
+    const resultaat = automatischPlan(
+      [opdracht("Z-1")],
+      [kandidaat("R-1", "Chauffeur", "Venlo")],
+      { ...NU, laadLosMinutenVoorPlaats: geleerd }
+    );
+    // 50 min geleerd laden in Venlo + 60 min rijden = aankomst 10:50Z
+    // (standaard 30 min zou 10:30Z geven).
+    expect(resultaat.voorstellen[0].aankomstIso).toBe("2026-08-07T10:50:00.000Z");
+    expect(resultaat.voorstellen[0].motivatie).toContain("geleerde laadtijd Venlo: 50 min");
+  });
+
   it("balanceert werkdruk: wie bijna aan zijn daggrens zit, krijgt een straf", () => {
     const bijnaOp: RijtijdStatus = { ...ruim, dagResterendMinuten: 100 };
     const resultaat = automatischPlan(

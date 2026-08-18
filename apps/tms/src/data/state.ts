@@ -22,10 +22,30 @@ import {
 } from "./bron";
 import { STANDAARD_ACTIEF, type ModuleId } from "./modules";
 
+// Beleid per actiesoort (stap 3 van de automatiseringsladder): de planner
+// bepaalt per soort ingreep of de automaat zelf handelt, alleen voorstelt,
+// of uit staat.
+export type BeleidActie = "klantbericht" | "herplannen" | "wachturen";
+export type BeleidStand = "automatisch" | "voorstel" | "uit";
+
+export interface KlantBericht {
+  id: string;
+  klant: string;
+  ritId: string;
+  zendingId: string;
+  etaIso: string;
+  vertragingMin: number;
+  tekst: string;
+  tijdstip: string;
+  wie: "automaat" | "planner";
+}
+
 export interface AppState extends DagSnapshot {
   offline: boolean;
   outbox: number;
   actieveModules: ModuleId[];
+  beleid: Record<BeleidActie, BeleidStand>;
+  berichten: KlantBericht[];
 }
 
 export type Actie =
@@ -44,7 +64,9 @@ export type Actie =
   | { type: "dock_event"; event: DockEvent }
   | { type: "cmr_registreer"; cmr: CmrRegistratie }
   | { type: "zet_trailer"; ritId: string; kenteken: string }
-  | { type: "rit_km"; ritId: string; veld: "start" | "eind"; waarde: number };
+  | { type: "rit_km"; ritId: string; veld: "start" | "eind"; waarde: number }
+  | { type: "zet_beleid"; actie: BeleidActie; stand: BeleidStand }
+  | { type: "klantbericht"; bericht: KlantBericht };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
@@ -53,6 +75,8 @@ export const leegState: AppState = {
   weekRijMinuten: {}, wagenparkSync: "",
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
+  beleid: { klantbericht: "automatisch", herplannen: "voorstel", wachturen: "automatisch" },
+  berichten: [],
 };
 
 export function reducer(state: AppState, actie: Actie): AppState {
@@ -133,6 +157,10 @@ export function reducer(state: AppState, actie: Actie): AppState {
         ritKm: { ...state.ritKm, [actie.ritId]: { ...huidig, [actie.veld]: actie.waarde } },
       };
     }
+    case "zet_beleid":
+      return { ...state, beleid: { ...state.beleid, [actie.actie]: actie.stand } };
+    case "klantbericht":
+      return { ...state, berichten: [...state.berichten, actie.bericht] };
   }
 }
 

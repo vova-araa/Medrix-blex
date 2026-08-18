@@ -79,6 +79,14 @@ const zendingen: Record<string, Zending> = {
     van: { naam: "DC Jumbo", plaats: "Veghel", land: "NL", tijdvenster: { van: dag("10:00"), tot: dag("16:00") } },
     naar: depot,
   },
+  // Retourzending op de rit van Kowalski: beide taken staan nog op "gepland",
+  // dus als zijn rit vastloopt kan de herstel-lus deze zending verplaatsen.
+  "SHZ-114-025": {
+    id: "SHZ-114-025", tenantId: TENANT, orderId: "O-1003", barcode: "SHZ-114-025",
+    laadmeters: 2.0, gewichtKg: 1200, omschrijving: "Retour: 40 lege fusten",
+    van: { naam: "Fustenloods", plaats: "Lieshout", land: "NL" },
+    naar: depot,
+  },
 };
 
 const ritten: Rit[] = [
@@ -119,7 +127,8 @@ const taken: Taak[] = [
   taak("T-04", "R-260807-01", "emballage_retour", depot, "10:00", "10:30"),
   taak("T-05", "R-260807-02", "laden", depot, "04:45", "05:15", "SHZ-114-011"),
   taak("T-06", "R-260807-02", "lossen", zendingen["SHZ-114-011"].naar, "06:45", "07:30", "SHZ-114-011"),
-  taak("T-07", "R-260807-02", "laden", { naam: "Fustenloods", plaats: "Lieshout", land: "NL" }, "07:45", "08:15"),
+  taak("T-07", "R-260807-02", "laden", zendingen["SHZ-114-025"].van, "07:45", "08:15", "SHZ-114-025"),
+  taak("T-12", "R-260807-02", "lossen", depot, "09:00", "09:30", "SHZ-114-025"),
   taak("T-08", "R-260807-03", "laden", zendingen["SHZ-114-015"].van, "04:00", "04:40", "SHZ-114-015"),
   taak("T-09", "R-260807-03", "lossen", zendingen["SHZ-114-015"].naar, "06:30", "07:30", "SHZ-114-015"),
   taak("T-10", "R-260807-04", "laden", depot, "06:00", "06:30", "SHZ-114-019"),
@@ -134,6 +143,7 @@ const events: TaakEvent[] = [
   ev("T-05", "taak_aangemaakt", "03:56", "planning", "tms-web"),
   ev("T-06", "taak_aangemaakt", "03:56", "planning", "tms-web"),
   ev("T-07", "taak_aangemaakt", "03:56", "planning", "tms-web"),
+  ev("T-12", "taak_aangemaakt", "03:56", "planning", "tms-web"),
   ev("T-08", "taak_aangemaakt", "03:57", "planning", "tms-web"),
   ev("T-09", "taak_aangemaakt", "03:57", "planning", "tms-web"),
   ev("T-10", "taak_aangemaakt", "03:58", "planning", "tms-web"),

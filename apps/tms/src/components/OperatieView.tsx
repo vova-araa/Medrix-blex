@@ -1,4 +1,6 @@
 import { formatteerKenteken } from "@sharzi/domain";
+import { benodigdeBerichten, type BerichtVoorstel } from "../data/communicatie";
+import { herstelVoorstellen, type HerstelVoorstel } from "../data/herstel";
 import { meldingen, STANDTIJD_GRENS_MIN } from "../data/meldingen";
 import {
   actieveTakenVanRit,
@@ -7,6 +9,8 @@ import {
   statusVanTaak,
   takenVanRit,
   type AppState,
+  type BeleidActie,
+  type BeleidStand,
 } from "../data/state";
 import { statusLabel, t } from "../i18n";
 import { ritEta, voertuigPositie } from "../kaart/simulatie";
@@ -20,13 +24,136 @@ const BRON_ICOON: Record<string, IcoonNaam> = {
   rijtijden: "stuur",
 };
 
-export function OperatieView({ state, nu }: { state: AppState; nu: string }) {
+const BELEID_ACTIES: BeleidActie[] = ["klantbericht", "herplannen", "wachturen"];
+const BELEID_STANDEN: BeleidStand[] = ["automatisch", "voorstel", "uit"];
+
+export function OperatieView({ state, nu, onHerstel, onZetBeleid, onVerstuurBericht }: {
+  state: AppState;
+  nu: string;
+  onHerstel: (voorstel: HerstelVoorstel) => void;
+  onZetBeleid: (actie: BeleidActie, stand: BeleidStand) => void;
+  onVerstuurBericht: (voorstel: BerichtVoorstel) => void;
+}) {
   const lijst = meldingen(state, nu);
+  const herstel = state.beleid.herplannen === "uit" ? [] : herstelVoorstellen(state, nu);
+  const openBerichten = state.beleid.klantbericht === "voorstel" ? benodigdeBerichten(state, nu) : [];
   const actieveRitten = state.ritten.filter((r) => takenVanRit(state, r.id).length > 0);
 
   return (
     <div className="operatie-main">
       <div className="operatie-meldingen">
+        <div className="ph-card">
+          <h3 className="zij-kop">{t("operatie.beleid")}</h3>
+          <p className="uren-noot">{t("operatie.beleidNoot")}</p>
+          <div className="beleid-lijst">
+            {BELEID_ACTIES.map((actie) => (
+              <div className="beleid-rij" key={actie}>
+                <span className="beleid-label">{t(`beleid.${actie}`)}</span>
+                <div className="beleid-standen">
+                  {BELEID_STANDEN.map((stand) => (
+                    <button
+                      key={stand}
+                      className={`beleid-knop${state.beleid[actie] === stand ? " actief" : ""}`}
+                      onClick={() => onZetBeleid(actie, stand)}
+                    >
+                      {t(`beleid.stand.${stand}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="ph-card">
+          <div className="operatie-kop">
+            <h3 className="zij-kop">{t("operatie.herstel")}</h3>
+            <span className="melding-teller">{herstel.length}</span>
+          </div>
+          <p className="uren-noot">{t("operatie.herstelNoot")}</p>
+          {state.beleid.herplannen === "uit" ? (
+            <p className="kaart-kies">{t("operatie.herstelUitgezet")}</p>
+          ) : (
+            herstel.length === 0 && <p className="kaart-kies">{t("operatie.herstelGeen")}</p>
+          )}
+          <ul className="herstel-lijst">
+            {herstel.map((h) => {
+              const zending = state.zendingen[h.zendingId];
+              return (
+                <li key={`${h.ritId}-${h.zendingId}`} className="herstel-voorstel">
+                  <div className="herstel-kop">
+                    <span className="mono">{h.zendingId}</span>
+                    <Icoon naam="pijl" maat={12} />
+                    <b>{h.voorstel.chauffeur}</b>
+                    <span className="mono av-rit">{h.voorstel.ritId}</span>
+                  </div>
+                  {zending && (
+                    <div className="av-route">
+                      {zending.van.plaats} → {zending.naar.plaats} · {zending.omschrijving}
+                    </div>
+                  )}
+                  <div className="herstel-reden">
+                    <Icoon naam="waarschuwing" maat={11} />{" "}
+                    {t(`operatie.herstelReden.${h.reden}`, { chauffeur: h.chauffeur, rit: h.ritId })}
+                  </div>
+                  <div className="av-tijden">
+                    {t("operatie.herstelNaar", { tijd: tijd(h.voorstel.aankomstIso) })}
+                  </div>
+                  <ul className="av-motivatie">
+                    {h.voorstel.motivatie.map((regel, i) => <li key={i}>{regel}</li>)}
+                  </ul>
+                  <button className="btn primary knop-met-icoon" onClick={() => onHerstel(h)}>
+                    <Icoon naam="check" maat={13} /> {t("operatie.herstelUitvoeren")}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div className="ph-card">
+          <div className="operatie-kop">
+            <h3 className="zij-kop">{t("operatie.communicatie")}</h3>
+            <span className="melding-teller">{state.berichten.length}</span>
+          </div>
+          <p className="uren-noot">{t("operatie.communicatieNoot")}</p>
+          {openBerichten.length > 0 && (
+            <ul className="herstel-lijst">
+              {openBerichten.map((voorstel) => (
+                <li key={voorstel.zendingId} className="herstel-voorstel">
+                  <div className="herstel-kop">
+                    <b>{voorstel.klant}</b>
+                    <span className="mono av-rit">{voorstel.zendingId}</span>
+                  </div>
+                  <div className="bericht-tekst">{voorstel.tekst}</div>
+                  <button className="btn primary knop-met-icoon" onClick={() => onVerstuurBericht(voorstel)}>
+                    <Icoon naam="pijl" maat={13} /> {t("operatie.verstuur")}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {state.berichten.length === 0 && openBerichten.length === 0 && (
+            <p className="kaart-kies">{t("operatie.geenBerichten")}</p>
+          )}
+          <ul className="bericht-lijst">
+            {[...state.berichten].reverse().map((bericht) => (
+              <li key={bericht.id} className="bericht">
+                <div className="herstel-kop">
+                  <b>{bericht.klant}</b>
+                  <span className="mono av-rit">{bericht.zendingId}</span>
+                </div>
+                <div className="bericht-tekst">{bericht.tekst}</div>
+                <div className="melding-meta">
+                  <span className="melding-bron">
+                    {t(`operatie.berichtWie.${bericht.wie}`)} · {tijd(bericht.tijdstip)}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         <div className="ph-card">
           <div className="operatie-kop">
             <h3 className="zij-kop">{t("operatie.meldingen")}</h3>

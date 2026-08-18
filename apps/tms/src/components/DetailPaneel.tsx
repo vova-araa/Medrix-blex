@@ -1,6 +1,7 @@
 import { formatteerKenteken, type TaakEventType } from "@sharzi/domain";
 import { useState, type ChangeEvent } from "react";
 import { adresSleutel, type AdresFoto } from "../data/bron";
+import { leertijdVanAdres } from "../data/leertijden";
 import { adresInfoVan, eventsVanTaak, statusVanTaak, zendingVan, type AppState } from "../data/state";
 import { statusLabel, t } from "../i18n";
 import { tijd, venster } from "../utils";
@@ -25,6 +26,7 @@ export function DetailPaneel({
   const s = statusVanTaak(state, taakId);
   const events = [...eventsVanTaak(state, taakId)].reverse();
   const zending = zendingVan(state, taak);
+  const leertijd = leertijdVanAdres(state, taak.adres);
 
   const volgende: TaakEventType[] = ({
     gepland: ["vertrokken"],
@@ -68,6 +70,12 @@ export function DetailPaneel({
               {formatteerKenteken({ landcode: rit.voertuig.landcode, kenteken: rit.voertuig.kentekenGenormaliseerd })}
               {" · "}{rit.voertuig.omschrijving}
             </dd>
+            {leertijd && (
+              <>
+                <dt>{t("detail.leertijd")}</dt>
+                <dd>{t("detail.leertijdWaarde", { minuten: leertijd.gemiddeldeMinuten, metingen: leertijd.metingen })}</dd>
+              </>
+            )}
           </dl>
 
           <AdresInfoBewerker

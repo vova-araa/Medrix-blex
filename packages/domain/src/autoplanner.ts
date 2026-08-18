@@ -35,6 +35,11 @@ export interface PlanOpties {
   reistijdMinuten: (van: string, naar: string) => number;
   /** Vaste handelingstijd per laad-/losstop, in minuten. */
   laadLosMinuten?: number;
+  /**
+   * Geleerde handelingstijd per plaats (uit de event-log), in minuten.
+   * Wint van laadLosMinuten; geef undefined terug als er geen metingen zijn.
+   */
+  laadLosMinutenVoorPlaats?: (plaats: string) => number | undefined;
 }
 
 export type OnplanbaarReden =
@@ -84,7 +89,9 @@ export function automatischPlan(
   kandidaten: readonly PlanKandidaat[],
   opties: PlanOpties
 ): PlanResultaat {
-  const laadLos = (opties.laadLosMinuten ?? 30) * 60_000;
+  const standaardLaadLos = opties.laadLosMinuten ?? 30;
+  const handelMs = (plaats: string) =>
+    (opties.laadLosMinutenVoorPlaats?.(plaats) ?? standaardLaadLos) * 60_000;
   const nuMs = Date.parse(opties.nuIso);
 
   const standen: KandidaatStand[] = kandidaten.map((k) => ({
@@ -132,8 +139,8 @@ export function automatischPlan(
       const pauzeMs = pauze ? RIJTIJD_REGELS.pauzeNaBlokMinuten * 60_000 : 0;
 
       const vertrekMs = stand.beschikbaarMs;
-      let aankomstLaadMs = vertrekMs + aanrij * 60_000 + pauzeMs;
-      let aankomstMs = aankomstLaadMs + laadLos + beladen * 60_000;
+      const aankomstLaadMs = vertrekMs + aanrij * 60_000 + pauzeMs;
+      let aankomstMs = aankomstLaadMs + handelMs(opdracht.vanPlaats) + beladen * 60_000;
       if (opdracht.vensterVan) {
         const vroegst = Date.parse(opdracht.vensterVan);
         if (aankomstMs < vroegst) aankomstMs = vroegst; // wachten tot het venster opent
@@ -163,7 +170,7 @@ export function automatischPlan(
     // Kandidaat bijwerken zodat het volgende voorstel op de nieuwe stand rekent.
     const stand = beste.stand;
     stand.plaats = opdracht.naarPlaats;
-    stand.beschikbaarMs = beste.aankomstMs + laadLos;
+    stand.beschikbaarMs = beste.aankomstMs + handelMs(opdracht.naarPlaats);
     stand.restLm = Math.round((stand.restLm - opdracht.laadmeters) * 10) / 10;
     stand.dagResterend -= beste.extraRij;
     stand.weekResterend -= beste.extraRij;
@@ -183,9 +190,20 @@ export function automatischPlan(
         `dichtstbij: +${beste.extraRij} min rijtijd`,
         `rijtijd na inplannen: ${stand.dagResterend} min dag / ${Math.round(stand.weekResterend / 60)} u week over`,
         ...(beste.pauze ? ["verplichte pauze van 45 min ingecalculeerd"] : []),
+        ...geleerdeTijden(opties, opdracht),
       ],
     });
   }
 
   return { voorstellen, onplanbaar };
+}
+
+function geleerdeTijden(opties: PlanOpties, opdracht: PlanOpdracht): string[] {
+  const regels: string[] = [];
+  if (!opties.laadLosMinutenVoorPlaats) return regels;
+  const laad = opties.laadLosMinutenVoorPlaats(opdracht.vanPlaats);
+  const los = opties.laadLosMinutenVoorPlaats(opdracht.naarPlaats);
+  if (laad !== undefined) regels.push(`geleerde laadtijd ${opdracht.vanPlaats}: ${laad} min`);
+  if (los !== undefined) regels.push(`geleerde lostijd ${opdracht.naarPlaats}: ${los} min`);
+  return regels;
 }

@@ -26,7 +26,10 @@ import { PortaalView } from "./components/PortaalView";
 import { UrenView } from "./components/UrenView";
 import { WagenparkView } from "./components/WagenparkView";
 import type { AdresFoto, CmrSoort, Klant, Tarief } from "./data/bron";
+import { benodigdeBerichten, type BerichtVoorstel } from "./data/communicatie";
+import { herstelVoorstellen, type HerstelVoorstel } from "./data/herstel";
 import { meldingen } from "./data/meldingen";
+import { planKandidaten, planOpties } from "./data/planner";
 import { MockDataBron } from "./data/mock";
 import { MODULES, type ModuleId } from "./data/modules";
 import {
@@ -37,6 +40,8 @@ import {
   rijtijdVan,
   statusVanTaak,
   takenVanRit,
+  type BeleidActie,
+  type BeleidStand,
 } from "./data/state";
 import { geschatteRijMinuten } from "./kaart/simulatie";
 import { statusLabel, t } from "./i18n";
@@ -76,6 +81,26 @@ export default function App() {
     const timer = window.setInterval(() => setSimMs((ms) => ms + 60_000), 2000);
     return () => window.clearInterval(timer);
   }, []);
+
+  // Stap 2/3: staat het beleid voor klantberichten op "automatisch", dan
+  // verstuurt de automaat ETA-berichten zodra een levering uitloopt. De
+  // 10-minutendrempel in benodigdeBerichten voorkomt herhaalberichten.
+  useEffect(() => {
+    if (state.beleid.klantbericht !== "automatisch") return;
+    for (const voorstel of benodigdeBerichten(state, nu)) {
+      dispatch({ type: "klantbericht", bericht: {
+        ...voorstel, id: crypto.randomUUID(), tijdstip: nu, wie: "automaat",
+      }});
+    }
+  }, [state, nu]);
+
+  // Staat herplannen op "automatisch", dan voert de automaat het eerste
+  // herstelvoorstel direct uit; de rest volgt vanzelf op de volgende tik.
+  useEffect(() => {
+    if (state.beleid.herplannen !== "automatisch") return;
+    const [eerste] = herstelVoorstellen(state, nu);
+    if (eerste) voerHerstelUit(eerste);
+  }, [state, nu]);
 
   function meld(bericht: string) {
     setToast(bericht);
@@ -312,26 +337,55 @@ export default function App() {
         vensterTot: zending.naar.tijdvenster?.tot,
       };
     });
-    const kandidaten = state.ritten
-      .filter((rit) => rit.chauffeur)
-      .map((rit) => {
-        const actief = actieveTakenVanRit(state, rit.id);
-        const laatste = actief.at(-1);
-        return {
-          ritId: rit.id,
-          chauffeur: rit.chauffeur,
-          huidigePlaats: laatste?.adres.plaats ?? "Venlo",
-          beschikbaarVanafIso: laatste
-            ? new Date(Math.max(Date.parse(laatste.geplandTot), simMs)).toISOString()
-            : nu,
-          resterendeLaadmeters:
-            Math.round((rit.voertuig.capaciteitLaadmeters - gebruikteLaadmeters(state, rit.id)) * 10) / 10,
-          rijtijd: rijtijdVan(state, rit.chauffeur, nu),
-        };
-      });
     setAutoPlanResultaat(
-      automatischPlan(opdrachten, kandidaten, { nuIso: nu, reistijdMinuten: geschatteRijMinuten })
+      automatischPlan(opdrachten, planKandidaten(state, nu), planOpties(state, nu))
     );
+  }
+
+  // Herstel-lus (stap 1): verplaats een nog niet gestarte zending van een
+  // vastgelopen rit naar de doelrit uit het voorstel. De oude taken krijgen
+  // een vervallen-event (append-only); de nieuwe taken zet de automaat neer.
+  function voerHerstelUit(herstel: HerstelVoorstel) {
+    const zending = state.zendingen[herstel.zendingId];
+    if (!zending) return;
+    for (const taakId of herstel.taakIds) {
+      dispatch({ type: "registreer", event: {
+        id: crypto.randomUUID(), tenantId: TENANT, taakId,
+        type: "vervallen", tijdstip: nu, wie: "automaat", apparaat: "tms-web",
+      }});
+    }
+    const doelRitId = herstel.voorstel.ritId;
+    const vanPlaats = actieveTakenVanRit(state, doelRitId).at(-1)?.adres.plaats ?? "Venlo";
+    const aanrij = geschatteRijMinuten(vanPlaats, zending.van.plaats);
+    const laadVanMs = Date.parse(herstel.voorstel.vertrekIso) + aanrij * 60_000;
+    const aankomstMs = Date.parse(herstel.voorstel.aankomstIso);
+    const nieuweTaak = (soort: Taak["soort"], adres: Zending["van"], vanMs: number): Taak => ({
+      id: crypto.randomUUID(), tenantId: TENANT, ritId: doelRitId, soort, adres,
+      zendingId: zending.id,
+      geplandVan: new Date(vanMs).toISOString(),
+      geplandTot: new Date(vanMs + 30 * 60_000).toISOString(),
+    });
+    for (const taak of [
+      nieuweTaak("laden", zending.van, laadVanMs),
+      nieuweTaak("lossen", zending.naar, aankomstMs),
+    ]) {
+      dispatch({ type: "plan_zending", zendingId: zending.id, taak, event: {
+        id: crypto.randomUUID(), tenantId: TENANT, taakId: taak.id,
+        type: "taak_aangemaakt", tijdstip: nu, wie: "automaat", apparaat: "tms-web",
+      }});
+    }
+    meld(t("toast.herstel", { zending: zending.id, chauffeur: herstel.voorstel.chauffeur }));
+  }
+
+  function zetBeleid(actie: BeleidActie, stand: BeleidStand) {
+    dispatch({ type: "zet_beleid", actie, stand });
+  }
+
+  function verstuurBericht(voorstel: BerichtVoorstel) {
+    dispatch({ type: "klantbericht", bericht: {
+      ...voorstel, id: crypto.randomUUID(), tijdstip: nu, wie: "planner",
+    }});
+    meld(t("toast.bericht", { klant: voorstel.klant }));
   }
 
   function accepteerAutoPlan(voorstellen: PlanVoorstel[]) {
@@ -465,7 +519,15 @@ export default function App() {
           onAutoPlan={startAutoPlan}
         />
       )}
-      {rol === "bedrijf" && effectieveTab === "operatie" && <OperatieView state={state} nu={nu} />}
+      {rol === "bedrijf" && effectieveTab === "operatie" && (
+        <OperatieView
+          state={state}
+          nu={nu}
+          onHerstel={voerHerstelUit}
+          onZetBeleid={zetBeleid}
+          onVerstuurBericht={verstuurBericht}
+        />
+      )}
       {rol === "bedrijf" && effectieveTab === "klanten" && (
         <KlantenView state={state} onNieuweKlant={nieuweKlant} />
       )}
