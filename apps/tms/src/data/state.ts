@@ -71,7 +71,8 @@ export type Actie =
   | { type: "mail_nieuw"; thread: MailThread }
   | { type: "mail_bericht"; threadId: string; bericht: MailBericht }
   | { type: "mail_gelezen"; threadId: string }
-  | { type: "koppeling_replay"; logId: string; regel: KoppelingLogRegel };
+  | { type: "koppeling_replay"; logId: string; regel: KoppelingLogRegel }
+  | { type: "koppeling_log"; regel: KoppelingLogRegel };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
@@ -188,6 +189,8 @@ export function reducer(state: AppState, actie: Actie): AppState {
           thread.id === actie.threadId ? { ...thread, ongelezen: false } : thread
         ),
       };
+    case "koppeling_log":
+      return { ...state, koppelingLog: [...state.koppelingLog, actie.regel] };
     case "koppeling_replay":
       return {
         ...state,

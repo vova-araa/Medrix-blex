@@ -14,10 +14,11 @@ interface Props {
   onSimuleer: (taakId: string, type: TaakEventType) => void;
   onZetInstructies: (sleutel: string, instructies: string) => void;
   onVoegFotoToe: (sleutel: string, foto: AdresFoto) => void;
+  onMailAdres: (naam: string, email: string, zendingId?: string) => void;
 }
 
 export function DetailPaneel({
-  state, taakId, onSluit, onSimuleer, onZetInstructies, onVoegFotoToe,
+  state, taakId, onSluit, onSimuleer, onZetInstructies, onVoegFotoToe, onMailAdres,
 }: Props) {
   const taak = state.taken.find((tk) => tk.id === taakId);
   const rit = taak && state.ritten.find((r) => r.id === taak.ritId);
@@ -77,6 +78,17 @@ export function DetailPaneel({
               </>
             )}
           </dl>
+
+          <button
+            className="btn knop-met-icoon detail-mail"
+            onClick={() => onMailAdres(
+              taak.adres.naam,
+              state.klanten[taak.adres.naam]?.email ?? "",
+              taak.zendingId
+            )}
+          >
+            <Icoon naam="mail" maat={13} /> {t("detail.mailOntvanger")}
+          </button>
 
           <AdresInfoBewerker
             state={state}

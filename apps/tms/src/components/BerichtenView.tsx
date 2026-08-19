@@ -143,9 +143,14 @@ function NieuwBericht({ state, concept, onVerstuur }: {
   onVerstuur: (tegenpartij: string, email: string, onderwerp: string, tekst: string, zendingId?: string) => void;
 }) {
   const klantNamen = Object.keys(state.klanten);
-  const [keuze, setKeuze] = useState(concept?.tegenpartij ?? klantNamen[0] ?? "");
-  const [anderNaam, setAnderNaam] = useState("");
-  const [anderEmail, setAnderEmail] = useState("");
+  // Een ontvanger die geen bestaande klant is (bv. een losadres uit een stop)
+  // komt binnen als vrij adres, met naam en e-mail alvast ingevuld.
+  const conceptIsKlant = concept ? klantNamen.includes(concept.tegenpartij) : false;
+  const [keuze, setKeuze] = useState(
+    concept ? (conceptIsKlant ? concept.tegenpartij : "__ander__") : klantNamen[0] ?? ""
+  );
+  const [anderNaam, setAnderNaam] = useState(conceptIsKlant ? "" : concept?.tegenpartij ?? "");
+  const [anderEmail, setAnderEmail] = useState(conceptIsKlant ? "" : concept?.email ?? "");
   const [onderwerp, setOnderwerp] = useState("");
   const [tekst, setTekst] = useState("");
 

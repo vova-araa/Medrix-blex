@@ -91,11 +91,7 @@ export default function App() {
   // 10-minutendrempel in benodigdeBerichten voorkomt herhaalberichten.
   useEffect(() => {
     if (state.beleid.klantbericht !== "automatisch") return;
-    for (const voorstel of benodigdeBerichten(state, nu)) {
-      dispatch({ type: "klantbericht", bericht: {
-        ...voorstel, id: crypto.randomUUID(), tijdstip: nu, wie: "automaat",
-      }});
-    }
+    for (const voorstel of benodigdeBerichten(state, nu)) leverKlantbericht(voorstel, "automaat");
   }, [state, nu]);
 
   // Staat herplannen op "automatisch", dan voert de automaat het eerste
@@ -412,6 +408,7 @@ export default function App() {
       berichten: [{ id: crypto.randomUUID(), richting: "uit", tekst, tijdstip: nu, wie: t("mail.afzender") }],
     }});
     setMailConcept(null);
+    logMail(t("koppeling.mailUit", { aan: tegenpartij }));
     meld(t("toast.mail", { aan: tegenpartij }));
   }
 
@@ -419,11 +416,20 @@ export default function App() {
     dispatch({ type: "mail_bericht", threadId, bericht: {
       id: crypto.randomUUID(), richting: "uit", tekst, tijdstip: nu, wie: t("mail.afzender"),
     }});
+    const thread = state.mailThreads.find((mt) => mt.id === threadId);
+    if (thread) logMail(t("koppeling.mailUit", { aan: thread.tegenpartij }));
     meld(t("toast.mailAntwoord"));
   }
 
   function mailNaarKlant(klant: Klant) {
     setMailConcept({ tegenpartij: klant.naam, email: klant.email });
+    setTab("berichten");
+  }
+
+  /** Mailen naar de ontvanger op een stop — adres komt uit de taak. */
+  function mailNaarAdres(naam: string, email: string, zendingId?: string) {
+    setMailConcept({ tegenpartij: naam, email, zendingId });
+    setGeselecteerdeTaak(null);
     setTab("berichten");
   }
 
@@ -447,10 +453,42 @@ export default function App() {
   }
 
   function verstuurBericht(voorstel: BerichtVoorstel) {
-    dispatch({ type: "klantbericht", bericht: {
-      ...voorstel, id: crypto.randomUUID(), tijdstip: nu, wie: "planner",
-    }});
+    leverKlantbericht(voorstel, "planner");
     meld(t("toast.bericht", { klant: voorstel.klant }));
+  }
+
+  // Eén inbox: een ETA-bericht wordt gelogd voor de driftbewaking, afgeleverd
+  // als mail in het gesprek met die klant, en zichtbaar in het koppelingslog.
+  function leverKlantbericht(voorstel: BerichtVoorstel, wie: "automaat" | "planner") {
+    dispatch({ type: "klantbericht", bericht: {
+      ...voorstel, id: crypto.randomUUID(), tijdstip: nu, wie,
+    }});
+    const afzender = wie === "automaat" ? t("mail.afzenderAutomaat") : t("mail.afzender");
+    const bestaand = state.mailThreads.find(
+      (thread) => thread.zendingId === voorstel.zendingId && thread.tegenpartij === voorstel.klant
+    );
+    if (bestaand) {
+      dispatch({ type: "mail_bericht", threadId: bestaand.id, bericht: {
+        id: crypto.randomUUID(), richting: "uit", tekst: voorstel.tekst, tijdstip: nu, wie: afzender,
+      }});
+    } else {
+      dispatch({ type: "mail_nieuw", thread: {
+        id: crypto.randomUUID(),
+        tegenpartij: voorstel.klant,
+        email: state.klanten[voorstel.klant]?.email ?? "",
+        onderwerp: t("mail.etaOnderwerp", { zending: voorstel.zendingId }),
+        zendingId: voorstel.zendingId,
+        berichten: [{ id: crypto.randomUUID(), richting: "uit", tekst: voorstel.tekst, tijdstip: nu, wie: afzender }],
+      }});
+    }
+    logMail(t("koppeling.mailUit", { aan: voorstel.klant }));
+  }
+
+  function logMail(omschrijving: string) {
+    dispatch({ type: "koppeling_log", regel: {
+      id: crypto.randomUUID(), koppelingId: "email", richting: "uit",
+      omschrijving, tijdstip: nu, status: "geslaagd",
+    }});
   }
 
   function accepteerAutoPlan(voorstellen: PlanVoorstel[]) {
@@ -654,6 +692,7 @@ export default function App() {
             dispatch({ type: "adres_instructies", sleutel, instructies });
             meld(t("toast.adresOpgeslagen"));
           }}
+          onMailAdres={mailNaarAdres}
           onVoegFotoToe={(sleutel, foto: AdresFoto) => {
             dispatch({ type: "adres_foto", sleutel, foto });
             meld(t("toast.fotoToegevoegd"));
