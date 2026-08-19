@@ -9,6 +9,8 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { Assistent } from "./components/Assistent";
 import { AutoPlanView } from "./components/AutoPlanView";
 import { BedrijfView } from "./components/BedrijfView";
+import { BerichtenView, type MailConcept } from "./components/BerichtenView";
+import { KoppelingenView } from "./components/KoppelingenView";
 import { ChauffeurView } from "./components/ChauffeurView";
 import { DashboardView } from "./components/DashboardView";
 import { DetailPaneel } from "./components/DetailPaneel";
@@ -28,6 +30,7 @@ import { WagenparkView } from "./components/WagenparkView";
 import type { AdresFoto, CmrSoort, Klant, Tarief } from "./data/bron";
 import { benodigdeBerichten, type BerichtVoorstel } from "./data/communicatie";
 import { herstelVoorstellen, type HerstelVoorstel } from "./data/herstel";
+import type { KoppelingDef } from "./data/koppelingen";
 import { meldingen } from "./data/meldingen";
 import { planKandidaten, planOpties } from "./data/planner";
 import { MockDataBron } from "./data/mock";
@@ -64,6 +67,7 @@ export default function App() {
   const [geselecteerdeTaak, setGeselecteerdeTaak] = useState<string | null>(null);
   const [orderFormOpen, setOrderFormOpen] = useState(false);
   const [autoPlanResultaat, setAutoPlanResultaat] = useState<PlanResultaat | null>(null);
+  const [mailConcept, setMailConcept] = useState<MailConcept | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [simMs, setSimMs] = useState(SIM_START);
   const toastTimer = useRef<number | undefined>(undefined);
@@ -101,6 +105,24 @@ export default function App() {
     const [eerste] = herstelVoorstellen(state, nu);
     if (eerste) voerHerstelUit(eerste);
   }, [state, nu]);
+
+  // Demo van inkomende mail: op een verstuurd bericht volgt na een paar
+  // gesimuleerde minuten een antwoord van de tegenpartij. Met echte data
+  // komt dit binnen via de e-mailkoppeling in plaats van deze simulatie.
+  useEffect(() => {
+    for (const thread of state.mailThreads) {
+      const laatste = thread.berichten.at(-1);
+      if (!laatste || laatste.richting !== "uit") continue;
+      if (simMs - Date.parse(laatste.tijdstip) < 3 * 60_000) continue;
+      dispatch({ type: "mail_bericht", threadId: thread.id, bericht: {
+        id: crypto.randomUUID(),
+        richting: "in",
+        tekst: t("mail.demoAntwoord"),
+        tijdstip: nu,
+        wie: state.klanten[thread.tegenpartij]?.contactpersoon ?? thread.tegenpartij,
+      }});
+    }
+  }, [state, nu, simMs]);
 
   function meld(bericht: string) {
     setToast(bericht);
@@ -381,6 +403,49 @@ export default function App() {
     dispatch({ type: "zet_beleid", actie, stand });
   }
 
+  // ── Berichtencentrum ──────────────────────────────────────────────────────
+  function verstuurNieuweMail(
+    tegenpartij: string, email: string, onderwerp: string, tekst: string, zendingId?: string
+  ) {
+    dispatch({ type: "mail_nieuw", thread: {
+      id: crypto.randomUUID(), tegenpartij, email, onderwerp, zendingId,
+      berichten: [{ id: crypto.randomUUID(), richting: "uit", tekst, tijdstip: nu, wie: t("mail.afzender") }],
+    }});
+    setMailConcept(null);
+    meld(t("toast.mail", { aan: tegenpartij }));
+  }
+
+  function verstuurMailAntwoord(threadId: string, tekst: string) {
+    dispatch({ type: "mail_bericht", threadId, bericht: {
+      id: crypto.randomUUID(), richting: "uit", tekst, tijdstip: nu, wie: t("mail.afzender"),
+    }});
+    meld(t("toast.mailAntwoord"));
+  }
+
+  function mailNaarKlant(klant: Klant) {
+    setMailConcept({ tegenpartij: klant.naam, email: klant.email });
+    setTab("berichten");
+  }
+
+  // ── Koppelingen-hub ───────────────────────────────────────────────────────
+  function replayKoppeling(logId: string) {
+    const origineel = state.koppelingLog.find((regel) => regel.id === logId);
+    if (!origineel) return;
+    dispatch({ type: "koppeling_replay", logId, regel: {
+      id: crypto.randomUUID(),
+      koppelingId: origineel.koppelingId,
+      richting: origineel.richting,
+      omschrijving: t("koppeling.replayRegel", { omschrijving: origineel.omschrijving }),
+      tijdstip: nu,
+      status: "geslaagd",
+    }});
+    meld(t("toast.replay"));
+  }
+
+  function vraagKoppelingAan(koppeling: KoppelingDef) {
+    meld(t("toast.koppelingAanvraag", { naam: koppeling.naam }));
+  }
+
   function verstuurBericht(voorstel: BerichtVoorstel) {
     dispatch({ type: "klantbericht", bericht: {
       ...voorstel, id: crypto.randomUUID(), tijdstip: nu, wie: "planner",
@@ -529,7 +594,20 @@ export default function App() {
         />
       )}
       {rol === "bedrijf" && effectieveTab === "klanten" && (
-        <KlantenView state={state} onNieuweKlant={nieuweKlant} />
+        <KlantenView state={state} onNieuweKlant={nieuweKlant} onMail={mailNaarKlant} />
+      )}
+      {rol === "bedrijf" && effectieveTab === "berichten" && (
+        <BerichtenView
+          key={mailConcept ? `c-${mailConcept.tegenpartij}` : "std"}
+          state={state}
+          concept={mailConcept}
+          onNieuwThread={verstuurNieuweMail}
+          onAntwoord={verstuurMailAntwoord}
+          onGelezen={(threadId) => dispatch({ type: "mail_gelezen", threadId })}
+        />
+      )}
+      {rol === "bedrijf" && effectieveTab === "koppelingen" && (
+        <KoppelingenView state={state} onReplay={replayKoppeling} onAanvragen={vraagKoppelingAan} />
       )}
       {rol === "bedrijf" && effectieveTab === "kaart" && <KaartView state={state} nu={nu} />}
       {rol === "bedrijf" && effectieveTab === "uren" && <UrenView state={state} nu={nu} />}

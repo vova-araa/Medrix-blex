@@ -980,6 +980,63 @@
 .av-venster { color: var(--ok); font-weight: 600; }
 .av-pauze { display: inline-flex; align-items: center; gap: 4px; color: var(--warn); font-weight: 600; }
 .av-motivatie { margin: 6px 0 0; padding-left: 16px; font-size: 11.5px; color: var(--muted); }
+/* ── Berichtencentrum ─────────────────────────────────────────────────── */
+.berichten-main {
+  display: grid; grid-template-columns: 340px 1fr; gap: 14px;
+  align-items: start;
+}
+.berichten-lijst { min-width: 0; }
+.thread-lijst { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.thread {
+  width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 10px;
+  background: transparent; color: inherit; font: inherit; padding: 10px 12px; cursor: pointer;
+}
+.thread.actief { border-color: var(--accent); background: var(--accent-soft); }
+.thread-kop { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.thread-tijd { margin-left: auto; font-size: 11px; color: var(--faint); }
+.thread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; }
+.thread-onderwerp { font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+.thread-preview {
+  font-size: 11.5px; color: var(--faint); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.berichten-gesprek { display: flex; flex-direction: column; min-height: 480px; }
+.gesprek-kop h3 { margin: 0 0 2px; font-size: 15px; }
+.gesprek-berichten { flex: 1; display: grid; gap: 10px; margin: 14px 0; align-content: start; }
+.mail-bubbel { max-width: 72%; border-radius: 12px; padding: 10px 13px; font-size: 13px; }
+.mail-bubbel.r-uit { justify-self: end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.mail-bubbel.r-in { justify-self: start; background: var(--line); border-bottom-left-radius: 4px; }
+.mail-meta { font-size: 10.5px; opacity: 0.75; margin-top: 5px; }
+.gesprek-antwoord { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.gesprek-antwoord textarea, .mail-form textarea {
+  min-height: 64px; resize: vertical; border: 1px solid var(--line); border-radius: 8px;
+  background: transparent; color: inherit; font: inherit; font-size: 13px; padding: 8px 10px;
+}
+.mail-form { display: grid; gap: 10px; margin-top: 12px; max-width: 560px; }
+.mail-form label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; }
+.mail-form input, .mail-form select {
+  border: 1px solid var(--line); border-radius: 8px; background: transparent;
+  color: inherit; font: inherit; font-size: 13px; padding: 7px 10px;
+}
+.mail-ander { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mail-form .btn { justify-self: start; }
+
+/* ── Koppelingen-hub ──────────────────────────────────────────────────── */
+/* Ruimte onderaan zodat de zwevende assistent-knop geen kaartknop afdekt. */
+.koppelingen-main { display: grid; gap: 14px; padding-bottom: 64px; }
+.koppeling-kaarten { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-top: 10px; }
+.koppeling-kaart { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+.koppeling-kaart.s-fout { border-color: var(--crit); }
+.koppeling-kop { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.koppeling-kop .status-chip { margin-left: auto; }
+.koppeling-meta { font-size: 11.5px; color: var(--muted); }
+.koppeling-kaart .btn { justify-self: start; margin-top: 4px; }
+.status-chip.k-actief { background: var(--ok-soft); color: var(--ok); }
+.status-chip.k-fout { background: var(--crit-soft); color: var(--crit); }
+.status-chip.k-hersteld, .status-chip.k-beschikbaar { background: var(--line); color: var(--muted); }
+.log-fout td { background: var(--crit-soft); }
+.log-foutmelding { font-size: 11px; color: var(--crit); margin-top: 2px; }
+
 .beleid-lijst { display: grid; gap: 8px; margin-top: 10px; }
 .beleid-rij { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .beleid-label { font-size: 12.5px; font-weight: 600; }

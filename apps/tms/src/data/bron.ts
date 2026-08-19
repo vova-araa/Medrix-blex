@@ -75,6 +75,41 @@ export interface WagenparkItem {
   kostenPerMaandCenten: number;
 }
 
+/** Eén mail in een gesprek met een opdrachtgever of ontvanger. */
+export interface MailBericht {
+  id: string;
+  richting: "in" | "uit";
+  tekst: string;
+  tijdstip: string;
+  /** Afzender: contactpersoon van de tegenpartij, plannernaam of "automaat". */
+  wie: string;
+}
+
+export interface MailThread {
+  id: string;
+  tegenpartij: string;
+  email: string;
+  onderwerp: string;
+  zendingId?: string;
+  berichten: MailBericht[];
+  ongelezen?: boolean;
+}
+
+/** Status van een externe koppeling zoals die in de hub getoond wordt. */
+export type KoppelingStatus = "actief" | "fout" | "beschikbaar";
+
+export interface KoppelingLogRegel {
+  id: string;
+  koppelingId: string;
+  richting: "in" | "uit";
+  omschrijving: string;
+  tijdstip: string;
+  status: "geslaagd" | "gefaald";
+  foutmelding?: string;
+  /** Gezet zodra een gefaald bericht opnieuw is afgespeeld. */
+  opnieuwAfgespeeld?: boolean;
+}
+
 export interface DagSnapshot {
   ritten: Rit[];
   taken: Taak[];
@@ -97,6 +132,8 @@ export interface DagSnapshot {
   weekRijMinuten: Record<string, number>;
   /** Tijdstip van de laatste wagenpark-sync uit de Truck & Trailer-koppeling. */
   wagenparkSync: string;
+  mailThreads: MailThread[];
+  koppelingLog: KoppelingLogRegel[];
 }
 
 export interface DataBron {

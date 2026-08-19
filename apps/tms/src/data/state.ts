@@ -18,7 +18,8 @@ import {
 } from "@sharzi/domain";
 import {
   adresSleutel,
-  type AdresFoto, type AdresInfo, type CmrRegistratie, type DagSnapshot, type Klant, type Tarief,
+  type AdresFoto, type AdresInfo, type CmrRegistratie, type DagSnapshot, type Klant,
+  type KoppelingLogRegel, type MailBericht, type MailThread, type Tarief,
 } from "./bron";
 import { STANDAARD_ACTIEF, type ModuleId } from "./modules";
 
@@ -66,13 +67,17 @@ export type Actie =
   | { type: "zet_trailer"; ritId: string; kenteken: string }
   | { type: "rit_km"; ritId: string; veld: "start" | "eind"; waarde: number }
   | { type: "zet_beleid"; actie: BeleidActie; stand: BeleidStand }
-  | { type: "klantbericht"; bericht: KlantBericht };
+  | { type: "klantbericht"; bericht: KlantBericht }
+  | { type: "mail_nieuw"; thread: MailThread }
+  | { type: "mail_bericht"; threadId: string; bericht: MailBericht }
+  | { type: "mail_gelezen"; threadId: string }
+  | { type: "koppeling_replay"; logId: string; regel: KoppelingLogRegel };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
   adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
   klanten: {}, dockEvents: [], trailers: [], trailerVanRit: {}, cmrs: [], ritKm: {},
-  weekRijMinuten: {}, wagenparkSync: "",
+  weekRijMinuten: {}, wagenparkSync: "", mailThreads: [], koppelingLog: [],
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
   beleid: { klantbericht: "automatisch", herplannen: "voorstel", wachturen: "automatisch" },
@@ -161,6 +166,38 @@ export function reducer(state: AppState, actie: Actie): AppState {
       return { ...state, beleid: { ...state.beleid, [actie.actie]: actie.stand } };
     case "klantbericht":
       return { ...state, berichten: [...state.berichten, actie.bericht] };
+    case "mail_nieuw":
+      return { ...state, mailThreads: [...state.mailThreads, actie.thread] };
+    case "mail_bericht":
+      return {
+        ...state,
+        mailThreads: state.mailThreads.map((thread) =>
+          thread.id === actie.threadId
+            ? {
+                ...thread,
+                berichten: [...thread.berichten, actie.bericht],
+                ongelezen: actie.bericht.richting === "in" ? true : thread.ongelezen,
+              }
+            : thread
+        ),
+      };
+    case "mail_gelezen":
+      return {
+        ...state,
+        mailThreads: state.mailThreads.map((thread) =>
+          thread.id === actie.threadId ? { ...thread, ongelezen: false } : thread
+        ),
+      };
+    case "koppeling_replay":
+      return {
+        ...state,
+        koppelingLog: [
+          ...state.koppelingLog.map((regel) =>
+            regel.id === actie.logId ? { ...regel, opnieuwAfgespeeld: true } : regel
+          ),
+          actie.regel,
+        ],
+      };
   }
 }
 

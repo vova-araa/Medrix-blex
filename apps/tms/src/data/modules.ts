@@ -20,7 +20,9 @@ export type ModuleId =
   | "dock"
   | "edi"
   | "documenten"
-  | "boekhouding";
+  | "boekhouding"
+  | "berichten"
+  | "koppelingen";
 
 export interface ModuleDef {
   id: ModuleId;
@@ -49,6 +51,8 @@ export const MODULES: ModuleDef[] = [
   { id: "edi", icoon: "edi", inOntwikkeling: true },
   { id: "documenten", icoon: "document", tab: true },
   { id: "boekhouding", icoon: "boek", inOntwikkeling: true },
+  { id: "berichten", icoon: "mail", tab: true },
+  { id: "koppelingen", icoon: "koppeling", kern: true, tab: true },
 ];
 
 export const STANDAARD_ACTIEF: ModuleId[] = MODULES.filter(

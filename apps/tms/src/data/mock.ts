@@ -3,7 +3,10 @@ import type {
   WerktijdEvent, WerktijdEventType, Zending,
 } from "@sharzi/domain";
 import { FixtureTruckAndTrailerClient } from "@sharzi/integratie-truck-and-trailer";
-import type { AdresInfo, CmrRegistratie, DagSnapshot, DataBron, Klant, RitKm, Tarief } from "./bron";
+import type {
+  AdresInfo, CmrRegistratie, DagSnapshot, DataBron, Klant, KoppelingLogRegel,
+  MailThread, RitKm, Tarief,
+} from "./bron";
 
 // Demodag voor Blex: 2026-08-07. Alle tijden staan in UTC (CLAUDE.md §5.3);
 // Europe/Amsterdam is die dag UTC+2, dus 06:30 lokaal = 04:30Z.
@@ -346,6 +349,43 @@ const weekRijMinuten: Record<string, number> = {
   "S. de Boer": 55 * 60,
 };
 
+// Berichtencentrum: correspondentie met opdrachtgevers en ontvangers hoort
+// bij de zending in het platform, niet in een losse mailbox.
+const mailThreads: MailThread[] = [
+  {
+    id: "MT-001",
+    tegenpartij: "Jumbo Supermarkten BV",
+    email: "transport@jumbo.example",
+    onderwerp: "Retour europallets vandaag (SHZ-114-024)",
+    zendingId: "SHZ-114-024",
+    berichten: [
+      { id: "MB-001", richting: "uit", tekst: "Goedemorgen, wij halen vandaag tussen 10:00 en 16:00 de 26 retour-europallets op bij DC Veghel. Graag gereed zetten bij dock 12.", tijdstip: dag("06:10"), wie: "Planning Blex" },
+      { id: "MB-002", richting: "in", tekst: "Dank voor de aankondiging. Pallets staan vanaf 10:00 klaar bij dock 14 (12 is vandaag buiten gebruik).", tijdstip: dag("06:25"), wie: "R. van den Berg" },
+    ],
+  },
+  {
+    id: "MT-002",
+    tegenpartij: "Brouwerij De Kroon",
+    email: "expeditie@dekroon.example",
+    onderwerp: "Losprobleem fusten Lieshout",
+    zendingId: "SHZ-114-011",
+    berichten: [
+      { id: "MB-003", richting: "uit", tekst: "Onze chauffeur staat bij poort 3 maar de heftruck is nog niet beschikbaar. Kunt u iemand sturen?", tijdstip: dag("07:10"), wie: "Planning Blex" },
+      { id: "MB-004", richting: "in", tekst: "Heftruckchauffeur is onderweg, verwachte start lossen 07:45. Excuses voor het wachten.", tijdstip: dag("07:18"), wie: "S. Vermeulen" },
+    ],
+    ongelezen: true,
+  },
+];
+
+// Koppelingslogboek: elk in- en uitgaand bericht is zichtbaar en een gefaald
+// bericht is opnieuw af te spelen (CLAUDE.md §6.3 — nooit stilzwijgend falen).
+const koppelingLog: KoppelingLogRegel[] = [
+  { id: "KL-001", koppelingId: "truck_and_trailer", richting: "in", omschrijving: "Wagenpark-sync: 5 voertuigen, 3 trailers", tijdstip: dag("05:30"), status: "geslaagd" },
+  { id: "KL-002", koppelingId: "truck_and_trailer", richting: "in", omschrijving: "Onderhoudsstatus trekker 43-BKL-7", tijdstip: dag("05:30"), status: "geslaagd" },
+  { id: "KL-003", koppelingId: "truck_and_trailer", richting: "in", omschrijving: "APK-gegevens trailer OL-84-XF", tijdstip: dag("05:31"), status: "gefaald", foutmelding: "Veld apk_vervaldatum ontbreekt in het antwoord — bericht in de wachtrij gezet" },
+  { id: "KL-004", koppelingId: "email", richting: "uit", omschrijving: "ETA-bericht aan Jumbo Supermarkten BV", tijdstip: dag("06:10"), status: "geslaagd" },
+];
+
 export class MockDataBron implements DataBron {
   // Vloot en trailers komen door de Truck & Trailer-koppeling binnen
   // (fixture-client tot de echte API-afspraken er zijn — zie
@@ -372,6 +412,8 @@ export class MockDataBron implements DataBron {
       ritKm,
       weekRijMinuten,
       wagenparkSync: vloot.syncTijdstip,
+      mailThreads,
+      koppelingLog,
     };
   }
 }

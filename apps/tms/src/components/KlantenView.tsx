@@ -10,9 +10,10 @@ import { Icoon } from "./Icoon";
 interface Props {
   state: AppState;
   onNieuweKlant: (klant: Klant, tarief: Tarief) => void;
+  onMail: (klant: Klant) => void;
 }
 
-export function KlantenView({ state, onNieuweKlant }: Props) {
+export function KlantenView({ state, onNieuweKlant, onMail }: Props) {
   const [formOpen, setFormOpen] = useState(false);
   const [naam, setNaam] = useState("");
   const [contactpersoon, setContactpersoon] = useState("");
@@ -107,6 +108,7 @@ export function KlantenView({ state, onNieuweKlant }: Props) {
                 <th>{t("tarieven.basis")}</th>
                 <th>{t("tarieven.perLm")}</th>
                 <th>{t("klanten.omzetVandaag")}</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -130,6 +132,13 @@ export function KlantenView({ state, onNieuweKlant }: Props) {
                     <td>{tarief ? formatteerGeld({ bedragCenten: tarief.basisCenten, valuta: "EUR" }) : "—"}</td>
                     <td>{tarief ? formatteerGeld({ bedragCenten: tarief.perLaadmeterCenten, valuta: "EUR" }) : "—"}</td>
                     <td>{omzet ? <b>{formatteerGeld(omzet)}</b> : "—"}</td>
+                    <td>
+                      {klant && (
+                        <button className="btn knop-met-icoon" onClick={() => onMail(klant)}>
+                          <Icoon naam="mail" maat={12} /> {t("klanten.mail")}
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 );
               })}

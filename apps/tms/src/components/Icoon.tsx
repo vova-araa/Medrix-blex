@@ -8,9 +8,22 @@ export type IcoonNaam =
   | "rapportage" | "assistent" | "dock" | "edi" | "document" | "boek"
   | "modules" | "check" | "waarschuwing" | "pakket" | "pijl" | "locatie"
   | "pen" | "speel" | "stopblok" | "koffie" | "stuur" | "camera" | "maan"
-  | "vlag" | "plus" | "kruis" | "timer" | "info";
+  | "vlag" | "plus" | "kruis" | "timer" | "info" | "mail" | "koppeling";
 
 const PADEN: Record<IcoonNaam, JSX.Element> = {
+  mail: (
+    <>
+      <rect x="3" y="5.5" width="18" height="13" rx="1.5" />
+      <path d="M3.5 6.5 12 13l8.5-6.5" />
+    </>
+  ),
+  koppeling: (
+    <>
+      <path d="M9.5 14.5 14.5 9.5" />
+      <path d="M11 6.8 13.2 4.6a3.4 3.4 0 0 1 4.8 0l1.4 1.4a3.4 3.4 0 0 1 0 4.8L17.2 13" />
+      <path d="M13 17.2l-2.2 2.2a3.4 3.4 0 0 1-4.8 0l-1.4-1.4a3.4 3.4 0 0 1 0-4.8L6.8 11" />
+    </>
+  ),
   bedrijf: (
     <>
       <path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16" />
