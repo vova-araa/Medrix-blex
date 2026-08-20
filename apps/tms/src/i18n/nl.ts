@@ -77,6 +77,12 @@ export const nl = {
   "nav.uren": "Uren",
   "nav.facturen": "Facturen",
   "nav.modules": "Modules",
+  "nav.hoofdmenu": "Hoofdmenu",
+  "nav.klapIn": "Menu inklappen",
+  "nav.groep.planning": "Planning",
+  "nav.groep.administratie": "Administratie",
+  "nav.groep.data": "Documenten & data",
+  "nav.groep.systeem": "Systeem",
 
   "module.planbord.naam": "Planbord",
   "module.planbord.oms": "Orders invoeren, ritten samenstellen en taken plannen met slepen — de kern van Sharzi.",

@@ -24,9 +24,15 @@ export type ModuleId =
   | "berichten"
   | "koppelingen";
 
+/** Navigatiegroepen: de zijbalk toont de modules per werkgebied. */
+export type ModuleGroep = "planning" | "administratie" | "data" | "systeem";
+
+export const MODULE_GROEPEN: ModuleGroep[] = ["planning", "administratie", "data", "systeem"];
+
 export interface ModuleDef {
   id: ModuleId;
   icoon: IcoonNaam;
+  groep: ModuleGroep;
   /** Kernmodules zitten in elk abonnement en kunnen niet uit. */
   kern?: boolean;
   /** Zichtbaar in de catalogus, nog niet leverbaar. */
@@ -36,23 +42,23 @@ export interface ModuleDef {
 }
 
 export const MODULES: ModuleDef[] = [
-  { id: "planbord", icoon: "planbord", kern: true, tab: true },
-  { id: "operatie", icoon: "operatie", kern: true, tab: true },
-  { id: "kaart", icoon: "kaart", tab: true },
-  { id: "uren", icoon: "klok", tab: true },
-  { id: "facturen", icoon: "factuur", tab: true },
-  { id: "klanten", icoon: "klanten", tab: true },
-  { id: "emballage", icoon: "emballage", tab: true },
-  { id: "portaal", icoon: "portaal", tab: true },
-  { id: "wagenpark", icoon: "wagenpark", tab: true },
-  { id: "rapportage", icoon: "rapportage", tab: true },
-  { id: "assistent", icoon: "assistent" },
-  { id: "dock", icoon: "dock" },
-  { id: "edi", icoon: "edi", inOntwikkeling: true },
-  { id: "documenten", icoon: "document", tab: true },
-  { id: "boekhouding", icoon: "boek", inOntwikkeling: true },
-  { id: "berichten", icoon: "mail", tab: true },
-  { id: "koppelingen", icoon: "koppeling", kern: true, tab: true },
+  { id: "planbord", icoon: "planbord", groep: "planning", kern: true, tab: true },
+  { id: "operatie", icoon: "operatie", groep: "planning", kern: true, tab: true },
+  { id: "kaart", icoon: "kaart", groep: "planning", tab: true },
+  { id: "uren", icoon: "klok", groep: "administratie", tab: true },
+  { id: "facturen", icoon: "factuur", groep: "administratie", tab: true },
+  { id: "klanten", icoon: "klanten", groep: "administratie", tab: true },
+  { id: "emballage", icoon: "emballage", groep: "administratie", tab: true },
+  { id: "portaal", icoon: "portaal", groep: "data", tab: true },
+  { id: "wagenpark", icoon: "wagenpark", groep: "data", tab: true },
+  { id: "rapportage", icoon: "rapportage", groep: "data", tab: true },
+  { id: "assistent", icoon: "assistent", groep: "planning" },
+  { id: "dock", icoon: "dock", groep: "data" },
+  { id: "edi", icoon: "edi", groep: "systeem", inOntwikkeling: true },
+  { id: "documenten", icoon: "document", groep: "data", tab: true },
+  { id: "boekhouding", icoon: "boek", groep: "systeem", inOntwikkeling: true },
+  { id: "berichten", icoon: "mail", groep: "systeem", tab: true },
+  { id: "koppelingen", icoon: "koppeling", groep: "systeem", kern: true, tab: true },
 ];
 
 export const STANDAARD_ACTIEF: ModuleId[] = MODULES.filter(

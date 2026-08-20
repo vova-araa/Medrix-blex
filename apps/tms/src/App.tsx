@@ -27,6 +27,7 @@ import { OperatieView } from "./components/OperatieView";
 import { PortaalView } from "./components/PortaalView";
 import { UrenView } from "./components/UrenView";
 import { WagenparkView } from "./components/WagenparkView";
+import { Zijbalk } from "./components/Zijbalk";
 import type { AdresFoto, CmrSoort, Klant, Tarief } from "./data/bron";
 import { benodigdeBerichten, type BerichtVoorstel } from "./data/communicatie";
 import { herstelVoorstellen, type HerstelVoorstel } from "./data/herstel";
@@ -69,6 +70,7 @@ export default function App() {
   const [autoPlanResultaat, setAutoPlanResultaat] = useState<PlanResultaat | null>(null);
   const [mailConcept, setMailConcept] = useState<MailConcept | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [zijbalkIn, setZijbalkIn] = useState(false);
   const [simMs, setSimMs] = useState(SIM_START);
   const toastTimer = useRef<number | undefined>(undefined);
 
@@ -576,28 +578,6 @@ export default function App() {
             </button>
           )}
         </div>
-        {rol === "bedrijf" && (
-          <nav className="sub-tabs">
-            {tabModules.map((moduleDef) => (
-              <button
-                key={moduleDef.id}
-                className={effectieveTab === moduleDef.id ? "active" : ""}
-                onClick={() => setTab(moduleDef.id)}
-              >
-                <Icoon naam={moduleDef.icoon} maat={13} /> {t(`module.${moduleDef.id}.naam`)}
-                {moduleDef.id === "operatie" && aantalMeldingen > 0 && (
-                  <span className="nav-badge">{aantalMeldingen}</span>
-                )}
-              </button>
-            ))}
-            <button
-              className={`modules-tab${effectieveTab === "modules" ? " active" : ""}`}
-              onClick={() => setTab("modules")}
-            >
-              <Icoon naam="modules" maat={13} /> {t("nav.modules")}
-            </button>
-          </nav>
-        )}
         <div className="spacer" />
         {rol === "bedrijf" && (
           <button className="btn primary knop-met-icoon" onClick={() => setOrderFormOpen(true)}>
@@ -613,6 +593,19 @@ export default function App() {
         </span>
       </div>
 
+      <div className={`werkblad${rol === "bedrijf" ? "" : " zonder-zijbalk"}`}>
+        {rol === "bedrijf" && (
+          <Zijbalk
+            modules={tabModules}
+            actief={effectieveTab}
+            ingeklapt={zijbalkIn}
+            aantalMeldingen={aantalMeldingen}
+            ongelezenBerichten={state.mailThreads.filter((mt) => mt.ongelezen).length}
+            onKies={setTab}
+            onKlapIn={() => setZijbalkIn(!zijbalkIn)}
+          />
+        )}
+        <main className="werkblad-inhoud">
       {rol === "bedrijf" && effectieveTab === "planbord" && (
         <BedrijfView
           state={state}
@@ -681,6 +674,8 @@ export default function App() {
       )}
 
       {rol === "dock" && <DockView state={state} onDockEvent={dockEvent} />}
+        </main>
+      </div>
 
       {geselecteerdeTaak && (
         <DetailPaneel
