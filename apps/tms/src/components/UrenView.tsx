@@ -53,11 +53,13 @@ export function UrenView({ state, nu }: Props) {
       <div className="ph-card uren-kaart">
         <h3 className="zij-kop"><Icoon naam="stuur" maat={15} /> {t("rijtijd.titel")}</h3>
         <p className="uren-noot">{t("rijtijd.noot")}</p>
+        <p className="uren-noot">{t("rijtijd.bronNoot")}</p>
         <div className="table-scroll">
           <table className="uren-tabel">
             <thead>
               <tr>
                 <th>{t("uren.chauffeur")}</th>
+                <th>{t("rijtijd.bron")}</th>
                 <th>{t("rijtijd.vandaag")}</th>
                 <th>{t("rijtijd.nogDag")}</th>
                 <th>{t("rijtijd.blok")}</th>
@@ -82,6 +84,11 @@ export function UrenView({ state, nu }: Props) {
                   <tr key={naam}>
                     <td>
                       <span className="avatar avatar-klein">{initialen(naam)}</span> {naam}
+                    </td>
+                    <td>
+                      <span className={`bron-chip b-${state.tachoBron[naam] ?? "app"}`}>
+                        {t(`rijtijd.bron.${state.tachoBron[naam] ?? "app"}`)}
+                      </span>
                     </td>
                     <td>
                       <div className="rijtijd-cel">

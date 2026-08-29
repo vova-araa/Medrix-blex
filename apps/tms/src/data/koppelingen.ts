@@ -10,7 +10,7 @@ import type { AppState } from "./state";
 export interface KoppelingDef {
   id: string;
   naam: string;
-  soort: "wagenpark" | "email" | "boekhouding" | "vervoerder" | "planning";
+  soort: "wagenpark" | "email" | "tacho" | "boekhouding" | "vervoerder" | "planning";
   /** "beschikbaar" = in de catalogus, aan te vragen maar nog niet gebouwd. */
   status: Exclude<KoppelingStatus, "fout"> ;
 }
@@ -18,6 +18,7 @@ export interface KoppelingDef {
 export const KOPPELINGEN: KoppelingDef[] = [
   { id: "truck_and_trailer", naam: "Truck & Trailer", soort: "wagenpark", status: "actief" },
   { id: "email", naam: "E-mail (berichtencentrum)", soort: "email", status: "actief" },
+  { id: "tacho", naam: "Tachograafdata", soort: "tacho", status: "actief" },
   { id: "exact_online", naam: "Exact Online", soort: "boekhouding", status: "beschikbaar" },
   { id: "dhl_parcel", naam: "DHL Parcel", soort: "vervoerder", status: "beschikbaar" },
   { id: "ptv_verkeer", naam: "Verkeersdata (route & ETA)", soort: "planning", status: "beschikbaar" },
@@ -37,6 +38,7 @@ export function koppelingStatus(state: AppState, koppeling: KoppelingDef): Koppe
 
 export function laatsteSync(state: AppState, koppelingId: string): string | undefined {
   if (koppelingId === "truck_and_trailer" && state.wagenparkSync) return state.wagenparkSync;
+  if (koppelingId === "tacho" && state.tachoSync) return state.tachoSync;
   return state.koppelingLog
     .filter((regel) => regel.koppelingId === koppelingId && regel.status === "geslaagd")
     .at(-1)?.tijdstip;

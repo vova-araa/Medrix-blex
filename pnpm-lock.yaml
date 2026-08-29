@@ -13,6 +13,9 @@ importers:
       '@sharzi/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@sharzi/integratie-tacho':
+        specifier: workspace:*
+        version: link:../../integrations/tacho
       '@sharzi/integratie-truck-and-trailer':
         specifier: workspace:*
         version: link:../../integrations/truck_and_trailer
@@ -38,6 +41,19 @@ importers:
       vite:
         specifier: ^5.4.11
         version: 5.4.21
+
+  integrations/tacho:
+    dependencies:
+      '@sharzi/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+    devDependencies:
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9
 
   integrations/truck_and_trailer:
     dependencies:

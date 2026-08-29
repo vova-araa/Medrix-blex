@@ -1086,6 +1086,13 @@
 .log-fout td { background: var(--crit-soft); }
 .log-foutmelding { font-size: 11px; color: var(--crit); margin-top: 2px; }
 
+.bron-chip {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  border-radius: 999px; padding: 2px 8px; border: 1px solid var(--line-strong); color: var(--muted);
+}
+.bron-chip.b-tachograaf { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.bron-chip.b-app { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+
 .naleving-lijst { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
 .naleving-regel {
   display: flex; gap: 10px; align-items: start;

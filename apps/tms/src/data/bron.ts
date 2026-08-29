@@ -1,5 +1,6 @@
 import type {
-  Adres, DockEvent, EmballageTransactie, Order, Rit, Taak, TaakEvent, WerktijdEvent, Zending,
+  ActiviteitBron, Adres, DockEvent, EmballageTransactie, Order, Rit, Taak, TaakEvent,
+  TachoToestemming, TachoUitlezing, WerktijdEvent, Zending,
 } from "@sharzi/domain";
 
 // De UI praat alleen met deze poort. Nu zit er een mock achter (in-memory);
@@ -138,6 +139,14 @@ export interface DagSnapshot {
   wagenparkSync: string;
   mailThreads: MailThread[];
   koppelingLog: KoppelingLogRegel[];
+  /** Wettelijke uitlezingen van voertuigunits en chauffeurskaarten. */
+  tachoUitlezingen: TachoUitlezing[];
+  /** Toestemming per chauffeur/voertuig voor live tachodata (AVG). */
+  tachoToestemmingen: TachoToestemming[];
+  /** Bron van de rijtijdstand per chauffeur: uitgelezen of app-registratie. */
+  tachoBron: Record<string, ActiviteitBron>;
+  /** Tijdstip van de laatste geslaagde ophaal bij de tachograafleverancier. */
+  tachoSync: string;
 }
 
 export interface DataBron {

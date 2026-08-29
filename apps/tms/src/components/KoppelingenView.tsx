@@ -1,3 +1,4 @@
+import { uitleesStatussen } from "@sharzi/domain";
 import { KOPPELINGEN, koppelingStatus, laatsteSync, type KoppelingDef } from "../data/koppelingen";
 import type { AppState } from "../data/state";
 import { t } from "../i18n";
@@ -6,14 +7,23 @@ import { Icoon } from "./Icoon";
 
 interface Props {
   state: AppState;
+  nu: string;
   onReplay: (logId: string) => void;
   onAanvragen: (koppeling: KoppelingDef) => void;
 }
 
-export function KoppelingenView({ state, onReplay, onAanvragen }: Props) {
+export function KoppelingenView({ state, nu, onReplay, onAanvragen }: Props) {
   const actieve = KOPPELINGEN.filter((k) => k.status === "actief");
   const catalogus = KOPPELINGEN.filter((k) => k.status === "beschikbaar");
   const log = [...state.koppelingLog].sort((a, b) => b.tijdstip.localeCompare(a.tijdstip));
+  const termijnen = uitleesStatussen(
+    state.tachoUitlezingen,
+    {
+      kentekens: state.wagenpark.map((v) => v.kenteken),
+      chauffeurs: state.ritten.map((r) => r.chauffeur).filter(Boolean),
+    },
+    nu
+  );
 
   return (
     <div className="koppelingen-main">
@@ -38,6 +48,50 @@ export function KoppelingenView({ state, onReplay, onAanvragen }: Props) {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      <div className="ph-card uren-kaart">
+        <div className="operatie-kop">
+          <h3 className="zij-kop">{t("tacho.termijnen")}</h3>
+          <span className="melding-teller">{termijnen.filter((s) => s.ernst !== "ok").length}</span>
+        </div>
+        <p className="uren-noot">{t("tacho.termijnenNoot")}</p>
+        <div className="table-scroll">
+          <table className="uren-tabel">
+            <thead>
+              <tr>
+                <th>{t("tacho.soort")}</th>
+                <th>{t("tacho.onderwerp")}</th>
+                <th>{t("tacho.laatste")}</th>
+                <th>{t("tacho.termijn")}</th>
+                <th>{t("tacho.resterend")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {termijnen.map((s) => (
+                <tr key={`${s.soort}-${s.onderwerp}`} className={s.ernst === "verstreken" ? "log-fout" : undefined}>
+                  <td>{t(`tacho.soort.${s.soort}`)}</td>
+                  <td>{s.onderwerp}</td>
+                  <td>{s.laatsteUitlezingIso
+                    ? t("tacho.dagenGeleden", { dagen: s.dagenGeleden ?? 0 })
+                    : t("tacho.nooit")}</td>
+                  <td>{t("tacho.elkeDagen", { dagen: s.termijnDagen })}</td>
+                  <td>
+                    <span className={`klok-chip ${
+                      s.ernst === "verstreken" ? "rt-kritiek" : s.ernst === "waarschuwing" ? "rt-warn" : "rt-ok"
+                    }`}>
+                      {s.dagenResterend === null
+                        ? t("tacho.nooit")
+                        : s.dagenResterend < 0
+                          ? t("tacho.teLaat", { dagen: -s.dagenResterend })
+                          : t("tacho.nogDagen", { dagen: s.dagenResterend })}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

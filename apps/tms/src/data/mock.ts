@@ -3,6 +3,7 @@ import type {
   WerktijdEvent, WerktijdEventType, Zending,
 } from "@sharzi/domain";
 import { FixtureTruckAndTrailerClient } from "@sharzi/integratie-truck-and-trailer";
+import { FixtureTachoClient } from "@sharzi/integratie-tacho";
 import type {
   AdresInfo, CmrRegistratie, DagSnapshot, DataBron, Klant, KoppelingLogRegel,
   MailThread, RitKm, Tarief,
@@ -410,6 +411,18 @@ export class MockDataBron implements DataBron {
   // directives/connector_truck_and_trailer.md).
   async laadDag(_datum: string): Promise<DagSnapshot> {
     const vloot = await new FixtureTruckAndTrailerClient().haalVloot();
+    // Tachodata komt via de tacho-koppeling binnen (fixture tot de
+    // API-afspraken rond zijn — zie directives/connector_tacho.md).
+    const tacho = await new FixtureTachoClient().haalStand();
+    // Bron per chauffeur: wie in de uitgelezen activiteiten voorkomt, heeft
+    // een onderbouwde stand; de rest leunt op app-registratie.
+    const uitgelezen = new Set(
+      tacho.activiteiten.flatMap((a) => (a.chauffeur ? [a.chauffeur] : []))
+    );
+    const tachoBron = Object.fromEntries(
+      ritten.filter((r) => r.chauffeur).map((r) =>
+        [r.chauffeur, uitgelezen.has(r.chauffeur) ? "tachograaf" : "app"] as const)
+    );
     return {
       ritten,
       taken,
@@ -432,6 +445,10 @@ export class MockDataBron implements DataBron {
       vorigeWeekRijMinuten,
       weekArbeidMinuten,
       wagenparkSync: vloot.syncTijdstip,
+      tachoUitlezingen: tacho.uitlezingen,
+      tachoToestemmingen: tacho.toestemmingen,
+      tachoBron,
+      tachoSync: tacho.opgehaaldOp,
       mailThreads,
       koppelingLog,
     };

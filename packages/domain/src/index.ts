@@ -8,5 +8,6 @@ export * from "./facturatie";
 export * from "./emballage";
 export * from "./dock";
 export * from "./rijtijden";
+export * from "./tacho";
 export * from "./autoplanner";
 export * from "./vervanging";

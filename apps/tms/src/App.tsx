@@ -655,7 +655,7 @@ export default function App() {
         />
       )}
       {rol === "bedrijf" && effectieveTab === "koppelingen" && (
-        <KoppelingenView state={state} onReplay={replayKoppeling} onAanvragen={vraagKoppelingAan} />
+        <KoppelingenView state={state} nu={nu} onReplay={replayKoppeling} onAanvragen={vraagKoppelingAan} />
       )}
       {rol === "bedrijf" && effectieveTab === "kaart" && <KaartView state={state} nu={nu} />}
       {rol === "bedrijf" && effectieveTab === "uren" && <UrenView state={state} nu={nu} />}
