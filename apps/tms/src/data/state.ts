@@ -82,6 +82,7 @@ export const leegState: AppState = {
   weekRijMinuten: {}, vorigeWeekRijMinuten: {}, weekArbeidMinuten: {},
   wagenparkSync: "", mailThreads: [], koppelingLog: [],
   tachoUitlezingen: [], tachoToestemmingen: [], tachoBron: {}, tachoSync: "",
+  referenties: [],
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
   beleid: { klantbericht: "automatisch", herplannen: "voorstel", wachturen: "automatisch" },

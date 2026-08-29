@@ -11,3 +11,4 @@ export * from "./rijtijden";
 export * from "./tacho";
 export * from "./autoplanner";
 export * from "./vervanging";
+export * from "./vergelijking";

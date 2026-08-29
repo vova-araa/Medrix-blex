@@ -1,6 +1,6 @@
 import type {
   ActiviteitBron, Adres, DockEvent, EmballageTransactie, Order, Rit, Taak, TaakEvent,
-  TachoToestemming, TachoUitlezing, WerktijdEvent, Zending,
+  Referentie, TachoToestemming, TachoUitlezing, WerktijdEvent, Zending,
 } from "@sharzi/domain";
 
 // De UI praat alleen met deze poort. Nu zit er een mock achter (in-memory);
@@ -147,6 +147,8 @@ export interface DagSnapshot {
   tachoBron: Record<string, ActiviteitBron>;
   /** Tijdstip van de laatste geslaagde ophaal bij de tachograafleverancier. */
   tachoSync: string;
+  /** Referentiecijfers uit het bestaande pakket, voor het schaduwdraaien. */
+  referenties: Referentie[];
 }
 
 export interface DataBron {

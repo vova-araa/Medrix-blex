@@ -8,6 +8,7 @@ import type {
   AdresInfo, CmrRegistratie, DagSnapshot, DataBron, Klant, KoppelingLogRegel,
   MailThread, RitKm, Tarief,
 } from "./bron";
+import type { Referentie } from "@sharzi/domain";
 
 // Demodag voor Blex: 2026-08-07. Alle tijden staan in UTC (CLAUDE.md §5.3);
 // Europe/Amsterdam is die dag UTC+2, dus 06:30 lokaal = 04:30Z.
@@ -405,6 +406,17 @@ const koppelingLog: KoppelingLogRegel[] = [
   { id: "KL-004", koppelingId: "email", richting: "uit", omschrijving: "ETA-bericht aan Jumbo Supermarkten BV", tijdstip: dag("06:10"), status: "geslaagd" },
 ];
 
+// Referentiecijfers zoals Roadsoft ze deze dag rapporteert. Tijdens het
+// schaduwdraaien leggen we onze eigen berekening hiernaast (fase 3 van
+// directives/tacho_overgang_actielijst.md). Peeters loopt gelijk; bij Ionescu
+// zit bewust een verschil zodat de vergelijking zichtbaar werk maakt.
+const referenties: Referentie[] = [
+  { chauffeur: "J. Peeters", datum: "2026-08-07", dagRijMinuten: 149, weekRijMinuten: 2279, overtredingen: [], bron: "Roadsoft" },
+  { chauffeur: "M. Kowalski", datum: "2026-08-07", dagRijMinuten: 86, weekRijMinuten: 2546, overtredingen: [], bron: "Roadsoft" },
+  { chauffeur: "A. Ionescu", datum: "2026-08-07", dagRijMinuten: 240, weekRijMinuten: 2238, overtredingen: [], bron: "Roadsoft" },
+  { chauffeur: "S. de Boer", datum: "2026-08-07", dagRijMinuten: 0, weekRijMinuten: 3300, overtredingen: [], bron: "Roadsoft" },
+];
+
 export class MockDataBron implements DataBron {
   // Vloot en trailers komen door de Truck & Trailer-koppeling binnen
   // (fixture-client tot de echte API-afspraken er zijn — zie
@@ -449,6 +461,7 @@ export class MockDataBron implements DataBron {
       tachoToestemmingen: tacho.toestemmingen,
       tachoBron,
       tachoSync: tacho.opgehaaldOp,
+      referenties,
       mailThreads,
       koppelingLog,
     };

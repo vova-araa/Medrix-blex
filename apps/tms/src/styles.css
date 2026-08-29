@@ -1086,6 +1086,8 @@
 .log-fout td { background: var(--crit-soft); }
 .log-foutmelding { font-size: 11px; color: var(--crit); margin-top: 2px; }
 
+.schaduw-verschillen { display: flex; flex-wrap: wrap; gap: 4px; }
+
 .bron-chip {
   font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   border-radius: 999px; padding: 2px 8px; border: 1px solid var(--line-strong); color: var(--muted);

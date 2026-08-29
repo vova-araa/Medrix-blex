@@ -1,7 +1,9 @@
-import { uitleesStatussen } from "@sharzi/domain";
+import { uitleesStatussen, vatSamen, vergelijk } from "@sharzi/domain";
+import { rijtijdVan } from "../data/state";
 import { KOPPELINGEN, koppelingStatus, laatsteSync, type KoppelingDef } from "../data/koppelingen";
 import type { AppState } from "../data/state";
 import { t } from "../i18n";
+import { initialen } from "../utils";
 import { tijd } from "../utils";
 import { Icoon } from "./Icoon";
 
@@ -16,6 +18,12 @@ export function KoppelingenView({ state, nu, onReplay, onAanvragen }: Props) {
   const actieve = KOPPELINGEN.filter((k) => k.status === "actief");
   const catalogus = KOPPELINGEN.filter((k) => k.status === "beschikbaar");
   const log = [...state.koppelingLog].sort((a, b) => b.tijdstip.localeCompare(a.tijdstip));
+  // Schaduwdraaien: onze berekening naast die van het bestaande pakket.
+  const vergelijkingen = state.referenties.map((r) =>
+    vergelijk(rijtijdVan(state, r.chauffeur, nu), r)
+  );
+  const samenvatting = vatSamen(vergelijkingen);
+
   const termijnen = uitleesStatussen(
     state.tachoUitlezingen,
     {
@@ -50,6 +58,57 @@ export function KoppelingenView({ state, nu, onReplay, onAanvragen }: Props) {
           })}
         </div>
       </div>
+
+      {state.referenties.length > 0 && (
+        <div className="ph-card uren-kaart">
+          <div className="operatie-kop">
+            <h3 className="zij-kop">{t("schaduw.titel")}</h3>
+            <span className={`klok-chip ${samenvatting.gereedVoorOverstap ? "rt-ok" : "rt-warn"}`}>
+              {t("schaduw.akkoord", { akkoord: samenvatting.akkoord, totaal: samenvatting.totaal })}
+            </span>
+          </div>
+          <p className="uren-noot">{t("schaduw.noot")}</p>
+          <div className="table-scroll">
+            <table className="uren-tabel">
+              <thead>
+                <tr>
+                  <th>{t("uren.chauffeur")}</th>
+                  <th>{t("schaduw.sharzi")}</th>
+                  <th>{t("schaduw.referentie")}</th>
+                  <th>{t("schaduw.verschil")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vergelijkingen.map((v) => (
+                  <tr key={v.chauffeur} className={v.akkoord ? undefined : "log-fout"}>
+                    <td>
+                      <span className="avatar avatar-klein">{initialen(v.chauffeur)}</span> {v.chauffeur}
+                    </td>
+                    <td>{v.verschillen.find((d) => d.soort === "dagrijtijd")?.sharzi ?? "—"}</td>
+                    <td>{v.verschillen.find((d) => d.soort === "dagrijtijd")?.referentie ?? "—"}</td>
+                    <td>
+                      {v.verschillen.length === 0 ? (
+                        <span className="klok-chip rt-ok">{t("schaduw.gelijk")}</span>
+                      ) : (
+                        <div className="schaduw-verschillen">
+                          {v.verschillen.map((d, i) => (
+                            <span key={i} className={`klok-chip ${d.blokkerend ? "rt-kritiek" : "rt-warn"}`}>
+                              {d.omschrijving}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="uren-noot">
+            {samenvatting.gereedVoorOverstap ? t("schaduw.gereed") : t("schaduw.nietGereed", { aantal: samenvatting.blokkerend })}
+          </p>
+        </div>
+      )}
 
       <div className="ph-card uren-kaart">
         <div className="operatie-kop">
