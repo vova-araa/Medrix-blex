@@ -130,6 +130,10 @@ export interface DagSnapshot {
   ritKm: Record<string, RitKm>;
   /** Rijtijd eerder deze week (vóór vandaag) per chauffeur, in minuten. */
   weekRijMinuten: Record<string, number>;
+  /** Rijtijd vorige week per chauffeur — nodig voor de 90-uursgrens. */
+  vorigeWeekRijMinuten: Record<string, number>;
+  /** Arbeidstijd eerder deze week per chauffeur (ATB-V, 60-uursgrens). */
+  weekArbeidMinuten: Record<string, number>;
   /** Tijdstip van de laatste wagenpark-sync uit de Truck & Trailer-koppeling. */
   wagenparkSync: string;
   mailThreads: MailThread[];

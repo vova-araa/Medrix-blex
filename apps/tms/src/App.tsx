@@ -1,7 +1,7 @@
 import {
   automatischPlan,
   kanInplannen,
-  type DockEventType, type EmballageSoort, type Order, type PlanResultaat,
+  type DockEventType, type EmballageSoort, type Order, type PlanResultaat, type VervangResultaat,
   type PlanVoorstel, type Taak, type TaakEvent,
   type TaakEventType, type WerktijdEventType, type Zending,
 } from "@sharzi/domain";
@@ -31,6 +31,8 @@ import { Zijbalk } from "./components/Zijbalk";
 import type { AdresFoto, CmrSoort, Klant, Tarief } from "./data/bron";
 import { benodigdeBerichten, type BerichtVoorstel } from "./data/communicatie";
 import { herstelVoorstellen, type HerstelVoorstel } from "./data/herstel";
+import { vervangingVoorRit } from "./data/uitval";
+import { VervangingView } from "./components/VervangingView";
 import type { KoppelingDef } from "./data/koppelingen";
 import { meldingen } from "./data/meldingen";
 import { planKandidaten, planOpties } from "./data/planner";
@@ -69,6 +71,7 @@ export default function App() {
   const [orderFormOpen, setOrderFormOpen] = useState(false);
   const [autoPlanResultaat, setAutoPlanResultaat] = useState<PlanResultaat | null>(null);
   const [mailConcept, setMailConcept] = useState<MailConcept | null>(null);
+  const [uitval, setUitval] = useState<{ ritId: string; chauffeur: string; resultaat: VervangResultaat } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [zijbalkIn, setZijbalkIn] = useState(false);
   const [simMs, setSimMs] = useState(SIM_START);
@@ -450,6 +453,19 @@ export default function App() {
     meld(t("toast.replay"));
   }
 
+  /** Chauffeur valt uit: reken door wie de rit kan overnemen. */
+  function meldUitval(ritId: string) {
+    const rit = state.ritten.find((r) => r.id === ritId);
+    const resultaat = vervangingVoorRit(state, ritId, nu);
+    if (!rit || !resultaat) { meld(t("toast.geenUitval")); return; }
+    setUitval({ ritId, chauffeur: rit.chauffeur, resultaat });
+  }
+
+  function kiesVervanger(chauffeur: string) {
+    meld(t("toast.vervanger", { chauffeur, rit: uitval?.ritId ?? "" }));
+    setUitval(null);
+  }
+
   function vraagKoppelingAan(koppeling: KoppelingDef) {
     meld(t("toast.koppelingAanvraag", { naam: koppeling.naam }));
   }
@@ -622,6 +638,7 @@ export default function App() {
           onHerstel={voerHerstelUit}
           onZetBeleid={zetBeleid}
           onVerstuurBericht={verstuurBericht}
+          onUitval={meldUitval}
         />
       )}
       {rol === "bedrijf" && effectieveTab === "klanten" && (
@@ -692,6 +709,16 @@ export default function App() {
             dispatch({ type: "adres_foto", sleutel, foto });
             meld(t("toast.fotoToegevoegd"));
           }}
+        />
+      )}
+
+      {uitval && (
+        <VervangingView
+          chauffeur={uitval.chauffeur}
+          ritId={uitval.ritId}
+          resultaat={uitval.resultaat}
+          onSluit={() => setUitval(null)}
+          onKies={kiesVervanger}
         />
       )}
 

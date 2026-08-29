@@ -7,6 +7,9 @@ export type WerktijdEventType =
   | "ingeklokt"
   | "rijden_gestart"
   | "werk_gestart"
+  /** Beschikbaarheidstijd (tachograaf-POA): wachten zonder werk. Telt niet
+   *  mee als arbeidstijd, maar ook niet als pauze. */
+  | "beschikbaar_gestart"
   | "pauze_gestart"
   | "uitgeklokt";
 
@@ -23,14 +26,16 @@ export interface UrenTotalen {
   rijMinuten: number;
   werkMinuten: number;
   pauzeMinuten: number;
+  beschikbaarMinuten: number;
   /** Toestand na het laatste event; null = niet in dienst. */
-  actief: "rijden" | "werk" | "pauze" | null;
+  actief: "rijden" | "werk" | "pauze" | "beschikbaar" | null;
 }
 
 const TOESTAND_NA: Record<WerktijdEventType, UrenTotalen["actief"]> = {
   ingeklokt: "werk",
   rijden_gestart: "rijden",
   werk_gestart: "werk",
+  beschikbaar_gestart: "beschikbaar",
   pauze_gestart: "pauze",
   uitgeklokt: null,
 };
@@ -43,7 +48,8 @@ export function urenTotalen(
   nu: string
 ): UrenTotalen {
   const totalen: UrenTotalen = {
-    dienstMinuten: 0, rijMinuten: 0, werkMinuten: 0, pauzeMinuten: 0, actief: null,
+    dienstMinuten: 0, rijMinuten: 0, werkMinuten: 0, pauzeMinuten: 0,
+    beschikbaarMinuten: 0, actief: null,
   };
   const gesorteerd = [...events].sort((a, b) => a.tijdstip.localeCompare(b.tijdstip));
 
@@ -55,6 +61,7 @@ export function urenTotalen(
     if (toestand === "rijden") totalen.rijMinuten += duur;
     if (toestand === "werk") totalen.werkMinuten += duur;
     if (toestand === "pauze") totalen.pauzeMinuten += duur;
+    if (toestand === "beschikbaar") totalen.beschikbaarMinuten += duur;
     totalen.dienstMinuten += duur;
     totalen.actief = toestand;
   }

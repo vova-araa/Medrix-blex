@@ -1,6 +1,7 @@
 import {
   rijtijdStatus,
   ritStatus,
+  weekStartMs,
   taakStatus,
   voegEventToe,
   type Adres,
@@ -78,7 +79,8 @@ export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
   adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
   klanten: {}, dockEvents: [], trailers: [], trailerVanRit: {}, cmrs: [], ritKm: {},
-  weekRijMinuten: {}, wagenparkSync: "", mailThreads: [], koppelingLog: [],
+  weekRijMinuten: {}, vorigeWeekRijMinuten: {}, weekArbeidMinuten: {},
+  wagenparkSync: "", mailThreads: [], koppelingLog: [],
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
   beleid: { klantbericht: "automatisch", herplannen: "voorstel", wachturen: "automatisch" },
@@ -269,9 +271,19 @@ export function cmrsVanTaak(state: AppState, taakId: string): CmrRegistratie[] {
 }
 
 export function rijtijdVan(state: AppState, chauffeur: string, nu: string): RijtijdStatus {
-  return rijtijdStatus(
-    werktijdenVan(state, chauffeur),
+  // De rijtijd eerder deze week (vóór de event-log) hoort bij de lopende week;
+  // de motor rekent per weekstart, dus die sleutel bepalen we hier.
+  const dezeWeek = weekStartMs(Date.parse(nu));
+  const vorigeWeek = weekStartMs(dezeWeek - 86_400_000);
+  return rijtijdStatus({
+    events: werktijdenVan(state, chauffeur),
     nu,
-    state.weekRijMinuten[chauffeur] ?? 0
-  );
+    eerdereRijMinutenPerWeek: {
+      [dezeWeek]: state.weekRijMinuten[chauffeur] ?? 0,
+      [vorigeWeek]: state.vorigeWeekRijMinuten?.[chauffeur] ?? 0,
+    },
+    eerdereArbeidMinutenPerWeek: {
+      [dezeWeek]: state.weekArbeidMinuten?.[chauffeur] ?? 0,
+    },
+  });
 }

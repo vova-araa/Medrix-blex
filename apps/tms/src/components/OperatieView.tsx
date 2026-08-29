@@ -27,12 +27,13 @@ const BRON_ICOON: Record<string, IcoonNaam> = {
 const BELEID_ACTIES: BeleidActie[] = ["klantbericht", "herplannen", "wachturen"];
 const BELEID_STANDEN: BeleidStand[] = ["automatisch", "voorstel", "uit"];
 
-export function OperatieView({ state, nu, onHerstel, onZetBeleid, onVerstuurBericht }: {
+export function OperatieView({ state, nu, onHerstel, onZetBeleid, onVerstuurBericht, onUitval }: {
   state: AppState;
   nu: string;
   onHerstel: (voorstel: HerstelVoorstel) => void;
   onZetBeleid: (actie: BeleidActie, stand: BeleidStand) => void;
   onVerstuurBericht: (voorstel: BerichtVoorstel) => void;
+  onUitval: (ritId: string) => void;
 }) {
   const lijst = meldingen(state, nu);
   const herstel = state.beleid.herplannen === "uit" ? [] : herstelVoorstellen(state, nu);
@@ -196,6 +197,7 @@ export function OperatieView({ state, nu, onHerstel, onZetBeleid, onVerstuurBeri
                   <th>{t("kaart.positie")}</th>
                   <th>{t("kaart.eta")}</th>
                   <th>{t("operatie.standtijd")}</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -247,6 +249,13 @@ export function OperatieView({ state, nu, onHerstel, onZetBeleid, onVerstuurBeri
                       </td>
                       <td className={standtijd !== null && standtijd > STANDTIJD_GRENS_MIN ? "eta-te-laat" : undefined}>
                         {standtijd !== null ? `${standtijd} min` : "—"}
+                      </td>
+                      <td>
+                        {huidige && rit.chauffeur && (
+                          <button className="btn knop-met-icoon" onClick={() => onUitval(rit.id)}>
+                            <Icoon naam="stuur" maat={12} /> {t("operatie.uitval")}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

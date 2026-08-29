@@ -342,6 +342,24 @@ const ritKm: Record<string, RitKm> = {
 
 // Rijtijd eerder deze week (ma t/m gisteren): S. de Boer zit vlak bij de
 // 56-uursgrens — handig om de inplanblokkade te demonstreren.
+// Rijtijd vorige week: samen met deze week bewaakt dit de 90-uursgrens over
+// twee weken. De Boer zit daar bewust dicht tegenaan.
+const vorigeWeekRijMinuten: Record<string, number> = {
+  "J. Peeters": 41 * 60,
+  "M. Kowalski": 38 * 60,
+  "A. Ionescu": 44 * 60,
+  "S. de Boer": 33 * 60,
+};
+
+// Arbeidstijd (rijden + ander werk) eerder deze week, voor de 60-uursgrens
+// uit het Arbeidstijdenbesluit vervoer.
+const weekArbeidMinuten: Record<string, number> = {
+  "J. Peeters": 44 * 60,
+  "M. Kowalski": 50 * 60,
+  "A. Ionescu": 41 * 60,
+  "S. de Boer": 58 * 60 + 30,
+};
+
 const weekRijMinuten: Record<string, number> = {
   "J. Peeters": 35 * 60 + 30,
   "M. Kowalski": 41 * 60,
@@ -411,6 +429,8 @@ export class MockDataBron implements DataBron {
       cmrs,
       ritKm,
       weekRijMinuten,
+      vorigeWeekRijMinuten,
+      weekArbeidMinuten,
       wagenparkSync: vloot.syncTijdstip,
       mailThreads,
       koppelingLog,

@@ -39,7 +39,7 @@ describe("urenTotalen", () => {
 
   it("is leeg zonder events", () => {
     expect(urenTotalen([], "2026-08-07T05:00:00Z")).toEqual({
-      dienstMinuten: 0, rijMinuten: 0, werkMinuten: 0, pauzeMinuten: 0, actief: null,
+      dienstMinuten: 0, rijMinuten: 0, werkMinuten: 0, pauzeMinuten: 0, beschikbaarMinuten: 0, actief: null,
     });
   });
 });
