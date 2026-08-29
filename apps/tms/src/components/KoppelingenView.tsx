@@ -12,9 +12,10 @@ interface Props {
   nu: string;
   onReplay: (logId: string) => void;
   onAanvragen: (koppeling: KoppelingDef) => void;
+  onHerstart: (itemId: string) => void;
 }
 
-export function KoppelingenView({ state, nu, onReplay, onAanvragen }: Props) {
+export function KoppelingenView({ state, nu, onReplay, onAanvragen, onHerstart }: Props) {
   const actieve = KOPPELINGEN.filter((k) => k.status === "actief");
   const catalogus = KOPPELINGEN.filter((k) => k.status === "beschikbaar");
   const log = [...state.koppelingLog].sort((a, b) => b.tijdstip.localeCompare(a.tijdstip));
@@ -153,6 +154,38 @@ export function KoppelingenView({ state, nu, onReplay, onAanvragen }: Props) {
           </table>
         </div>
       </div>
+
+      {state.wachtrij.filter((w) => !w.opgelostIso).length > 0 && (
+        <div className="ph-card uren-kaart">
+          <div className="operatie-kop">
+            <h3 className="zij-kop">{t("wachtrij.titel")}</h3>
+            <span className="melding-teller">{state.wachtrij.filter((w) => !w.opgelostIso).length}</span>
+          </div>
+          <p className="uren-noot">{t("wachtrij.noot")}</p>
+          <ul className="herstel-lijst">
+            {state.wachtrij.filter((w) => !w.opgelostIso).map((item) => {
+              const def = KOPPELINGEN.find((k) => k.id === item.koppelingId);
+              return (
+                <li key={item.id} className="herstel-voorstel">
+                  <div className="herstel-kop">
+                    <b>{def?.naam ?? item.koppelingId}</b>
+                    <span className="mono av-rit">{item.actie}</span>
+                  </div>
+                  <div className="herstel-reden">
+                    <Icoon naam="waarschuwing" maat={11} /> {item.foutmelding}
+                  </div>
+                  <div className="av-tijden">
+                    {t("wachtrij.pogingen", { pogingen: item.pogingen, sinds: tijd(item.eersteFoutIso) })}
+                  </div>
+                  <button className="btn primary knop-met-icoon" onClick={() => onHerstart(item.id)}>
+                    <Icoon naam="speel" maat={13} /> {t("wachtrij.herstart")}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       <div className="ph-card uren-kaart">
         <h3 className="zij-kop">{t("koppeling.logboek")}</h3>

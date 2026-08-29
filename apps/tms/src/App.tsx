@@ -466,6 +466,19 @@ export default function App() {
     setUitval(null);
   }
 
+  /** Een gefaalde uitgaande aanroep opnieuw aanbieden. */
+  function herstartWachtrij(itemId: string) {
+    const item = state.wachtrij.find((w) => w.id === itemId);
+    if (!item) return;
+    dispatch({ type: "wachtrij_opgelost", itemId, nuIso: nu });
+    dispatch({ type: "koppeling_log", regel: {
+      id: crypto.randomUUID(), koppelingId: item.koppelingId, richting: "uit",
+      omschrijving: t("wachtrij.herstartRegel", { actie: item.actie }),
+      tijdstip: nu, status: "geslaagd",
+    }});
+    meld(t("toast.wachtrijHerstart"));
+  }
+
   function vraagKoppelingAan(koppeling: KoppelingDef) {
     meld(t("toast.koppelingAanvraag", { naam: koppeling.naam }));
   }
@@ -655,7 +668,7 @@ export default function App() {
         />
       )}
       {rol === "bedrijf" && effectieveTab === "koppelingen" && (
-        <KoppelingenView state={state} nu={nu} onReplay={replayKoppeling} onAanvragen={vraagKoppelingAan} />
+        <KoppelingenView state={state} nu={nu} onReplay={replayKoppeling} onAanvragen={vraagKoppelingAan} onHerstart={herstartWachtrij} />
       )}
       {rol === "bedrijf" && effectieveTab === "kaart" && <KaartView state={state} nu={nu} />}
       {rol === "bedrijf" && effectieveTab === "uren" && <UrenView state={state} nu={nu} />}

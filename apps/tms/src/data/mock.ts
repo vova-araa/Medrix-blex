@@ -9,6 +9,7 @@ import type {
   MailThread, RitKm, Tarief,
 } from "./bron";
 import type { Referentie } from "@sharzi/domain";
+import type { WachtrijItem } from "@sharzi/connector-kit";
 
 // Demodag voor Blex: 2026-08-07. Alle tijden staan in UTC (CLAUDE.md §5.3);
 // Europe/Amsterdam is die dag UTC+2, dus 06:30 lokaal = 04:30Z.
@@ -417,6 +418,21 @@ const referenties: Referentie[] = [
   { chauffeur: "S. de Boer", datum: "2026-08-07", dagRijMinuten: 0, weekRijMinuten: 3300, overtredingen: [], bron: "Roadsoft" },
 ];
 
+// Eén gefaalde uitgaande aanroep, zodat de dead-letter wachtrij in de hub
+// zichtbaar is: een bericht dat blijft staan tot iemand het afhandelt.
+const wachtrij: WachtrijItem[] = [
+  {
+    id: "dlq-1",
+    koppelingId: "truck_and_trailer",
+    actie: "kilometerstand:43BKL7",
+    inhoud: { kenteken: "43BKL7", kmStand: 412_698 },
+    foutSoort: "tijdelijk",
+    foutmelding: "Time-out na 3 pogingen — leverancier reageerde niet binnen 30 s",
+    eersteFoutIso: dag("09:12"),
+    pogingen: 3,
+  },
+];
+
 export class MockDataBron implements DataBron {
   // Vloot en trailers komen door de Truck & Trailer-koppeling binnen
   // (fixture-client tot de echte API-afspraken er zijn — zie
@@ -462,6 +478,7 @@ export class MockDataBron implements DataBron {
       tachoBron,
       tachoSync: tacho.opgehaaldOp,
       referenties,
+      wachtrij,
       mailThreads,
       koppelingLog,
     };

@@ -73,7 +73,8 @@ export type Actie =
   | { type: "mail_bericht"; threadId: string; bericht: MailBericht }
   | { type: "mail_gelezen"; threadId: string }
   | { type: "koppeling_replay"; logId: string; regel: KoppelingLogRegel }
-  | { type: "koppeling_log"; regel: KoppelingLogRegel };
+  | { type: "koppeling_log"; regel: KoppelingLogRegel }
+  | { type: "wachtrij_opgelost"; itemId: string; nuIso: string };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
@@ -82,7 +83,7 @@ export const leegState: AppState = {
   weekRijMinuten: {}, vorigeWeekRijMinuten: {}, weekArbeidMinuten: {},
   wagenparkSync: "", mailThreads: [], koppelingLog: [],
   tachoUitlezingen: [], tachoToestemmingen: [], tachoBron: {}, tachoSync: "",
-  referenties: [],
+  referenties: [], wachtrij: [],
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
   beleid: { klantbericht: "automatisch", herplannen: "voorstel", wachturen: "automatisch" },
@@ -191,6 +192,13 @@ export function reducer(state: AppState, actie: Actie): AppState {
         ...state,
         mailThreads: state.mailThreads.map((thread) =>
           thread.id === actie.threadId ? { ...thread, ongelezen: false } : thread
+        ),
+      };
+    case "wachtrij_opgelost":
+      return {
+        ...state,
+        wachtrij: state.wachtrij.map((item) =>
+          item.id === actie.itemId ? { ...item, opgelostIso: actie.nuIso } : item
         ),
       };
     case "koppeling_log":

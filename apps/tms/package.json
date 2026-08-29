@@ -13,6 +13,7 @@
     "@sharzi/domain": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "@sharzi/connector-kit": "workspace:*",
     "@sharzi/integratie-tacho": "workspace:*",
     "@sharzi/integratie-truck-and-trailer": "workspace:*"
   },

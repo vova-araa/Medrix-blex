@@ -1,3 +1,7 @@
+// Retry, foutsoorten en idempotentie komen uit de gedeelde connector-kit —
+// elke koppeling gebruikt dezelfde regels (CLAUDE.md §6.3).
+export { metRetry, KoppelingFout, foutVanStatus } from "@sharzi/connector-kit";
+import { foutVanStatus, metRetry } from "@sharzi/connector-kit";
 import { mapVloot } from "./mapping";
 import type { ExternVlootRespons, Vloot } from "./types";
 import { vlootFixture } from "./fixtures/vloot";
@@ -13,36 +17,6 @@ export interface TruckAndTrailerClient {
 export class FixtureTruckAndTrailerClient implements TruckAndTrailerClient {
   haalVloot(): Promise<Vloot> {
     return Promise.resolve(mapVloot(vlootFixture));
-  }
-}
-
-/**
- * Retry met exponential backoff voor de echte HTTP-client (directive:
- * 3 pogingen — 1 s, 2 s, 4 s). Autorisatiefouten (401/403) worden nooit
- * opnieuw geprobeerd: die vragen om nieuwe credentials, niet om geduld.
- */
-export async function metRetry<T>(
-  actie: () => Promise<T>,
-  pogingen = 3,
-  wachtMs = 1000,
-  slaap: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms))
-): Promise<T> {
-  let laatsteFout: unknown;
-  for (let poging = 0; poging < pogingen; poging++) {
-    try {
-      return await actie();
-    } catch (fout) {
-      laatsteFout = fout;
-      if (fout instanceof AutorisatieFout) throw fout;
-      if (poging < pogingen - 1) await slaap(wachtMs * 2 ** poging);
-    }
-  }
-  throw laatsteFout;
-}
-
-export class AutorisatieFout extends Error {
-  constructor() {
-    super("Truck & Trailer: credentials geweigerd (401/403) — vernieuw ze in de tenant-vault");
   }
 }
 
@@ -63,11 +37,16 @@ export class HttpTruckAndTrailerClient implements TruckAndTrailerClient {
       const respons = await fetch(`${this.basisUrl}/fleet`, {
         headers: { Authorization: `Bearer ${credential}` },
       });
-      if (respons.status === 401 || respons.status === 403) {
-        throw new AutorisatieFout();
-      }
       if (!respons.ok) {
-        throw new Error(`Truck & Trailer: HTTP ${respons.status}`);
+        // De kit bepaalt op basis van de status of opnieuw proberen zin heeft.
+        throw foutVanStatus(
+          "truck_and_trailer",
+          respons.status,
+          `Truck & Trailer gaf HTTP ${respons.status}`,
+          respons.headers.get("retry-after")
+            ? Number(respons.headers.get("retry-after")) * 1000
+            : undefined
+        );
       }
       return mapVloot((await respons.json()) as ExternVlootRespons);
     });

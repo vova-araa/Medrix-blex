@@ -1,3 +1,4 @@
+import type { WachtrijItem } from "@sharzi/connector-kit";
 import type {
   ActiviteitBron, Adres, DockEvent, EmballageTransactie, Order, Rit, Taak, TaakEvent,
   Referentie, TachoToestemming, TachoUitlezing, WerktijdEvent, Zending,
@@ -149,6 +150,8 @@ export interface DagSnapshot {
   tachoSync: string;
   /** Referentiecijfers uit het bestaande pakket, voor het schaduwdraaien. */
   referenties: Referentie[];
+  /** Uitgaande aanroepen die na alle pogingen faalden (§6.3). */
+  wachtrij: WachtrijItem[];
 }
 
 export interface DataBron {

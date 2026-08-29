@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { AutorisatieFout, FixtureTruckAndTrailerClient, metRetry } from "../src/client";
+import { FixtureTruckAndTrailerClient } from "../src/client";
+import { foutVanStatus, KoppelingFout, metRetry } from "@sharzi/connector-kit";
 import { mapVloot } from "../src/mapping";
 import { vlootFixture } from "../src/fixtures/vloot";
 import type { ExternVlootRespons } from "../src/types";
@@ -60,25 +61,33 @@ describe("contract: client", () => {
     expect(vloot.voertuigen.length + vloot.trailers.length).toBe(7);
   });
 
-  it("metRetry probeert 3× met backoff en geeft daarna de laatste fout", async () => {
+  it("gebruikt de gedeelde retry: drie pogingen met verdubbelende wachttijd", async () => {
     let pogingen = 0;
     const wachttijden: number[] = [];
     await expect(
       metRetry(
-        async () => { pogingen++; throw new Error("kapot"); },
-        3, 1000,
-        async (ms) => { wachttijden.push(ms); }
+        async () => { pogingen++; throw new KoppelingFout("truck_and_trailer", "tijdelijk", "kapot"); },
+        { pogingen: 3, wachtMs: 1000, slaap: async (ms) => { wachttijden.push(ms); } }
       )
     ).rejects.toThrow("kapot");
     expect(pogingen).toBe(3);
     expect(wachttijden).toEqual([1000, 2000]);
   });
 
-  it("metRetry probeert autorisatiefouten nooit opnieuw", async () => {
+  it("vertaalt een 401 naar een autorisatiefout die nooit herhaald wordt", async () => {
     let pogingen = 0;
+    const fout = foutVanStatus("truck_and_trailer", 401, "credentials geweigerd");
+    expect(fout.soort).toBe("autorisatie");
     await expect(
-      metRetry(async () => { pogingen++; throw new AutorisatieFout(); }, 3, 1, async () => {})
-    ).rejects.toBeInstanceOf(AutorisatieFout);
+      metRetry(async () => { pogingen++; throw fout; }, { pogingen: 3, slaap: async () => {} })
+    ).rejects.toThrow("credentials geweigerd");
     expect(pogingen).toBe(1);
+  });
+
+  it("vertaalt een 429 naar een rate limit die wél opnieuw geprobeerd wordt", () => {
+    const fout = foutVanStatus("truck_and_trailer", 429, "te snel", 2000);
+    expect(fout.soort).toBe("rate_limit");
+    expect(fout.herhaalbaar).toBe(true);
+    expect(fout.opnieuwNaMs).toBe(2000);
   });
 });

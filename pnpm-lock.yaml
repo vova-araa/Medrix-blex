@@ -10,6 +10,9 @@ importers:
 
   apps/tms:
     dependencies:
+      '@sharzi/connector-kit':
+        specifier: workspace:*
+        version: link:../../packages/connector-kit
       '@sharzi/domain':
         specifier: workspace:*
         version: link:../../packages/domain
@@ -44,6 +47,9 @@ importers:
 
   integrations/tacho:
     dependencies:
+      '@sharzi/connector-kit':
+        specifier: workspace:*
+        version: link:../../packages/connector-kit
       '@sharzi/domain':
         specifier: workspace:*
         version: link:../../packages/domain
@@ -57,9 +63,21 @@ importers:
 
   integrations/truck_and_trailer:
     dependencies:
+      '@sharzi/connector-kit':
+        specifier: workspace:*
+        version: link:../../packages/connector-kit
       '@sharzi/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+    devDependencies:
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9
+
+  packages/connector-kit:
     devDependencies:
       typescript:
         specifier: ^5.6.0
