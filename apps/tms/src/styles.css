@@ -1095,6 +1095,8 @@
 .bron-chip.b-tachograaf { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
 .bron-chip.b-app { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
 
+.plate-klein { font-size: 10px; padding: 2px 6px; }
+
 .naleving-lijst { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
 .naleving-regel {
   display: flex; gap: 10px; align-items: start;

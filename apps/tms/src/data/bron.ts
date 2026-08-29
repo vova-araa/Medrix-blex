@@ -68,6 +68,8 @@ export interface RitKm {
 
 export interface WagenparkItem {
   kenteken: string;
+  /** Laatste tachograafkeuring; leeg = onbekend, en dat is zelf een signaal. */
+  tachograafGekeurd?: string;
   landcode: string;
   omschrijving: string;
   kmStand: number;

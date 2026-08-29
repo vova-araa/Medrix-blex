@@ -25,6 +25,7 @@ function naarVoertuig(extern: ExternVoertuig): KoppelingVoertuig {
     omschrijving: extern.description,
     kmStand: extern.odometerKm ?? 0,
     apkTot: extern.motExpiryDate ?? "",
+    tachograafGekeurd: extern.tachographInspectionDate,
     volgendeOnderhoudKm: extern.nextServiceKm ?? 0,
     verbruikL100: extern.fuelConsumptionL100 ?? 0,
     kostenPerMaandCenten: extern.monthlyCostCents ?? 0,

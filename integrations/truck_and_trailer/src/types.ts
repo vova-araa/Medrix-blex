@@ -10,6 +10,8 @@ export interface ExternVoertuig {
   description: string;
   odometerKm?: number;
   motExpiryDate?: string;
+  /** Laatste periodieke tachograafkeuring (elke 2 jaar verplicht). */
+  tachographInspectionDate?: string;
   nextServiceKm?: number;
   fuelConsumptionL100?: number;
   monthlyCostCents?: number;
@@ -29,6 +31,7 @@ export interface KoppelingVoertuig {
   omschrijving: string;
   kmStand: number;
   apkTot: string;
+  tachograafGekeurd?: string;
   volgendeOnderhoudKm: number;
   verbruikL100: number;
   kostenPerMaandCenten: number;

@@ -10,13 +10,13 @@ export const vlootFixture: ExternVlootRespons = {
     {
       registration: "43-BKL-7", countryCode: "nl", category: "TRACTOR",
       description: "Trekker + city-trailer", odometerKm: 412_680,
-      motExpiryDate: "2026-09-02", nextServiceKm: 420_000,
+      motExpiryDate: "2026-09-02", tachographInspectionDate: "2025-06-01", nextServiceKm: 420_000,
       fuelConsumptionL100: 27.4, monthlyCostCents: 312_500,
     },
     {
       registration: "87-TDF-3", countryCode: "NL", category: "RIGID",
       description: "Bakwagen", odometerKm: 188_240,
-      motExpiryDate: "2027-03-15", nextServiceKm: 195_000,
+      motExpiryDate: "2027-03-15", tachographInspectionDate: "2024-05-10", nextServiceKm: 195_000,
       fuelConsumptionL100: 21.1, monthlyCostCents: 218_000,
     },
     {
