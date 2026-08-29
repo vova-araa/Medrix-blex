@@ -60,7 +60,7 @@ import {
   type BeleidStand,
 } from "./data/state";
 import { geschatteRijMinuten } from "./kaart/simulatie";
-import { statusLabel, t } from "./i18n";
+import { statusLabel, t, zetTaal, type Taal } from "./i18n";
 import { datumKort, laadmeters } from "./utils";
 
 const TENANT = "blex";
@@ -84,6 +84,9 @@ export default function App() {
   const [uitval, setUitval] = useState<{ ritId: string; chauffeur: string; resultaat: VervangResultaat } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [zijbalkIn, setZijbalkIn] = useState(false);
+  // De taal staat in de state, niet alleen in de i18n-module: anders
+  // hertekent alleen de taalkiezer en blijft de rest van de app staan.
+  const [huidigeTaal, setHuidigeTaal] = useState<Taal>("nl");
   const [simMs, setSimMs] = useState(SIM_START);
   const toastTimer = useRef<number | undefined>(undefined);
 
@@ -801,6 +804,8 @@ export default function App() {
           onNulCmr={nulCmr}
           onZetTrailer={zetTrailer}
           onRitKm={ritKm}
+          taal={huidigeTaal}
+          onZetTaal={(nieuw) => { zetTaal(nieuw); setHuidigeTaal(nieuw); }}
         />
       )}
 

@@ -1088,6 +1088,22 @@
 
 .schaduw-verschillen { display: flex; flex-wrap: wrap; gap: 4px; }
 
+.eigen-rijtijden { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
+.eigen-knop { width: 100%; justify-content: center; display: flex; align-items: center; gap: 7px; }
+.eigen-lijst { display: grid; gap: 5px; margin: 10px 0 6px; }
+.eigen-lijst > div { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; }
+.eigen-lijst dt { color: var(--muted); margin: 0; }
+.eigen-lijst dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.outbox-kaart h4 { margin: 0 0 4px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.taal-kaart { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.taal-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); font-weight: 700; }
+.taal-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.taal-chips button {
+  border: 1px solid var(--line-strong); background: transparent; color: var(--muted);
+  border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 12px; cursor: pointer;
+}
+.taal-chips button.actief { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
 .factuur-lijst { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin-top: 12px; }
 .factuur-kaart { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--surface); }
 .factuur-kop { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }

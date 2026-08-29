@@ -1,4 +1,5 @@
 import {
+  RIJTIJD_REGELS,
   formatteerKenteken,
   urenTotalen,
   type EmballageSoort,
@@ -20,7 +21,7 @@ import {
   zendingVan,
   type AppState,
 } from "../data/state";
-import { statusLabel, t } from "../i18n";
+import { statusLabel, t, TALEN, type Taal } from "../i18n";
 import { initialen, tijd, venster } from "../utils";
 import { Icoon, type IcoonNaam } from "./Icoon";
 
@@ -37,11 +38,13 @@ interface Props {
   onNulCmr: (taakId: string) => void;
   onZetTrailer: (ritId: string, kenteken: string) => void;
   onRitKm: (ritId: string, veld: "start" | "eind", waarde: number) => void;
+  taal: Taal;
+  onZetTaal: (taal: Taal) => void;
 }
 
 export function ChauffeurView({
   state, nu, actieveChauffeur, onKiesChauffeur, onRegistreer, onWerktijdEvent,
-  onZetOffline, onEmballage, onCmr, onNulCmr, onZetTrailer, onRitKm,
+  onZetOffline, onEmballage, onCmr, onNulCmr, onZetTrailer, onRitKm, taal, onZetTaal,
 }: Props) {
   const [verbergGedane, setVerbergGedane] = useState(false);
   const chauffeurs = state.ritten.map((r) => r.chauffeur).filter(Boolean);
@@ -227,6 +230,15 @@ export function ChauffeurView({
             </label>
           </div>
 
+          {state.offline && state.outbox > 0 && (
+            <div className="ph-card outbox-kaart">
+              <h4><Icoon naam="pakket" maat={13} /> {t("outbox.titel")} ({state.outbox})</h4>
+              <p className="klok-noot">{t("outbox.noot")}</p>
+            </div>
+          )}
+
+          <TaalKiezer taal={taal} onZetTaal={onZetTaal} />
+
           <p className="nacht-note"><Icoon naam="maan" maat={12} /> {t("chauffeur.nachtNoot")}</p>
         </div>
       </div>
@@ -270,6 +282,29 @@ function KmKaart({
 const urenTekst = (minuten: number) =>
   `${Math.floor(minuten / 60)}:${String(minuten % 60).padStart(2, "0")}`;
 
+/**
+ * Taalwissel voor de chauffeur. NL is volledig; EN, PL en RO dekken de
+ * chauffeursapp en vallen per sleutel terug op Nederlands als iets ontbreekt.
+ */
+function TaalKiezer({ taal, onZetTaal }: { taal: Taal; onZetTaal: (taal: Taal) => void }) {
+  return (
+    <div className="ph-card taal-kaart">
+      <span className="taal-label">{t("taal.kies")}</span>
+      <div className="taal-chips">
+        {TALEN.map((optie) => (
+          <button
+            key={optie.code}
+            className={optie.code === taal ? "actief" : ""}
+            onClick={() => onZetTaal(optie.code)}
+          >
+            {optie.naam}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function KlokKaart({
   state, nu, chauffeur, onWerktijdEvent,
 }: {
@@ -287,6 +322,7 @@ function KlokKaart({
       : [
           ...(totalen.actief !== "rijden" ? [["rijden_gestart", t("klok.rijden"), "stuur"] as [WerktijdEventType, string, IcoonNaam]] : []),
           ...(totalen.actief !== "werk" ? [["werk_gestart", t("klok.werk"), "pakket"] as [WerktijdEventType, string, IcoonNaam]] : []),
+          ...(totalen.actief !== "beschikbaar" ? [["beschikbaar_gestart", t("klok.beschikbaar"), "timer"] as [WerktijdEventType, string, IcoonNaam]] : []),
           ...(totalen.actief !== "pauze" ? [["pauze_gestart", t("klok.pauze"), "koffie"] as [WerktijdEventType, string, IcoonNaam]] : []),
           ["uitgeklokt", t("klok.uitklokken"), "stopblok"],
         ];
@@ -306,6 +342,7 @@ function KlokKaart({
         <div><b>{urenTekst(totalen.rijMinuten)}</b><span>{t("uren.rijden")}</span></div>
         <div><b>{urenTekst(totalen.werkMinuten)}</b><span>{t("uren.werk")}</span></div>
         <div><b>{urenTekst(totalen.pauzeMinuten)}</b><span>{t("uren.pauze")}</span></div>
+        <div><b>{urenTekst(totalen.beschikbaarMinuten)}</b><span>{t("uren.beschikbaar")}</span></div>
       </div>
       <div className="klok-knoppen">
         {knoppen.map(([type, label, icoon]) => (
@@ -328,7 +365,51 @@ function KlokKaart({
               pauzeOver: urenTekst(rijtijd.blokResterendMinuten),
             })}
       </p>
+      <EigenRijtijden rijtijd={rijtijd} bron={state.tachoBron[chauffeur] ?? "app"} />
       <p className="klok-noot">{t("klok.avgNoot")}</p>
+    </div>
+  );
+}
+
+/**
+ * De chauffeur moet zijn eigen registraties kunnen inzien (CLAUDE.md §9).
+ * Dit paneel toont precies wat de planner ook ziet — geen versimpelde versie,
+ * want dan gaan de cijfers uit elkaar lopen in een gesprek.
+ */
+function EigenRijtijden({
+  rijtijd, bron,
+}: {
+  rijtijd: ReturnType<typeof rijtijdVan>;
+  bron: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const regels: Array<[string, string]> = [
+    [t("eigen.dag"), `${urenTekst(rijtijd.dagRijMinuten)} / ${urenTekst(RIJTIJD_REGELS.maxDagRijMinuten)}`],
+    [t("eigen.blok"), urenTekst(rijtijd.blokResterendMinuten)],
+    [t("eigen.week"), `${urenTekst(rijtijd.weekRijMinuten)} / ${urenTekst(RIJTIJD_REGELS.maxWeekRijMinuten)}`],
+    [t("eigen.tweeWeken"), `${urenTekst(rijtijd.tweeWekenRijMinuten)} / ${urenTekst(RIJTIJD_REGELS.maxTweeWekenRijMinuten)}`],
+    [t("eigen.verlengingen"), `${rijtijd.verlengingenGebruikt} / ${RIJTIJD_REGELS.maxVerlengingenPerWeek}`],
+    ...(rijtijd.minutenTotWeekRustDeadline !== null
+      ? [[t("eigen.weekrust"), urenTekst(Math.max(0, rijtijd.minutenTotWeekRustDeadline))] as [string, string]]
+      : []),
+    [t("eigen.bron"), t(`rijtijd.bron.${bron === "tachograaf" ? "tachograaf" : "app"}`)],
+  ];
+
+  return (
+    <div className="eigen-rijtijden">
+      <button className="btn eigen-knop" onClick={() => setOpen(!open)} aria-expanded={open}>
+        <Icoon naam="stuur" maat={13} /> {open ? t("eigen.verberg") : t("eigen.toon")}
+      </button>
+      {open && (
+        <>
+          <dl className="eigen-lijst">
+            {regels.map(([label, waarde]) => (
+              <div key={label}><dt>{label}</dt><dd>{waarde}</dd></div>
+            ))}
+          </dl>
+          <p className="klok-noot">{t("eigen.noot")}</p>
+        </>
+      )}
     </div>
   );
 }
