@@ -16,6 +16,8 @@ import {
   type TaakStatus,
   type WerktijdEvent,
   type Zending,
+  type Factuur,
+  type FactuurStatus,
 } from "@sharzi/domain";
 import {
   adresSleutel,
@@ -74,7 +76,10 @@ export type Actie =
   | { type: "mail_gelezen"; threadId: string }
   | { type: "koppeling_replay"; logId: string; regel: KoppelingLogRegel }
   | { type: "koppeling_log"; regel: KoppelingLogRegel }
-  | { type: "wachtrij_opgelost"; itemId: string; nuIso: string };
+  | { type: "wachtrij_opgelost"; itemId: string; nuIso: string }
+  | { type: "factuur_opgemaakt"; factuur: Factuur }
+  | { type: "factuur_status"; nummer: string; status: FactuurStatus }
+  | { type: "creditnota"; factuur: Factuur };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
@@ -83,7 +88,8 @@ export const leegState: AppState = {
   weekRijMinuten: {}, vorigeWeekRijMinuten: {}, weekArbeidMinuten: {},
   wagenparkSync: "", mailThreads: [], koppelingLog: [],
   tachoUitlezingen: [], tachoToestemmingen: [], tachoBron: {}, tachoSync: "",
-  referenties: [], wachtrij: [],
+  referenties: [], wachtrij: [], facturen: [],
+  uitgever: { naam: "", adres: "", postcodePlaats: "", kvkNummer: "", btwNummer: "" },
   offline: false, outbox: 0,
   actieveModules: STANDAARD_ACTIEF,
   beleid: { klantbericht: "automatisch", herplannen: "voorstel", wachturen: "automatisch" },
@@ -193,6 +199,28 @@ export function reducer(state: AppState, actie: Actie): AppState {
         mailThreads: state.mailThreads.map((thread) =>
           thread.id === actie.threadId ? { ...thread, ongelezen: false } : thread
         ),
+      };
+    case "factuur_opgemaakt":
+      return { ...state, facturen: [...state.facturen, actie.factuur] };
+    case "factuur_status":
+      return {
+        ...state,
+        facturen: state.facturen.map((f) =>
+          f.nummer === actie.nummer ? { ...f, status: actie.status } : f
+        ),
+      };
+    case "creditnota":
+      // Het origineel blijft staan; alleen de status wijzigt naar gecrediteerd.
+      return {
+        ...state,
+        facturen: [
+          ...state.facturen.map((f) =>
+            f.nummer === actie.factuur.crediteertNummer
+              ? { ...f, status: "gecrediteerd" as FactuurStatus }
+              : f
+          ),
+          actie.factuur,
+        ],
       };
     case "wachtrij_opgelost":
       return {

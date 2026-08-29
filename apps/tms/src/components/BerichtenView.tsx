@@ -1,3 +1,4 @@
+import { SJABLONEN, vulSjabloon, type SjabloonId } from "@sharzi/domain";
 import { useState } from "react";
 import type { MailThread } from "../data/bron";
 import type { AppState } from "../data/state";
@@ -153,6 +154,7 @@ function NieuwBericht({ state, concept, onVerstuur }: {
   const [anderEmail, setAnderEmail] = useState(conceptIsKlant ? "" : concept?.email ?? "");
   const [onderwerp, setOnderwerp] = useState("");
   const [tekst, setTekst] = useState("");
+  const [ontbrekend, setOntbrekend] = useState<string[]>([]);
 
   const ander = keuze === "__ander__";
   const tegenpartij = ander ? anderNaam : keuze;
@@ -168,6 +170,35 @@ function NieuwBericht({ state, concept, onVerstuur }: {
     <>
       <div className="gesprek-kop"><h3>{t("mail.nieuwTitel")}</h3></div>
       <div className="mail-form">
+        <label>
+          {t("mail.sjabloon")}
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              const id = e.target.value as SjabloonId;
+              if (!id) return;
+              const sjabloon = SJABLONEN.find((sj) => sj.id === id)!;
+              const klant = state.klanten[ander ? "" : keuze];
+              const ingevuld = vulSjabloon(sjabloon, {
+                contactpersoon: klant?.contactpersoon ?? anderNaam,
+                ons: state.uitgever.naam,
+              });
+              setOnderwerp(ingevuld.onderwerp);
+              setTekst(ingevuld.tekst);
+              setOntbrekend(ingevuld.ontbrekend);
+            }}
+          >
+            <option value="">{t("mail.geenSjabloon")}</option>
+            {SJABLONEN.map((sj) => (
+              <option key={sj.id} value={sj.id}>{t(`sjabloon.${sj.id}`)}</option>
+            ))}
+          </select>
+        </label>
+        {ontbrekend.length > 0 && (
+          <p className="mail-ontbrekend">
+            <Icoon naam="waarschuwing" maat={12} /> {t("mail.nogInvullen", { velden: ontbrekend.join(", ") })}
+          </p>
+        )}
         <label>
           {t("mail.aan")}
           <select value={keuze} onChange={(e) => setKeuze(e.target.value)}>

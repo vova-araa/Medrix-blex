@@ -8,7 +8,7 @@ import type {
   AdresInfo, CmrRegistratie, DagSnapshot, DataBron, Klant, KoppelingLogRegel,
   MailThread, RitKm, Tarief,
 } from "./bron";
-import type { Referentie } from "@sharzi/domain";
+import type { Factuur, Referentie, Uitgever } from "@sharzi/domain";
 import type { WachtrijItem } from "@sharzi/connector-kit";
 
 // Demodag voor Blex: 2026-08-07. Alle tijden staan in UTC (CLAUDE.md §5.3);
@@ -279,12 +279,12 @@ const tarieven: Record<string, Tarief> = {
 };
 
 const klanten: Record<string, Klant> = {
-  "Jumbo Supermarkten BV": { naam: "Jumbo Supermarkten BV", contactpersoon: "R. van den Berg", email: "transport@jumbo.example", telefoon: "088 001 1201" },
-  "Van Dijk Agro BV": { naam: "Van Dijk Agro BV", contactpersoon: "K. van Dijk", email: "planning@vandijkagro.example", telefoon: "0492 33 41 20" },
-  "Brouwerij De Kroon": { naam: "Brouwerij De Kroon", contactpersoon: "S. Vermeulen", email: "expeditie@dekroon.example", telefoon: "0499 42 18 07" },
-  "Kwekerij Maasbree": { naam: "Kwekerij Maasbree", contactpersoon: "T. Peeters", email: "logistiek@kwekerijmaasbree.example", telefoon: "077 465 22 90" },
+  "Jumbo Supermarkten BV": { naam: "Jumbo Supermarkten BV", contactpersoon: "R. van den Berg", email: "transport@jumbo.example", telefoon: "088 001 1201", adres: "Rijksweg 15", postcodePlaats: "5462 CE Veghel" },
+  "Van Dijk Agro BV": { naam: "Van Dijk Agro BV", contactpersoon: "K. van Dijk", email: "planning@vandijkagro.example", telefoon: "0492 33 41 20", adres: "Bedrijfsweg 8", postcodePlaats: "5708 JT Helmond" },
+  "Brouwerij De Kroon": { naam: "Brouwerij De Kroon", contactpersoon: "S. Vermeulen", email: "expeditie@dekroon.example", telefoon: "0499 42 18 07", adres: "Sluisweg 3", postcodePlaats: "5737 BE Lieshout" },
+  "Kwekerij Maasbree": { naam: "Kwekerij Maasbree", contactpersoon: "T. Peeters", email: "logistiek@kwekerijmaasbree.example", telefoon: "077 465 22 90", adres: "Venloseweg 44", postcodePlaats: "5993 PL Maasbree" },
   "Bouwgroep Limburg BV": { naam: "Bouwgroep Limburg BV", contactpersoon: "M. Habets", email: "inkoop@bouwgroeplimburg.example", telefoon: "046 411 78 33" },
-  "Plus Retail": { naam: "Plus Retail", contactpersoon: "D. Smits", email: "dc@plusretail.example", telefoon: "030 851 66 40" },
+  "Plus Retail": { naam: "Plus Retail", contactpersoon: "D. Smits", email: "dc@plusretail.example", telefoon: "030 851 66 40", adres: "Bedrijvenpark 2", postcodePlaats: "3439 LC Nieuwegein" },
 };
 
 let dkTeller = 0;
@@ -433,6 +433,34 @@ const wachtrij: WachtrijItem[] = [
   },
 ];
 
+// Gegevens van de uitgever; wettelijk verplicht op elke factuur.
+const uitgever: Uitgever = {
+  naam: "Blex Logistics BV",
+  adres: "Havenweg 12",
+  postcodePlaats: "5928 NX Venlo",
+  kvkNummer: "12345678",
+  btwNummer: "NL001234567B01",
+  iban: "NL91BLEX0417164300",
+};
+
+// Eén eerder verstuurde factuur die over de vervaldatum is, zodat de
+// openstaande posten en de betalingsherinnering te zien zijn.
+const facturen: Factuur[] = [
+  {
+    nummer: "2026-0031",
+    tenantId: TENANT,
+    ontvanger: {
+      naam: "Van Dijk Agro BV", adres: "Bedrijfsweg 8", postcodePlaats: "5708 JT Helmond",
+    },
+    referentie: "VDA-2198",
+    datumIso: "2026-06-24T09:00:00Z",
+    vervaldatumIso: "2026-07-24T09:00:00Z",
+    regels: [{ omschrijving: "VDA-2198 · Venlo → Helmond (SHZ-113-884)", bedrag: { bedragCenten: 9_845, valuta: "EUR" } }],
+    btwBehandeling: "standaard",
+    status: "verstuurd",
+  },
+];
+
 export class MockDataBron implements DataBron {
   // Vloot en trailers komen door de Truck & Trailer-koppeling binnen
   // (fixture-client tot de echte API-afspraken er zijn — zie
@@ -479,6 +507,8 @@ export class MockDataBron implements DataBron {
       tachoSync: tacho.opgehaaldOp,
       referenties,
       wachtrij,
+      facturen,
+      uitgever,
       mailThreads,
       koppelingLog,
     };

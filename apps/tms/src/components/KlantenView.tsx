@@ -19,6 +19,8 @@ export function KlantenView({ state, onNieuweKlant, onMail }: Props) {
   const [contactpersoon, setContactpersoon] = useState("");
   const [email, setEmail] = useState("");
   const [telefoon, setTelefoon] = useState("");
+  const [adres, setAdres] = useState("");
+  const [postcodePlaats, setPostcodePlaats] = useState("");
   const [basis, setBasis] = useState("45.00");
   const [perLm, setPerLm] = useState("18.50");
 
@@ -43,6 +45,8 @@ export function KlantenView({ state, onNieuweKlant, onMail }: Props) {
         contactpersoon: contactpersoon.trim(),
         email: email.trim(),
         telefoon: telefoon.trim(),
+        adres: adres.trim(),
+        postcodePlaats: postcodePlaats.trim(),
       },
       {
         basisCenten: Math.round(Number(basis) * 100) || 4500,
@@ -50,6 +54,7 @@ export function KlantenView({ state, onNieuweKlant, onMail }: Props) {
       }
     );
     setNaam(""); setContactpersoon(""); setEmail(""); setTelefoon("");
+    setAdres(""); setPostcodePlaats("");
     setFormOpen(false);
   }
 
@@ -82,6 +87,15 @@ export function KlantenView({ state, onNieuweKlant, onMail }: Props) {
                 <input value={telefoon} onChange={(e) => setTelefoon(e.target.value)} />
               </label>
             </div>
+            <div className="order-rij">
+              <label>{t("klanten.adres")}
+                <input value={adres} onChange={(e) => setAdres(e.target.value)} placeholder={t("klanten.adresVoorbeeld")} />
+              </label>
+              <label>{t("klanten.postcodePlaats")}
+                <input value={postcodePlaats} onChange={(e) => setPostcodePlaats(e.target.value)} placeholder={t("klanten.postcodeVoorbeeld")} />
+              </label>
+            </div>
+            <p className="uren-noot">{t("klanten.adresNoot")}</p>
             <div className="order-rij">
               <label>{t("tarieven.basis")}
                 <input type="number" min="0" step="0.50" value={basis} onChange={(e) => setBasis(e.target.value)} />

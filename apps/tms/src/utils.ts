@@ -23,3 +23,10 @@ export function initialen(naam: string): string {
   const delen = naam.split(/\s+/).filter((w) => /[\p{L}]/u.test(w[0] ?? ""));
   return delen.map((w) => w[0].toUpperCase()).slice(0, 2).join("") || "—";
 }
+
+/** Korte datum in lokale weergave: 7 aug 2026. */
+export function datumKort(iso: string): string {
+  return new Intl.DateTimeFormat("nl-NL", {
+    day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Amsterdam",
+  }).format(new Date(iso));
+}

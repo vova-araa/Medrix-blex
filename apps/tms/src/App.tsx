@@ -1,6 +1,15 @@
 import {
+  achterstallig,
   automatischPlan,
+  formatteerGeld,
   kanInplannen,
+  maakCreditnota,
+  sjabloonVan,
+  totalenVan,
+  vervaldatum,
+  volgendFactuurnummer,
+  vulSjabloon,
+  type Factuur,
   type DockEventType, type EmballageSoort, type Order, type PlanResultaat, type VervangResultaat,
   type PlanVoorstel, type Taak, type TaakEvent,
   type TaakEventType, type WerktijdEventType, type Zending,
@@ -30,6 +39,7 @@ import { WagenparkView } from "./components/WagenparkView";
 import { Zijbalk } from "./components/Zijbalk";
 import type { AdresFoto, CmrSoort, Klant, Tarief } from "./data/bron";
 import { benodigdeBerichten, type BerichtVoorstel } from "./data/communicatie";
+import { conceptFacturen } from "./data/facturen";
 import { herstelVoorstellen, type HerstelVoorstel } from "./data/herstel";
 import { vervangingVoorRit } from "./data/uitval";
 import { VervangingView } from "./components/VervangingView";
@@ -51,7 +61,7 @@ import {
 } from "./data/state";
 import { geschatteRijMinuten } from "./kaart/simulatie";
 import { statusLabel, t } from "./i18n";
-import { laadmeters } from "./utils";
+import { datumKort, laadmeters } from "./utils";
 
 const TENANT = "blex";
 const bron = new MockDataBron();
@@ -466,6 +476,89 @@ export default function App() {
     setUitval(null);
   }
 
+  // ── Facturatie ────────────────────────────────────────────────────────────
+  /** Conceptfactuur omzetten in een echte factuur met doorlopend nummer. */
+  function maakFactuur(opdrachtgever: string) {
+    const concept = conceptFacturen(state).find((c) => c.opdrachtgever === opdrachtgever);
+    if (!concept) return;
+    const jaar = Number(nu.slice(0, 4));
+    const nummer = volgendFactuurnummer(
+      state.facturen.flatMap((f) => (f.nummer ? [f.nummer] : [])),
+      jaar
+    );
+    const klant = state.klanten[opdrachtgever];
+    const factuur: Factuur = {
+      nummer,
+      tenantId: TENANT,
+      ontvanger: {
+        naam: opdrachtgever,
+        adres: klant?.adres,
+        postcodePlaats: klant?.postcodePlaats,
+      },
+      datumIso: nu,
+      vervaldatumIso: vervaldatum(nu),
+      regels: concept.regels,
+      btwBehandeling: "standaard",
+      status: "concept",
+    };
+    dispatch({ type: "factuur_opgemaakt", factuur });
+    meld(t("toast.factuurOpgemaakt", { nummer, klant: opdrachtgever }));
+  }
+
+  /** Factuur versturen: gaat als mail met sjabloon naar het berichtencentrum. */
+  function verstuurFactuur(nummer: string) {
+    const factuur = state.facturen.find((f) => f.nummer === nummer);
+    if (!factuur) return;
+    const klant = state.klanten[factuur.ontvanger.naam];
+    const totaal = formatteerGeld(totalenVan(factuur).totaal);
+    const herinnering = factuur.status === "verstuurd";
+    const post = achterstallig(state.facturen, nu).find((p) => p.nummer === nummer);
+
+    const ingevuld = vulSjabloon(
+      sjabloonVan(herinnering ? "betalingsherinnering" : "factuur_versturen"),
+      {
+        contactpersoon: klant?.contactpersoon,
+        factuurnummer: nummer,
+        datum: factuur.datumIso ? datumKort(factuur.datumIso) : "",
+        totaal,
+        vervaldatum: factuur.vervaldatumIso ? datumKort(factuur.vervaldatumIso) : "",
+        dagenTeLaat: post?.dagenTeLaat,
+        ons: state.uitgever.naam,
+      }
+    );
+
+    dispatch({ type: "mail_nieuw", thread: {
+      id: crypto.randomUUID(),
+      tegenpartij: factuur.ontvanger.naam,
+      email: klant?.email ?? "",
+      onderwerp: ingevuld.onderwerp,
+      berichten: [{
+        id: crypto.randomUUID(), richting: "uit", tekst: ingevuld.tekst,
+        tijdstip: nu, wie: t("mail.afzender"),
+      }],
+    }});
+    logMail(t("koppeling.mailUit", { aan: factuur.ontvanger.naam }));
+    if (!herinnering) dispatch({ type: "factuur_status", nummer, status: "verstuurd" });
+    meld(t("toast.factuurVerstuurd", { nummer, klant: factuur.ontvanger.naam }));
+  }
+
+  function markeerBetaald(nummer: string) {
+    dispatch({ type: "factuur_status", nummer, status: "betaald" });
+    meld(t("toast.factuurBetaald", { nummer }));
+  }
+
+  function crediteerFactuur(nummer: string) {
+    const origineel = state.facturen.find((f) => f.nummer === nummer);
+    if (!origineel) return;
+    const jaar = Number(nu.slice(0, 4));
+    const creditNummer = volgendFactuurnummer(
+      state.facturen.flatMap((f) => (f.nummer ? [f.nummer] : [])),
+      jaar
+    );
+    dispatch({ type: "creditnota", factuur: maakCreditnota(origineel, creditNummer, nu) });
+    meld(t("toast.creditnota", { nummer: creditNummer, origineel: nummer }));
+  }
+
   /** Een gefaalde uitgaande aanroep opnieuw aanbieden. */
   function herstartWachtrij(itemId: string) {
     const item = state.wachtrij.find((w) => w.id === itemId);
@@ -673,7 +766,15 @@ export default function App() {
       {rol === "bedrijf" && effectieveTab === "kaart" && <KaartView state={state} nu={nu} />}
       {rol === "bedrijf" && effectieveTab === "uren" && <UrenView state={state} nu={nu} />}
       {rol === "bedrijf" && effectieveTab === "facturen" && (
-        <FacturenView state={state} onZetTarief={zetTarief} />
+        <FacturenView
+          state={state}
+          nu={nu}
+          onZetTarief={zetTarief}
+          onMaakFactuur={maakFactuur}
+          onVerstuurFactuur={verstuurFactuur}
+          onMarkeerBetaald={markeerBetaald}
+          onCrediteer={crediteerFactuur}
+        />
       )}
       {rol === "bedrijf" && effectieveTab === "emballage" && <EmballageView state={state} />}
       {rol === "bedrijf" && effectieveTab === "portaal" && (

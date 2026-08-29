@@ -1,7 +1,7 @@
 import type { WachtrijItem } from "@sharzi/connector-kit";
 import type {
   ActiviteitBron, Adres, DockEvent, EmballageTransactie, Order, Rit, Taak, TaakEvent,
-  Referentie, TachoToestemming, TachoUitlezing, WerktijdEvent, Zending,
+  Factuur, Referentie, TachoToestemming, Uitgever, TachoUitlezing, WerktijdEvent, Zending,
 } from "@sharzi/domain";
 
 // De UI praat alleen met deze poort. Nu zit er een mock achter (in-memory);
@@ -35,6 +35,11 @@ export interface Klant {
   contactpersoon: string;
   email: string;
   telefoon: string;
+  /** Verplicht op een factuur; ontbreekt het, dan blokkeert verzending. */
+  adres?: string;
+  postcodePlaats?: string;
+  /** Nodig bij btw-verlegging binnen de EU. */
+  btwNummer?: string;
 }
 
 /** Trailer uit het wagenpark; toewijzing aan ritten doet de administratie. */
@@ -154,6 +159,10 @@ export interface DagSnapshot {
   referenties: Referentie[];
   /** Uitgaande aanroepen die na alle pogingen faalden (§6.3). */
   wachtrij: WachtrijItem[];
+  /** Opgemaakte facturen; concepten worden apart afgeleid uit zendingen. */
+  facturen: Factuur[];
+  /** Gegevens van de uitgevende partij — wettelijk verplicht op elke factuur. */
+  uitgever: Uitgever;
 }
 
 export interface DataBron {

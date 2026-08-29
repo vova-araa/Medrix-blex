@@ -1,60 +1,185 @@
-import { formatteerGeld } from "@sharzi/domain";
+import {
+  achterstallig, formatteerGeld, magVerstuurdWorden, ontbrekendeGegevens,
+  totalenVan, type Factuur,
+} from "@sharzi/domain";
+import { useState } from "react";
 import type { Tarief } from "../data/bron";
 import { conceptFacturen } from "../data/facturen";
 import type { AppState } from "../data/state";
 import { t } from "../i18n";
+import { datumKort } from "../utils";
+import { Icoon } from "./Icoon";
 
 interface Props {
   state: AppState;
+  nu: string;
   onZetTarief: (opdrachtgever: string, tarief: Tarief) => void;
+  onMaakFactuur: (opdrachtgever: string) => void;
+  onVerstuurFactuur: (nummer: string) => void;
+  onMarkeerBetaald: (nummer: string) => void;
+  onCrediteer: (nummer: string) => void;
 }
 
-export function FacturenView({ state, onZetTarief }: Props) {
-  const facturen = conceptFacturen(state);
-  const opdrachtgevers = [...new Set(Object.values(state.orders).map((o) => o.opdrachtgever))].sort();
+const STATUS_CHIP: Record<Factuur["status"], string> = {
+  concept: "rt-warn",
+  verstuurd: "k-actief",
+  betaald: "rt-ok",
+  gecrediteerd: "k-hersteld",
+};
+
+export function FacturenView({
+  state, nu, onZetTarief, onMaakFactuur, onVerstuurFactuur, onMarkeerBetaald, onCrediteer,
+}: Props) {
+  const concepten = conceptFacturen(state);
+  const openstaand = achterstallig(state.facturen, nu);
+  // Voor wie is er nog geen factuur opgemaakt vandaag?
+  const alReedsGefactureerd = new Set(
+    state.facturen.filter((f) => f.status !== "gecrediteerd").map((f) => f.ontvanger.naam)
+  );
 
   return (
-    <div className="facturen-main">
-      <div className="facturen-kop">
-        <h3 className="zij-kop">{t("facturen.titel")}</h3>
-        <p className="uren-noot">{t("facturen.noot")}</p>
+    <div className="uren-main">
+      {openstaand.length > 0 && (
+        <div className="ph-card uren-kaart">
+          <div className="operatie-kop">
+            <h3 className="zij-kop"><Icoon naam="waarschuwing" maat={15} /> {t("factuur.openstaand")}</h3>
+            <span className="melding-teller">{openstaand.length}</span>
+          </div>
+          <p className="uren-noot">{t("factuur.openstaandNoot")}</p>
+          <div className="table-scroll">
+            <table className="uren-tabel">
+              <thead>
+                <tr>
+                  <th>{t("factuur.nummer")}</th>
+                  <th>{t("factuur.ontvanger")}</th>
+                  <th>{t("factuur.bedrag")}</th>
+                  <th>{t("factuur.vervallen")}</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {openstaand.map((post) => (
+                  <tr key={post.nummer} className="log-fout">
+                    <td className="mono">{post.nummer}</td>
+                    <td>{post.ontvanger}</td>
+                    <td><b>{formatteerGeld(post.totaal)}</b></td>
+                    <td><span className="klok-chip rt-kritiek">{t("factuur.dagenTeLaat", { dagen: post.dagenTeLaat })}</span></td>
+                    <td>
+                      <button className="btn knop-met-icoon" onClick={() => onVerstuurFactuur(post.nummer)}>
+                        <Icoon naam="mail" maat={12} /> {t("factuur.herinner")}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div className="ph-card uren-kaart">
+        <h3 className="zij-kop">{t("factuur.concepten")}</h3>
+        <p className="uren-noot">{t("factuur.conceptenNoot")}</p>
+        {concepten.length === 0 && <p className="kaart-kies">{t("factuur.geenConcepten")}</p>}
+        <div className="factuur-lijst">
+          {concepten.map((concept) => (
+            <div className="factuur-kaart" key={concept.opdrachtgever}>
+              <div className="factuur-kop">
+                <b>{concept.opdrachtgever}</b>
+                <span className="factuur-totaal">{formatteerGeld(concept.totalen.totaal)}</span>
+              </div>
+              <ul className="factuur-regels">
+                {concept.regels.map((regel, i) => (
+                  <li key={i}>
+                    <span>{regel.omschrijving}</span>
+                    <span className="mono">{formatteerGeld(regel.bedrag)}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="factuur-voet">
+                <span className="uren-noot">
+                  {t("factuur.subtotaal")} {formatteerGeld(concept.totalen.subtotaal)} ·
+                  {" "}{t("factuur.btw")} {formatteerGeld(concept.totalen.btw)}
+                </span>
+                <button
+                  className="btn primary knop-met-icoon"
+                  disabled={alReedsGefactureerd.has(concept.opdrachtgever)}
+                  onClick={() => onMaakFactuur(concept.opdrachtgever)}
+                >
+                  <Icoon naam="factuur" maat={13} />
+                  {alReedsGefactureerd.has(concept.opdrachtgever)
+                    ? t("factuur.alGefactureerd")
+                    : t("factuur.maakOp")}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="ph-card uren-kaart tarieven-kaart">
-        <h4 className="zij-kop">{t("tarieven.titel")}</h4>
-        <p className="uren-noot">{t("tarieven.noot")}</p>
+      <div className="ph-card uren-kaart">
+        <h3 className="zij-kop">{t("factuur.opgemaakt")}</h3>
+        <p className="uren-noot">{t("factuur.opgemaaktNoot")}</p>
+        {state.facturen.length === 0 && <p className="kaart-kies">{t("factuur.geenOpgemaakt")}</p>}
         <div className="table-scroll">
           <table className="uren-tabel">
             <thead>
               <tr>
-                <th>{t("tarieven.opdrachtgever")}</th>
-                <th>{t("tarieven.basis")}</th>
-                <th>{t("tarieven.perLm")}</th>
+                <th>{t("factuur.nummer")}</th>
+                <th>{t("factuur.ontvanger")}</th>
+                <th>{t("factuur.datum")}</th>
+                <th>{t("factuur.bedrag")}</th>
+                <th>{t("factuur.status")}</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {opdrachtgevers.map((naam) => {
-                const tarief = state.tarieven[naam] ?? { basisCenten: 4500, perLaadmeterCenten: 1850 };
-                const zetCenten = (veld: keyof Tarief) => (waarde: string) =>
-                  onZetTarief(naam, { ...tarief, [veld]: Math.round(Number(waarde) * 100) });
+              {[...state.facturen].reverse().map((factuur) => {
+                const ontbreekt = ontbrekendeGegevens(factuur, state.uitgever);
+                const mag = magVerstuurdWorden(factuur, state.uitgever);
                 return (
-                  <tr key={naam}>
-                    <td>{naam}</td>
-                    <td>
-                      <input
-                        className="tarief-invoer" type="number" min="0" step="0.50"
-                        value={(tarief.basisCenten / 100).toFixed(2)}
-                        onChange={(e) => zetCenten("basisCenten")(e.target.value)}
-                        aria-label={`${t("tarieven.basis")} ${naam}`}
-                      />
+                  <tr key={factuur.nummer ?? factuur.datumIso}>
+                    <td className="mono">
+                      {factuur.nummer}
+                      {factuur.crediteertNummer && (
+                        <div className="uren-noot">{t("factuur.crediteert", { nummer: factuur.crediteertNummer })}</div>
+                      )}
                     </td>
+                    <td>{factuur.ontvanger.naam}</td>
+                    <td>{factuur.datumIso ? datumKort(factuur.datumIso) : "—"}</td>
+                    <td><b>{formatteerGeld(totalenVan(factuur).totaal)}</b></td>
                     <td>
-                      <input
-                        className="tarief-invoer" type="number" min="0" step="0.25"
-                        value={(tarief.perLaadmeterCenten / 100).toFixed(2)}
-                        onChange={(e) => zetCenten("perLaadmeterCenten")(e.target.value)}
-                        aria-label={`${t("tarieven.perLm")} ${naam}`}
-                      />
+                      <span className={`klok-chip ${STATUS_CHIP[factuur.status]}`}>
+                        {t(`factuur.status.${factuur.status}`)}
+                      </span>
+                      {!mag && (
+                        <div className="factuur-ontbreekt">
+                          <Icoon naam="waarschuwing" maat={11} />{" "}
+                          {ontbreekt.map((v) => t(`factuur.ontbreekt.${v}`)).join(", ")}
+                        </div>
+                      )}
+                    </td>
+                    <td className="factuur-acties">
+                      {factuur.status === "concept" && factuur.nummer && (
+                        <button
+                          className="btn primary knop-met-icoon"
+                          disabled={!mag}
+                          title={mag ? undefined : t("factuur.geblokkeerd")}
+                          onClick={() => onVerstuurFactuur(factuur.nummer!)}
+                        >
+                          <Icoon naam="mail" maat={12} /> {t("factuur.verstuur")}
+                        </button>
+                      )}
+                      {factuur.status === "verstuurd" && factuur.nummer && (
+                        <>
+                          <button className="btn knop-met-icoon" onClick={() => onMarkeerBetaald(factuur.nummer!)}>
+                            <Icoon naam="check" maat={12} /> {t("factuur.betaald")}
+                          </button>
+                          <button className="btn knop-met-icoon" onClick={() => onCrediteer(factuur.nummer!)}>
+                            <Icoon naam="pijl" maat={12} /> {t("factuur.crediteer")}
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 );
@@ -63,43 +188,62 @@ export function FacturenView({ state, onZetTarief }: Props) {
           </table>
         </div>
       </div>
-      {facturen.length === 0 && (
-        <div className="ph-card"><p className="kaart-kies">{t("facturen.leeg")}</p></div>
-      )}
-      <div className="facturen-grid">
-        {facturen.map((factuur) => (
-          <div className="ph-card factuur-kaart" key={factuur.opdrachtgever}>
-            <div className="factuur-kop">
-              <b>{factuur.opdrachtgever}</b>
-              <span className="status-chip s-gepland">{t("facturen.concept")}</span>
-            </div>
-            <table className="factuur-regels">
-              <tbody>
-                {factuur.regels.map((regel) => (
-                  <tr key={regel.omschrijving}>
-                    <td>{regel.omschrijving}</td>
-                    <td className="bedrag">{formatteerGeld(regel.bedrag)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td>{t("facturen.subtotaal")}</td>
-                  <td className="bedrag">{formatteerGeld(factuur.totalen.subtotaal)}</td>
+
+      <Tarieven state={state} onZetTarief={onZetTarief} />
+    </div>
+  );
+}
+
+function Tarieven({ state, onZetTarief }: { state: AppState; onZetTarief: Props["onZetTarief"] }) {
+  const [bewerkt, setBewerkt] = useState<string | null>(null);
+  const namen = Object.keys(state.tarieven).sort();
+
+  return (
+    <div className="ph-card uren-kaart">
+      <h3 className="zij-kop">{t("tarieven.titel")}</h3>
+      <p className="uren-noot">{t("tarieven.noot")}</p>
+      <div className="table-scroll">
+        <table className="uren-tabel">
+          <thead>
+            <tr>
+              <th>{t("tarieven.opdrachtgever")}</th>
+              <th>{t("tarieven.basis")}</th>
+              <th>{t("tarieven.perLm")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {namen.map((naam) => {
+              const tarief = state.tarieven[naam];
+              return (
+                <tr key={naam}>
+                  <td>{naam}</td>
+                  <td>
+                    <input
+                      type="number" min="0" step="0.50" className="tarief-invoer"
+                      value={(tarief.basisCenten / 100).toFixed(2)}
+                      onFocus={() => setBewerkt(naam)}
+                      onChange={(e) => onZetTarief(naam, {
+                        ...tarief, basisCenten: Math.round(Number(e.target.value) * 100),
+                      })}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number" min="0" step="0.25" className="tarief-invoer"
+                      value={(tarief.perLaadmeterCenten / 100).toFixed(2)}
+                      onFocus={() => setBewerkt(naam)}
+                      onChange={(e) => onZetTarief(naam, {
+                        ...tarief, perLaadmeterCenten: Math.round(Number(e.target.value) * 100),
+                      })}
+                    />
+                  </td>
                 </tr>
-                <tr>
-                  <td>{t("facturen.btw")}</td>
-                  <td className="bedrag">{formatteerGeld(factuur.totalen.btw)}</td>
-                </tr>
-                <tr className="factuur-totaal">
-                  <td>{t("facturen.totaal")}</td>
-                  <td className="bedrag">{formatteerGeld(factuur.totalen.totaal)}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        ))}
+              );
+            })}
+          </tbody>
+        </table>
       </div>
+      {bewerkt && <p className="uren-noot">{t("tarieven.directDoor")}</p>}
     </div>
   );
 }

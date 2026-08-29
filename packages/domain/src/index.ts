@@ -6,6 +6,7 @@ export * from "./tijd";
 export * from "./werktijden";
 export * from "./facturatie";
 export * from "./factuur";
+export * from "./sjablonen";
 export * from "./emballage";
 export * from "./dock";
 export * from "./wagenpark";
