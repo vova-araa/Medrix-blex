@@ -19,9 +19,10 @@ interface Props {
   onPlanZending: (zendingId: string, ritId: string) => void;
   onSelecteerTaak: (taakId: string) => void;
   onAutoPlan: () => void;
+  onVerplaatsStop: (ritId: string, taakId: string, richting: "omhoog" | "omlaag") => void;
 }
 
-export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak, onAutoPlan }: Props) {
+export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak, onAutoPlan, onVerplaatsStop }: Props) {
   const alleTaken = state.taken;
   const kpis: Array<{ ico: IcoonNaam; cls: string; n: string; label: string }> = [
     { ico: "truck", cls: "i-truck", n: String(state.ritten.filter((r) => statusVanRit(state, r.id) === "onderweg").length), label: t("kpi.rittenOnderweg") },
@@ -51,6 +52,7 @@ export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak, onAutoP
               nu={nu}
               onPlanZending={onPlanZending}
               onSelecteerTaak={onSelecteerTaak}
+              onVerplaatsStop={onVerplaatsStop}
             />
           ))}
         </div>
@@ -99,13 +101,14 @@ function OngeplandLijst({ state, onAutoPlan }: { state: AppState; onAutoPlan: ()
 }
 
 function RitKaart({
-  rit, state, nu, onPlanZending, onSelecteerTaak,
+  rit, state, nu, onPlanZending, onSelecteerTaak, onVerplaatsStop,
 }: {
   rit: Rit;
   state: AppState;
   nu: string;
   onPlanZending: (zendingId: string, ritId: string) => void;
   onSelecteerTaak: (taakId: string) => void;
+  onVerplaatsStop: (ritId: string, taakId: string, richting: "omhoog" | "omlaag") => void;
 }) {
   const [dropping, setDropping] = useState(false);
   const taken = takenVanRit(state, rit.id);
@@ -167,8 +170,9 @@ function RitKaart({
       ) : (
         <div className="rc-route">
           <div className="stops">
-            {taken.map((taakItem) => {
+            {taken.map((taakItem, index) => {
               const s = statusVanTaak(state, taakItem.id);
+              const vast = s === "afgerond" || s === "vervallen";
               const cls = s === "afgerond" ? "done" : s === "vervallen" ? "vervallen" : s === "probleem" ? "probleem" : s === "gepland" ? "" : "bezig";
               return (
                 <div className={`stop ${cls}`} key={taakItem.id}>
@@ -182,6 +186,20 @@ function RitKaart({
                     <span className="tijd">{tijd(taakItem.geplandVan)}</span>
                     <span className="soort-mini">{t(`taak.${taakItem.soort}`)}</span>
                   </button>
+                  {!vast && (
+                    <div className="stop-verplaats">
+                      <button
+                        className="stop-pijl" disabled={index === 0}
+                        aria-label={t("route.omhoog")} title={t("route.omhoog")}
+                        onClick={() => onVerplaatsStop(rit.id, taakItem.id, "omhoog")}
+                      >↑</button>
+                      <button
+                        className="stop-pijl" disabled={index === taken.length - 1}
+                        aria-label={t("route.omlaag")} title={t("route.omlaag")}
+                        onClick={() => onVerplaatsStop(rit.id, taakItem.id, "omlaag")}
+                      >↓</button>
+                    </div>
+                  )}
                 </div>
               );
             })}

@@ -1088,6 +1088,17 @@
 
 .schaduw-verschillen { display: flex; flex-wrap: wrap; gap: 4px; }
 
+.stop-verplaats { display: flex; flex-direction: column; gap: 1px; margin-left: auto; }
+.stop-pijl {
+  border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  border-radius: 5px; width: 20px; height: 16px; line-height: 1; font-size: 11px;
+  cursor: pointer; padding: 0; display: grid; place-items: center;
+}
+.stop-pijl:hover:not(:disabled) { background: var(--surface-2); color: var(--ink); }
+.stop-pijl:disabled { opacity: 0.3; cursor: default; }
+.stop-pijl:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.stop { display: flex; align-items: center; gap: 6px; }
+
 .eigen-rijtijden { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
 .eigen-knop { width: 100%; justify-content: center; display: flex; align-items: center; gap: 7px; }
 .eigen-lijst { display: grid; gap: 5px; margin: 10px 0 6px; }

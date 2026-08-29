@@ -9,6 +9,8 @@ import {
   vervaldatum,
   volgendFactuurnummer,
   vulSjabloon,
+  hertijden,
+  verplaatsStop,
   type Factuur,
   type DockEventType, type EmballageSoort, type Order, type PlanResultaat, type VervangResultaat,
   type PlanVoorstel, type Taak, type TaakEvent,
@@ -40,6 +42,7 @@ import { Zijbalk } from "./components/Zijbalk";
 import type { AdresFoto, CmrSoort, Klant, Tarief } from "./data/bron";
 import { benodigdeBerichten, type BerichtVoorstel } from "./data/communicatie";
 import { conceptFacturen } from "./data/facturen";
+import { leertijdVoorPlaats } from "./data/leertijden";
 import { herstelVoorstellen, type HerstelVoorstel } from "./data/herstel";
 import { vervangingVoorRit } from "./data/uitval";
 import { VervangingView } from "./components/VervangingView";
@@ -479,6 +482,31 @@ export default function App() {
     setUitval(null);
   }
 
+  /**
+   * Stop verplaatsen binnen een rit. De domeinregels blokkeren een volgorde
+   * die niet uitvoerbaar is — lossen vóór laden, of een afgeronde stop
+   * verschuiven — en daarna worden de tijden opnieuw berekend.
+   */
+  function verplaatsStopInRit(ritId: string, taakId: string, richting: "omhoog" | "omlaag") {
+    const huidige = takenVanRit(state, ritId);
+    const uit = verplaatsStop(huidige, taakId, richting, (id) => statusVanTaak(state, id));
+    if (!uit.geldig) {
+      const eerste = uit.fouten[0];
+      meld(eerste ? t(`route.fout.${eerste.soort}`) : t("route.fout.rand"));
+      return;
+    }
+    const eersteOpen = uit.taken.find((tk) => statusVanTaak(state, tk.id) !== "afgerond");
+    const hertijd = hertijden(uit.taken, (id) => statusVanTaak(state, id), {
+      startIso: eersteOpen
+        ? new Date(Math.max(simMs, Date.parse(eersteOpen.geplandVan))).toISOString()
+        : nu,
+      reistijdMinuten: geschatteRijMinuten,
+      handelingstijdMinuten: leertijdVoorPlaats(state),
+    });
+    dispatch({ type: "herorden", ritId, taken: hertijd });
+    meld(t("toast.herordend"));
+  }
+
   // ── Facturatie ────────────────────────────────────────────────────────────
   /** Conceptfactuur omzetten in een echte factuur met doorlopend nummer. */
   function maakFactuur(opdrachtgever: string) {
@@ -738,6 +766,7 @@ export default function App() {
           onPlanZending={planZending}
           onSelecteerTaak={setGeselecteerdeTaak}
           onAutoPlan={startAutoPlan}
+          onVerplaatsStop={verplaatsStopInRit}
         />
       )}
       {rol === "bedrijf" && effectieveTab === "operatie" && (

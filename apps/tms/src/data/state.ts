@@ -79,7 +79,8 @@ export type Actie =
   | { type: "wachtrij_opgelost"; itemId: string; nuIso: string }
   | { type: "factuur_opgemaakt"; factuur: Factuur }
   | { type: "factuur_status"; nummer: string; status: FactuurStatus }
-  | { type: "creditnota"; factuur: Factuur };
+  | { type: "creditnota"; factuur: Factuur }
+  | { type: "herorden"; ritId: string; taken: Taak[] };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
@@ -222,6 +223,14 @@ export function reducer(state: AppState, actie: Actie): AppState {
           actie.factuur,
         ],
       };
+    case "herorden": {
+      // Alleen de taken van deze rit vervangen; de rest blijft zoals hij was.
+      const nieuweIds = new Set(actie.taken.map((t) => t.id));
+      return {
+        ...state,
+        taken: [...state.taken.filter((t) => !nieuweIds.has(t.id)), ...actie.taken],
+      };
+    }
     case "wachtrij_opgelost":
       return {
         ...state,

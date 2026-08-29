@@ -11,6 +11,13 @@ export const nl = {
   "kpi.problemen": "problemen",
   "kpi.ongepland": "ongeplande zendingen",
 
+  "route.omhoog": "Stop eerder in de rit",
+  "route.omlaag": "Stop later in de rit",
+  "route.fout.lossen_voor_laden": "Kan niet: dan wordt er gelost vóórdat de zending geladen is.",
+  "route.fout.afgeronde_stop_verplaatst": "Kan niet: een afgeronde stop verplaats je niet — die ligt vast in de event-log.",
+  "route.fout.afgeronde_na_open": "Kan niet: een afgeronde stop komt niet achter een stop die nog open staat.",
+  "route.fout.rand": "Deze stop staat al vooraan of achteraan.",
+  "toast.herordend": "Volgorde aangepast — tijden opnieuw berekend",
   "ongepland.titel": "Ongepland",
   "ongepland.hint": "Sleep een zending op een voertuig",
   "ongepland.leeg": "Alles gepland ✓",
