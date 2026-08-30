@@ -1506,3 +1506,46 @@
   .wp-acties { display: flex; gap: 8px; margin-top: 9px; }
   .wp-acties .btn { padding: 4px 12px; font-size: 11.5px; }
   .wp-verholpen { margin-top: 10px; }
+
+  /* ── Instructieboek ─────────────────────────────────────────────────── */
+  .ib-balk { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 10px 0 12px; }
+  .ib-klap { font-size: 11.5px; padding: 5px 11px; }
+  .ib-lijst { display: flex; flex-direction: column; gap: 8px; }
+  .ib-kaart { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  .ib-kaart.open { border-color: var(--accent); }
+  .ib-kop {
+    width: 100%; display: grid; grid-template-columns: auto 1fr auto; gap: 12px;
+    align-items: center; padding: 12px 14px; background: none; border: none;
+    text-align: left; cursor: pointer; color: var(--ink);
+  }
+  .ib-kop:hover { background: var(--surface-2); border-radius: 10px; }
+  .ib-kop:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 10px; }
+  .ib-ico {
+    width: 30px; height: 30px; border-radius: 8px; display: inline-flex;
+    align-items: center; justify-content: center;
+    background: var(--accent-soft); color: var(--accent);
+  }
+  .ib-titel { font-size: 13.5px; font-weight: 600; }
+  .ib-body { padding: 0 14px 14px; }
+  .ib-intro { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin: 0 0 12px; max-width: 76ch; }
+  .ib-stappen { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; }
+  .ib-stappen li { font-size: 12.5px; line-height: 1.55; max-width: 76ch; }
+  .ib-stappen li::marker { color: var(--accent); font-weight: 700; }
+  .ib-let {
+    margin-top: 14px; padding: 10px 13px; border-radius: 10px;
+    background: var(--warn-soft); border: 1px solid var(--warn); color: var(--warn);
+  }
+  .ib-let b { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .ib-let p { font-size: 12px; margin: 5px 0 0; line-height: 1.55; max-width: 76ch; }
+
+  /* In de telefoon staat hetzelfde boek, alleen smaller. */
+  .instructieboek.compact .ib-balk { gap: 8px; }
+  .instructieboek.compact .doc-zoek { flex: 1 1 100%; max-width: none; }
+  .instructieboek.compact .doc-telling { margin-left: 0; }
+  .instructieboek.compact .ib-kop { padding: 10px 11px; gap: 9px; }
+  .instructieboek.compact .ib-titel { font-size: 12.5px; }
+  .instructieboek.compact .ib-body { padding: 0 11px 12px; }
+  .ib-knop { width: 100%; justify-content: center; }
+  .ib-telefoon-kop { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .ib-telefoon-kop h4 { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 13px; }
+  .ib-sluit { font-size: 11px; padding: 4px 10px; }

@@ -1,4 +1,5 @@
 import {
+  lokaleDatum,
   rijtijdStatus,
   ritStatus,
   weekStartMs,
@@ -343,8 +344,16 @@ export function huidigeTaak(state: AppState, ritId: string): Taak | undefined {
   );
 }
 
-export function ritVanChauffeur(state: AppState, chauffeur: string): Rit | undefined {
-  return state.ritten.find((r) => r.chauffeur === chauffeur);
+/**
+ * De rit die deze chauffeur vandaag rijdt. Sinds het planbord meerdere dagen
+ * toont staat dezelfde chauffeur vaker in de lijst; zonder de datumfilter zou
+ * de app morgen kunnen tonen terwijl hij vandaag rijdt.
+ */
+export function ritVanChauffeur(
+  state: AppState, chauffeur: string, nu: string
+): Rit | undefined {
+  const vandaag = lokaleDatum(nu);
+  return state.ritten.find((r) => r.chauffeur === chauffeur && r.datum === vandaag);
 }
 
 export function zendingVan(state: AppState, taak: Taak): Zending | undefined {

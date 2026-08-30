@@ -27,6 +27,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { Assistent } from "./components/Assistent";
 import { AutoPlanView } from "./components/AutoPlanView";
 import { AdresboekView } from "./components/AdresboekView";
+import { InstructiesView } from "./components/InstructieBoek";
 import { BedrijfView } from "./components/BedrijfView";
 import { RapportageView } from "./components/RapportageView";
 import { BerichtenView, type MailConcept } from "./components/BerichtenView";
@@ -930,6 +931,7 @@ export default function App() {
         />
       )}
       {rol === "bedrijf" && effectieveTab === "wagenpark" && <WagenparkView state={state} nu={nu} onZetTrailer={zetTrailer} onMeldingStatus={zetMeldingStatus} />}
+      {rol === "bedrijf" && effectieveTab === "instructies" && <InstructiesView />}
       {rol === "bedrijf" && effectieveTab === "adresboek" && (
         <AdresboekView
           state={state}

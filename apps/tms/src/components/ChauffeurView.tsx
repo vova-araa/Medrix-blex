@@ -25,6 +25,7 @@ import {
 import { statusLabel, t, TALEN, type Taal } from "../i18n";
 import { initialen, tijd, venster } from "../utils";
 import { DagcontroleKaart } from "./DagcontroleKaart";
+import { InstructieBoek } from "./InstructieBoek";
 import { Icoon, type IcoonNaam } from "./Icoon";
 
 interface Props {
@@ -52,8 +53,10 @@ export function ChauffeurView({
   onControle, onLosseMelding, taal, onZetTaal,
 }: Props) {
   const [verbergGedane, setVerbergGedane] = useState(false);
-  const chauffeurs = state.ritten.map((r) => r.chauffeur).filter(Boolean);
-  const rit = ritVanChauffeur(state, actieveChauffeur);
+  const [instructiesOpen, setInstructiesOpen] = useState(false);
+  // Eén chip per chauffeur: dezelfde man rijdt vandaag én morgen een rit.
+  const chauffeurs = [...new Set(state.ritten.map((r) => r.chauffeur).filter(Boolean))];
+  const rit = ritVanChauffeur(state, actieveChauffeur, nu);
   const alleTaken = rit ? takenVanRit(state, rit.id) : [];
   const actieveTaken = rit ? actieveTakenVanRit(state, rit.id) : [];
   const klaar = actieveTaken.filter((tk) => statusVanTaak(state, tk.id) === "afgerond").length;
@@ -216,6 +219,28 @@ export function ChauffeurView({
                 )}
               </ul>
             </div>
+          )}
+
+          {instructiesOpen && (
+            <div className="ph-card ib-telefoon">
+              <div className="ib-telefoon-kop">
+                <h4><Icoon naam="boek" maat={14} /> {t("instructie.titel")}</h4>
+                <button className="btn ib-sluit" onClick={() => setInstructiesOpen(false)}>
+                  {t("chauffeur.instructiesSluiten")}
+                </button>
+              </div>
+              <p className="dc-uitleg">{t("instructie.noot")}</p>
+              <InstructieBoek compact />
+            </div>
+          )}
+
+          {!instructiesOpen && (
+            <button
+              className="btn knop-met-icoon ib-knop"
+              onClick={() => setInstructiesOpen(true)}
+            >
+              <Icoon naam="boek" maat={14} /> {t("chauffeur.instructies")}
+            </button>
           )}
 
           {rit && (
