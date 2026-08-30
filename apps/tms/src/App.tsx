@@ -817,7 +817,13 @@ export default function App() {
       )}
       {rol === "bedrijf" && effectieveTab === "emballage" && <EmballageView state={state} />}
       {rol === "bedrijf" && effectieveTab === "portaal" && (
-        <PortaalView state={state} nu={nu} onAfspraak={() => meld(t("toast.afspraak"))} />
+        <PortaalView
+          state={state}
+          nu={nu}
+          standaardDatum={planDatum}
+          onAfspraak={() => meld(t("toast.afspraak"))}
+          onAanmaken={nieuweOrder}
+        />
       )}
       {rol === "bedrijf" && effectieveTab === "wagenpark" && <WagenparkView state={state} nu={nu} onZetTrailer={zetTrailer} />}
       {rol === "bedrijf" && effectieveTab === "documenten" && <DocumentenView state={state} />}
@@ -887,7 +893,13 @@ export default function App() {
       )}
 
       {orderFormOpen && (
-        <NieuweOrder state={state} onSluit={() => setOrderFormOpen(false)} onAanmaken={nieuweOrder} />
+        <NieuweOrder
+          state={state}
+          nu={nu}
+          standaardDatum={planDatum}
+          onSluit={() => setOrderFormOpen(false)}
+          onAanmaken={nieuweOrder}
+        />
       )}
 
       {rol === "bedrijf" && assistentActief && <Assistent state={state} nu={nu} />}

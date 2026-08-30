@@ -14,6 +14,7 @@ export * from "./rijtijden";
 export * from "./tacho";
 export * from "./route";
 export * from "./rapportage";
+export * from "./orderaanvraag";
 export * from "./autoplanner";
 export * from "./vervanging";
 export * from "./vergelijking";

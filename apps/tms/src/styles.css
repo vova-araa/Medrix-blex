@@ -704,7 +704,8 @@
   padding: 7px 9px;
 }
 .order-form input:focus-visible, .order-form select:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
-.order-rij { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Twee velden naast elkaar, drie ook (datum + venster van + tot). */
+.order-rij { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; }
 .tarief-invoer {
   font: inherit; font-size: 13px; width: 110px; text-align: right;
   color: var(--ink); background: var(--ground);
@@ -1237,3 +1238,20 @@
     border-top: 2px solid var(--line-strong); font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
+
+  /* ── Opdrachtgeverportaal ───────────────────────────────────────────── */
+  .portaal-kant { display: flex; gap: 6px; margin: 10px 0 4px; }
+  .portaal-klant { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .pk-kop { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .pk-wie { margin-left: auto; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .pk-wie select { font-size: 12px; }
+  .rap-tabel tr.pk-nieuw td { background: var(--accent-soft); }
+  .order-meldingen { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  .order-meldingen li {
+    display: flex; align-items: flex-start; gap: 7px;
+    font-size: 12px; line-height: 1.45; padding: 7px 10px; border-radius: 8px;
+  }
+  .order-meldingen li svg { flex: none; margin-top: 2px; }
+  .order-meldingen.fout li { background: var(--crit-soft); color: var(--crit); }
+  .order-meldingen.waarschuwing li { background: var(--warn-soft); color: var(--warn); }
+  .order-form input.vast { background: var(--surface-2); color: var(--muted); }
