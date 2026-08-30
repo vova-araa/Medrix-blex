@@ -3,8 +3,10 @@
 
 import { taal } from "./i18n";
 
-const LOCALES: Record<string, string> = { nl: "nl-NL", en: "en-GB", pl: "pl-PL", ro: "ro-RO" };
-const locale = () => LOCALES[taal()] ?? "nl-NL";
+export const DATUM_LOCALES: Record<string, string> = {
+  nl: "nl-NL", en: "en-GB", pl: "pl-PL", ro: "ro-RO",
+};
+const locale = () => DATUM_LOCALES[taal()] ?? "nl-NL";
 
 const tijdFormat = new Intl.DateTimeFormat("nl-NL", {
   hour: "2-digit",

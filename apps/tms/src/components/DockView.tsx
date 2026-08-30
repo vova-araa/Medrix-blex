@@ -4,9 +4,10 @@ import {
 } from "@sharzi/domain";
 import { useMemo, useState } from "react";
 import { dockEventsVanZending, takenVanRit, type AppState } from "../data/state";
-import { t } from "../i18n";
+import { t, TALEN, type Taal } from "../i18n";
 import { laadmeters, tijd } from "../utils";
 import { Icoon } from "./Icoon";
+import { TAALCODE, Vlag } from "./Vlag";
 
 const VAKKEN = ["Dok 1", "Dok 2", "A1", "A2", "B1", "B2", "C1", "C2", "Schadevak"];
 
@@ -15,9 +16,11 @@ interface Props {
   nu: string;
   onDockEvent: (zendingId: string, type: DockEventType, locatie?: string) => void;
   onZetOffline: (offline: boolean) => void;
+  taal: Taal;
+  onZetTaal: (taal: Taal) => void;
 }
 
-export function DockView({ state, nu, onDockEvent, onZetOffline }: Props) {
+export function DockView({ state, nu, onDockEvent, onZetOffline, taal, onZetTaal }: Props) {
   const [invoer, setInvoer] = useState("");
   const [gekozen, setGekozen] = useState<string | null>(null);
   const [vak, setVak] = useState("A1");
@@ -193,6 +196,25 @@ export function DockView({ state, nu, onDockEvent, onZetOffline }: Props) {
           {state.offline && (
             <p className="dock-offline-noot">{t("dock.offlineNoot")}</p>
           )}
+
+          <div className="ph-card taal-kaart">
+            <span className="taal-label">{t("taal.kies")}</span>
+            <div className="taal-vlaggen">
+              {TALEN.map((optie) => (
+                <button
+                  key={optie.code}
+                  className={`taal-vlag${optie.code === taal ? " actief" : ""}`}
+                  onClick={() => onZetTaal(optie.code)}
+                  aria-pressed={optie.code === taal}
+                  aria-label={optie.naam}
+                  title={optie.naam}
+                >
+                  <Vlag taal={optie.code} maat={34} />
+                  <span>{TAALCODE[optie.code]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

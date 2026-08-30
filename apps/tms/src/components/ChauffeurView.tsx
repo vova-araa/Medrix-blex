@@ -27,6 +27,7 @@ import { initialen, tijd, venster } from "../utils";
 import { DagcontroleKaart } from "./DagcontroleKaart";
 import { InstructieBoek } from "./InstructieBoek";
 import { Icoon, type IcoonNaam } from "./Icoon";
+import { TAALCODE, Vlag } from "./Vlag";
 
 interface Props {
   state: AppState;
@@ -333,14 +334,18 @@ function TaalKiezer({ taal, onZetTaal }: { taal: Taal; onZetTaal: (taal: Taal) =
   return (
     <div className="ph-card taal-kaart">
       <span className="taal-label">{t("taal.kies")}</span>
-      <div className="taal-chips">
+      <div className="taal-vlaggen">
         {TALEN.map((optie) => (
           <button
             key={optie.code}
-            className={optie.code === taal ? "actief" : ""}
+            className={`taal-vlag${optie.code === taal ? " actief" : ""}`}
             onClick={() => onZetTaal(optie.code)}
+            aria-pressed={optie.code === taal}
+            aria-label={optie.naam}
+            title={optie.naam}
           >
-            {optie.naam}
+            <Vlag taal={optie.code} maat={34} />
+            <span>{TAALCODE[optie.code]}</span>
           </button>
         ))}
       </div>

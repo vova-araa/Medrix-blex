@@ -27,6 +27,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { Assistent } from "./components/Assistent";
 import { AutoPlanView } from "./components/AutoPlanView";
 import { AdresboekView } from "./components/AdresboekView";
+import { TaalKnop } from "./components/TaalKnop";
 import { InstructiesView } from "./components/InstructieBoek";
 import { BedrijfView } from "./components/BedrijfView";
 import { RapportageView } from "./components/RapportageView";
@@ -73,7 +74,7 @@ import {
 } from "./data/state";
 import { geschatteRijMinuten } from "./kaart/simulatie";
 import { statusLabel, t, zetTaal, type Taal } from "./i18n";
-import { datumKort, laadmeters } from "./utils";
+import { datumKort, laadmeters, DATUM_LOCALES } from "./utils";
 
 const TENANT = "blex";
 const bron = new MockDataBron();
@@ -840,8 +841,9 @@ export default function App() {
             <Icoon naam="plus" maat={14} /> {t("order.knop")}
           </button>
         )}
+        <TaalKnop taal={huidigeTaal} onZetTaal={(nieuw) => { zetTaal(nieuw); setHuidigeTaal(nieuw); }} />
         <span className="date">
-          {new Intl.DateTimeFormat("nl-NL", {
+          {new Intl.DateTimeFormat(DATUM_LOCALES[huidigeTaal], {
             weekday: "short", day: "numeric", month: "short",
             hour: "2-digit", minute: "2-digit",
             timeZone: "Europe/Amsterdam",
@@ -970,7 +972,14 @@ export default function App() {
       )}
 
       {rol === "dock" && (
-        <DockView state={state} nu={nu} onDockEvent={dockEvent} onZetOffline={zetOffline} />
+        <DockView
+          state={state}
+          nu={nu}
+          onDockEvent={dockEvent}
+          onZetOffline={zetOffline}
+          taal={huidigeTaal}
+          onZetTaal={(nieuw) => { zetTaal(nieuw); setHuidigeTaal(nieuw); }}
+        />
       )}
         </main>
       </div>

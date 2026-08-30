@@ -1135,14 +1135,39 @@
 .eigen-lijst dt { color: var(--muted); margin: 0; }
 .eigen-lijst dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .outbox-kaart h4 { margin: 0 0 4px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
-.taal-kaart { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.taal-kaart { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .taal-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); font-weight: 700; }
-.taal-chips { display: flex; gap: 4px; flex-wrap: wrap; }
-.taal-chips button {
-  border: 1px solid var(--line-strong); background: transparent; color: var(--muted);
-  border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 12px; cursor: pointer;
+/* Taalkeuze met vlaggen: op de bok wordt niet gelezen maar herkend. Het
+   trefvlak is bewust groot genoeg voor een duim met handschoen aan. */
+.taal-vlaggen { display: flex; gap: 8px; flex-wrap: wrap; }
+.taal-vlag {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 7px 9px; border-radius: 10px; cursor: pointer;
+  border: 2px solid transparent; background: transparent; color: var(--muted);
+  font: inherit; font-size: 10.5px; font-weight: 600; letter-spacing: .04em;
 }
-.taal-chips button.actief { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.taal-vlag:hover { background: var(--surface-2); }
+.taal-vlag:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.taal-vlag.actief { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.vlag { display: block; border-radius: 2px; }
+
+/* Kopbalk: huidige vlag met een klein uitklapmenu. */
+.taalknop { position: relative; }
+.taalknop-huidig { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; }
+.taalknop-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 40;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: var(--shadow); padding: 5px; min-width: 168px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.taalknop-menu button {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 7px 10px; border: none; background: none; border-radius: 7px;
+  font: inherit; font-size: 12.5px; color: var(--ink); text-align: left; cursor: pointer;
+}
+.taalknop-menu button:hover { background: var(--surface-2); }
+.taalknop-menu button.actief { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.taalknop-menu button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 .factuur-lijst { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin-top: 12px; }
 .factuur-kaart { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--surface); }
