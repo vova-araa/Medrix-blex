@@ -20,6 +20,7 @@ export type ModuleId =
   | "dock"
   | "edi"
   | "documenten"
+  | "adresboek"
   | "boekhouding"
   | "berichten"
   | "koppelingen";
@@ -56,6 +57,7 @@ export const MODULES: ModuleDef[] = [
   { id: "dock", icoon: "dock", groep: "data" },
   { id: "edi", icoon: "edi", groep: "systeem", inOntwikkeling: true },
   { id: "documenten", icoon: "document", groep: "data", tab: true },
+  { id: "adresboek", icoon: "locatie", groep: "data", tab: true },
   { id: "boekhouding", icoon: "boek", groep: "systeem", inOntwikkeling: true },
   { id: "berichten", icoon: "mail", groep: "systeem", tab: true },
   { id: "koppelingen", icoon: "koppeling", groep: "systeem", kern: true, tab: true },

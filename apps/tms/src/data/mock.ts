@@ -1,6 +1,8 @@
+import { CONTROLEPUNTEN, legeStanden } from "@sharzi/domain";
 import type {
   Adres, DockEvent, DockEventType, EmballageTransactie, Order, Rit, Taak, TaakEvent, TaakEventType,
   Voorbehoud, WerktijdEvent, WerktijdEventType, Zending,
+  ControlePunt, Garagemelding, PuntStand, Voertuigcontrole,
 } from "@sharzi/domain";
 import { FixtureTruckAndTrailerClient } from "@sharzi/integratie-truck-and-trailer";
 import { FixtureTachoClient } from "@sharzi/integratie-tacho";
@@ -515,6 +517,51 @@ const voorbehouden: Voorbehoud[] = [
   },
 ];
 
+// Dagcontroles van vanochtend. Peeters liep alles na en keurde één punt af;
+// Kowalski heeft nog niet gecontroleerd, dus voor zijn auto staat er niets.
+const alleInOrde = (): Record<ControlePunt, PuntStand> => {
+  const standen = legeStanden();
+  for (const { punt } of CONTROLEPUNTEN) standen[punt] = "in_orde";
+  return standen;
+};
+
+const controles: Voertuigcontrole[] = [
+  {
+    id: "VC-001", tenantId: TENANT, kentekenGenormaliseerd: "43BKL7",
+    trailerKenteken: "OL84XF", chauffeur: "J. Peeters", ritId: "R-260807-01",
+    tijdstip: dag("04:18"), kilometerstand: 418_204,
+    standen: { ...alleInOrde(), vloeistoffen: "gebrek" },
+    toelichting: { vloeistoffen: "Ruitenwisservloeistof bijna leeg, bijgevuld met water." },
+  },
+  {
+    id: "VC-002", tenantId: TENANT, kentekenGenormaliseerd: "12PGH9",
+    chauffeur: "S. de Boer", ritId: "R-260807-04",
+    tijdstip: dag("05:40"), kilometerstand: 212_880,
+    standen: alleInOrde(),
+    toelichting: {},
+  },
+];
+
+const garagemeldingen: Garagemelding[] = [
+  {
+    id: "GM-001", tenantId: TENANT, kentekenGenormaliseerd: "43BKL7",
+    punt: "vloeistoffen",
+    omschrijving: "Ruitenwisservloeistof bijna leeg, bijgevuld met water.",
+    kritisch: false, gemeldDoor: "J. Peeters", gemeldOp: dag("04:18"),
+    bron: "dagcontrole", afhandeling: [],
+  },
+  {
+    id: "GM-002", tenantId: TENANT, kentekenGenormaliseerd: "87TDF3",
+    punt: "verlichting",
+    omschrijving: "Rechter achterlicht valt uit bij trillen; contact in de fitting.",
+    kritisch: true, gemeldDoor: "M. Kowalski", gemeldOp: "2026-08-06T15:20:00Z",
+    bron: "onderweg",
+    afhandeling: [
+      { status: "ingepland", tijdstip: "2026-08-06T16:05:00Z", wie: "werkplaats", notitie: "Zaterdagochtend 08:00 op de brug." },
+    ],
+  },
+];
+
 const koppelingLog: KoppelingLogRegel[] = [
   { id: "KL-001", koppelingId: "truck_and_trailer", richting: "in", omschrijving: "Wagenpark-sync: 5 voertuigen, 3 trailers", tijdstip: dag("05:30"), status: "geslaagd" },
   { id: "KL-002", koppelingId: "truck_and_trailer", richting: "in", omschrijving: "Onderhoudsstatus trekker 43-BKL-7", tijdstip: dag("05:30"), status: "geslaagd" },
@@ -627,6 +674,8 @@ export class MockDataBron implements DataBron {
       mailThreads,
       koppelingLog,
       voorbehouden,
+      controles,
+      garagemeldingen,
     };
   }
 }

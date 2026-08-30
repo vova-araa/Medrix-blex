@@ -1,8 +1,12 @@
-import { bewakingVanVloot, formatteerGeld, formatteerKenteken, kostenVanDag, type WagenparkVoertuig } from "@sharzi/domain";
+import {
+  bewakingVanVloot, formatteerGeld, formatteerKenteken, geblokkeerdeVoertuigen,
+  kostenVanDag, meldingStatus, openMeldingen,
+  type Garagemelding, type MeldingStatus, type WagenparkVoertuig,
+} from "@sharzi/domain";
 import { takenVanRit, type AppState } from "../data/state";
 import { kmVandaag } from "../kaart/simulatie";
 import { t } from "../i18n";
-import { tijd } from "../utils";
+import { datumKort, tijd } from "../utils";
 import { Icoon } from "./Icoon";
 
 const DAG_MS = 24 * 60 * 60 * 1000;
@@ -11,12 +15,13 @@ interface Props {
   state: AppState;
   nu: string;
   onZetTrailer: (ritId: string, kenteken: string) => void;
+  onMeldingStatus: (meldingId: string, status: MeldingStatus) => void;
 }
 
 /** Dieselprijs voor de kostprijsberekening; komt later uit de tankkoppeling. */
 const DIESEL_CENTEN_PER_LITER = 172;
 
-export function WagenparkView({ state, nu, onZetTrailer }: Props) {
+export function WagenparkView({ state, nu, onZetTrailer, onMeldingStatus }: Props) {
   // De app-vorm van het wagenpark omzetten naar het domeinmodel.
   const vloot: WagenparkVoertuig[] = state.wagenpark.map((v) => ({
     kentekenGenormaliseerd: v.kenteken,
@@ -37,6 +42,8 @@ export function WagenparkView({ state, nu, onZetTrailer }: Props) {
 
   return (
     <div className="uren-main">
+      <Werkplaats state={state} onMeldingStatus={onMeldingStatus} />
+
       <div className="ph-card uren-kaart">
         <div className="operatie-kop">
           <h3 className="zij-kop"><Icoon naam="waarschuwing" maat={15} /> {t("bewaking.titel")}</h3>
@@ -205,5 +212,94 @@ export function WagenparkView({ state, nu, onZetTrailer }: Props) {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Wat de chauffeurs hebben gemeld. Een kritiek gebrek zet de auto stil tot de
+ * werkplaats ernaar gekeken heeft — die blokkade staat hier, niet in de code
+ * van het planbord, want het is een werkplaatsbesluit.
+ */
+function Werkplaats({ state, onMeldingStatus }: {
+  state: AppState;
+  onMeldingStatus: (meldingId: string, status: MeldingStatus) => void;
+}) {
+  const open = openMeldingen(state.garagemeldingen);
+  const geblokkeerd = geblokkeerdeVoertuigen(state.garagemeldingen);
+  const verholpen = state.garagemeldingen.filter((m) => meldingStatus(m) === "verholpen");
+
+  return (
+    <div className="ph-card uren-kaart werkplaats">
+      <div className="operatie-kop">
+        <h3 className="zij-kop"><Icoon naam="waarschuwing" maat={15} /> {t("garage.titel")}</h3>
+        <span className="melding-teller">{open.length}</span>
+      </div>
+      <p className="uren-noot">{t("garage.noot")}</p>
+
+      {geblokkeerd.length > 0 && (
+        <div className="wp-blokkade">
+          <b><Icoon naam="waarschuwing" maat={13} /> {t("garage.geblokkeerd")}</b>
+          <span>
+            {geblokkeerd
+              .map((k) => formatteerKenteken({ landcode: "NL", kenteken: k }))
+              .join(" · ")}
+          </span>
+          <p>{t("garage.geblokkeerdUitleg")}</p>
+        </div>
+      )}
+
+      {open.length === 0 ? (
+        <p className="kaart-kies">{t("garage.geenOpen")}</p>
+      ) : (
+        <ul className="wp-lijst">
+          {open.map((melding) => (
+            <MeldingRegel key={melding.id} melding={melding} onMeldingStatus={onMeldingStatus} />
+          ))}
+        </ul>
+      )}
+
+      {verholpen.length > 0 && (
+        <p className="uren-noot wp-verholpen">
+          {t("garage.verholpenTelling", { n: verholpen.length })}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function MeldingRegel({ melding, onMeldingStatus }: {
+  melding: Garagemelding;
+  onMeldingStatus: (meldingId: string, status: MeldingStatus) => void;
+}) {
+  const status = meldingStatus(melding);
+  const laatste = melding.afhandeling[melding.afhandeling.length - 1];
+
+  return (
+    <li className={`wp-melding${melding.kritisch ? " kritisch" : ""}`}>
+      <div className="wp-kop">
+        <span className="mono wp-kenteken">
+          {formatteerKenteken({ landcode: "NL", kenteken: melding.kentekenGenormaliseerd })}
+        </span>
+        {melding.punt && <span className="wp-punt">{t(`dagcontrole.punt.${melding.punt}`)}</span>}
+        {melding.kritisch && <span className="wp-kritisch">{t("garage.veiligheid")}</span>}
+        <span className={`wp-status s-${status}`}>{t(`garage.status.${status}`)}</span>
+      </div>
+      <p className="wp-oms">{melding.omschrijving || t("dagcontrole.geenToelichting")}</p>
+      <p className="wp-meta">
+        {t(`garage.bron.${melding.bron}`)} · {melding.gemeldDoor} ·{" "}
+        {datumKort(melding.gemeldOp)} {tijd(melding.gemeldOp)}
+        {laatste?.notitie ? ` · ${laatste.notitie}` : ""}
+      </p>
+      <div className="wp-acties">
+        {status === "open" && (
+          <button className="btn wp-inplannen" onClick={() => onMeldingStatus(melding.id, "ingepland")}>
+            {t("garage.actie.inplannen")}
+          </button>
+        )}
+        <button className="btn primary wp-verhelpen" onClick={() => onMeldingStatus(melding.id, "verholpen")}>
+          {t("garage.actie.verholpen")}
+        </button>
+      </div>
+    </li>
   );
 }

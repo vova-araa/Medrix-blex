@@ -17,7 +17,11 @@ import {
   type WerktijdEvent,
   type Zending,
   type Factuur,
+  handelAf,
   type FactuurStatus,
+  type Garagemelding,
+  type MeldingStatus,
+  type Voertuigcontrole,
   type Voorbehoud,
 } from "@sharzi/domain";
 import {
@@ -69,6 +73,15 @@ export type Actie =
   | { type: "dock_event"; event: DockEvent }
   | { type: "cmr_registreer"; cmr: CmrRegistratie }
   | { type: "voorbehoud"; voorbehoud: Voorbehoud }
+  | { type: "voertuigcontrole"; controle: Voertuigcontrole; meldingen: Garagemelding[] }
+  | { type: "garagemelding"; melding: Garagemelding }
+  | {
+      type: "melding_afhandelen";
+      meldingId: string;
+      status: MeldingStatus;
+      wie: string;
+      tijdstip: string;
+    }
   | { type: "zet_trailer"; ritId: string; kenteken: string }
   | { type: "rit_km"; ritId: string; veld: "start" | "eind"; waarde: number }
   | { type: "zet_beleid"; actie: BeleidActie; stand: BeleidStand }
@@ -87,7 +100,7 @@ export type Actie =
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
   adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
-  voorbehouden: [],
+  voorbehouden: [], controles: [], garagemeldingen: [],
   klanten: {}, dockEvents: [], trailers: [], trailerVanRit: {}, cmrs: [], ritKm: {},
   weekRijMinuten: {}, vorigeWeekRijMinuten: {}, weekArbeidMinuten: {},
   wagenparkSync: "", mailThreads: [], koppelingLog: [],
@@ -179,6 +192,30 @@ export function reducer(state: AppState, actie: Actie): AppState {
     // Een voorbehoud wordt toegevoegd, nooit gewijzigd: het is bewijs (§5.1).
     case "voorbehoud":
       return { ...state, voorbehouden: [...state.voorbehouden, actie.voorbehoud] };
+    // De dagcontrole en de meldingen die eruit volgen gaan in één keer erin:
+    // de controle is het bewijs, de meldingen zijn het werk dat eruit volgt.
+    case "voertuigcontrole":
+      return {
+        ...state,
+        controles: [...state.controles, actie.controle],
+        garagemeldingen: [...state.garagemeldingen, ...actie.meldingen],
+        outbox: state.offline ? state.outbox + 1 : state.outbox,
+      };
+    case "garagemelding":
+      return {
+        ...state,
+        garagemeldingen: [...state.garagemeldingen, actie.melding],
+        outbox: state.offline ? state.outbox + 1 : state.outbox,
+      };
+    case "melding_afhandelen":
+      return {
+        ...state,
+        garagemeldingen: state.garagemeldingen.map((m) =>
+          m.id === actie.meldingId
+            ? handelAf(m, actie.status, actie.wie, actie.tijdstip)
+            : m
+        ),
+      };
     case "zet_trailer":
       return { ...state, trailerVanRit: { ...state.trailerVanRit, [actie.ritId]: actie.kenteken } };
     case "rit_km": {

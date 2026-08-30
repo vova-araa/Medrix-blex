@@ -2,8 +2,11 @@ import {
   achterstallig,
   automatischPlan,
   formatteerGeld,
+  beoordeelControle,
   boekTransactie,
+  formatteerKenteken,
   kanInplannen,
+  meldingenUitControle,
   maakCorrectie,
   lokaalTijdstipMs,
   maakCreditnota,
@@ -16,12 +19,14 @@ import {
   verplaatsStop,
   type Factuur,
   type DockEventType, type EmballageSoort, type Order, type PlanResultaat, type VervangResultaat,
-  type PlanVoorstel, type Taak, type TaakEvent, type VoorbehoudSoort,
+  type MeldingStatus, type PlanVoorstel, type Taak, type TaakEvent,
+  type Voertuigcontrole, type VoorbehoudSoort,
   type TaakEventType, type WerktijdEventType, type Zending,
 } from "@sharzi/domain";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { Assistent } from "./components/Assistent";
 import { AutoPlanView } from "./components/AutoPlanView";
+import { AdresboekView } from "./components/AdresboekView";
 import { BedrijfView } from "./components/BedrijfView";
 import { RapportageView } from "./components/RapportageView";
 import { BerichtenView, type MailConcept } from "./components/BerichtenView";
@@ -721,6 +726,44 @@ export default function App() {
     meld(t("toast.emballage", { klant }));
   }
 
+  // De dagcontrole is bewijs van wat de chauffeur zag; wat hij afkeurt gaat in
+  // dezelfde stap als melding naar de garage.
+  function legDagcontroleVast(controle: Voertuigcontrole) {
+    const meldingen = meldingenUitControle(controle, () => crypto.randomUUID());
+    dispatch({ type: "voertuigcontrole", controle, meldingen });
+    const oordeel = beoordeelControle(controle);
+    if (oordeel.gebreken.length === 0) {
+      meld(t("toast.controleInOrde"));
+    } else {
+      meld(t(oordeel.blokkeertPlanning ? "toast.controleKritiek" : "toast.controleGebrek", {
+        n: oordeel.gebreken.length,
+      }));
+    }
+  }
+
+  function meldAanGarage(kenteken: string, omschrijving: string, kritisch: boolean) {
+    dispatch({
+      type: "garagemelding",
+      melding: {
+        id: crypto.randomUUID(),
+        tenantId: TENANT,
+        kentekenGenormaliseerd: kenteken,
+        omschrijving,
+        kritisch,
+        gemeldDoor: actieveChauffeur,
+        gemeldOp: nu,
+        bron: "onderweg",
+        afhandeling: [],
+      },
+    });
+    meld(t("toast.garagemelding", { kenteken: formatteerKenteken({ landcode: "NL", kenteken }) }));
+  }
+
+  function zetMeldingStatus(meldingId: string, status: MeldingStatus) {
+    dispatch({ type: "melding_afhandelen", meldingId, status, wie: "werkplaats", tijdstip: nu });
+    meld(t(`toast.melding.${status}`));
+  }
+
   // Een voorbehoud is bewijs: het wordt vastgelegd met tijdstip en wie, en
   // daarna nooit meer gewijzigd (CLAUDE.md §5.1).
   function legVoorbehoudVast(
@@ -886,7 +929,15 @@ export default function App() {
           onAanmaken={nieuweOrder}
         />
       )}
-      {rol === "bedrijf" && effectieveTab === "wagenpark" && <WagenparkView state={state} nu={nu} onZetTrailer={zetTrailer} />}
+      {rol === "bedrijf" && effectieveTab === "wagenpark" && <WagenparkView state={state} nu={nu} onZetTrailer={zetTrailer} onMeldingStatus={zetMeldingStatus} />}
+      {rol === "bedrijf" && effectieveTab === "adresboek" && (
+        <AdresboekView
+          state={state}
+          onZetInstructies={(sleutel, instructies) =>
+            dispatch({ type: "adres_instructies", sleutel, instructies })}
+          onVoegFotoToe={(sleutel, foto) => dispatch({ type: "adres_foto", sleutel, foto })}
+        />
+      )}
       {rol === "bedrijf" && effectieveTab === "documenten" && (
         <DocumentenView state={state} nu={nu} onVoorbehoud={legVoorbehoudVast} />
       )}
@@ -909,6 +960,8 @@ export default function App() {
           onNulCmr={nulCmr}
           onZetTrailer={zetTrailer}
           onRitKm={ritKm}
+          onControle={legDagcontroleVast}
+          onLosseMelding={meldAanGarage}
           taal={huidigeTaal}
           onZetTaal={(nieuw) => { zetTaal(nieuw); setHuidigeTaal(nieuw); }}
         />

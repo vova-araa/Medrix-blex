@@ -10,6 +10,7 @@ export * from "./sjablonen";
 export * from "./emballage";
 export * from "./dock";
 export * from "./wagenpark";
+export * from "./voertuigcontrole";
 export * from "./rijtijden";
 export * from "./tacho";
 export * from "./route";

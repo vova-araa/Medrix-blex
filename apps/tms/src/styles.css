@@ -1374,3 +1374,135 @@
     border-radius: 8px; padding: 8px 10px; margin: 8px 0 0; line-height: 1.45;
   }
   .ll-ritnr { display: block; font-size: 10px; color: var(--faint); margin-top: 2px; }
+
+  /* ── Adresboek ──────────────────────────────────────────────────────── */
+  .ab-lijst { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .ab-kaart { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  .ab-kaart.open { border-color: var(--accent); }
+  .ab-kop {
+    width: 100%; display: grid; grid-template-columns: 1fr auto auto auto;
+    gap: 14px; align-items: center; padding: 11px 14px;
+    background: none; border: none; text-align: left; cursor: pointer; color: var(--ink);
+  }
+  .ab-kop:hover { background: var(--surface-2); border-radius: 10px; }
+  .ab-kop:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 10px; }
+  .ab-naam { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .ab-naam b { font-size: 13px; }
+  .ab-plaats { font-size: 11.5px; color: var(--muted); }
+  .ab-soort {
+    font-size: 10.5px; padding: 2px 8px; border-radius: 999px;
+    background: var(--surface-2); color: var(--muted); white-space: nowrap;
+  }
+  .ab-soort.s-depot { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .ab-meta { display: flex; align-items: center; gap: 12px; font-size: 11px; white-space: nowrap; }
+  .ab-fotos, .ab-heeft { display: inline-flex; align-items: center; gap: 4px; color: var(--ok); }
+  .ab-mist { color: var(--warn); }
+  .ab-body { padding: 0 14px 14px; }
+  .ab-body .adres-instructies { width: 100%; min-height: 80px; }
+  .ab-fotolijst { list-style: none; display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 0; padding: 0; }
+  .ab-fotolijst li { display: flex; flex-direction: column; gap: 4px; width: 150px; }
+  .ab-fotolijst img { width: 100%; border-radius: 8px; border: 1px solid var(--line); }
+  .ab-fotolijst span { font-size: 10.5px; color: var(--muted); }
+  @media (max-width: 800px) {
+    .ab-kop { grid-template-columns: 1fr auto; row-gap: 6px; }
+  }
+
+  /* ── Daglijst voertuig (chauffeursapp) ──────────────────────────────── */
+  .dagcontrole { padding-bottom: 12px; }
+  .dc-kop, .dc-kop-vast {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    width: 100%; background: none; border: none; padding: 0; cursor: pointer;
+    color: var(--ink); text-align: left;
+  }
+  .dc-kop-vast { cursor: default; }
+  .dc-titel { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; }
+  .dc-voortgang { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dc-uitslag { font-size: 11.5px; color: var(--ok); text-align: right; }
+  .dc-uitslag.met-gebrek { color: var(--warn); }
+  .dc-uitleg { font-size: 11.5px; color: var(--muted); line-height: 1.45; margin: 8px 0 0; }
+  .dc-body { margin-top: 6px; }
+  .dc-punten { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .dc-punt {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px;
+    border-left: 3px solid var(--line-strong);
+  }
+  .dc-punt.st-in_orde { border-left-color: var(--ok); }
+  .dc-punt.st-gebrek { border-left-color: var(--crit); background: var(--crit-soft); }
+  .dc-naam { font-size: 12.5px; font-weight: 600; display: flex; align-items: baseline; gap: 7px; }
+  .dc-kritisch {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--crit); font-weight: 700;
+  }
+  .dc-knoppen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .dc-keuze {
+    padding: 8px 6px; font-size: 11.5px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  }
+  .dc-keuze:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .dc-keuze.k-in_orde.actief { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); font-weight: 600; }
+  .dc-keuze.k-gebrek.actief { background: var(--crit-soft); border-color: var(--crit); color: var(--crit); font-weight: 600; }
+  .dc-keuze.k-niet_gecontroleerd.actief { background: var(--surface-2); border-color: var(--line-strong); color: var(--ink); font-weight: 600; }
+  .dc-toelichting, .dc-melden textarea {
+    width: 100%; padding: 7px 9px; font-size: 12px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  }
+  .dc-melden textarea { min-height: 72px; resize: vertical; }
+  .dc-km { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+  .dc-km input {
+    padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink); font-size: 13px;
+  }
+  .dc-oordeel {
+    margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+    background: var(--warn-soft); border: 1px solid var(--warn); color: var(--warn);
+  }
+  .dc-oordeel.blokkeert { background: var(--crit-soft); border-color: var(--crit); color: var(--crit); }
+  .dc-oordeel b { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .dc-oordeel p { font-size: 11.5px; margin: 5px 0 0; line-height: 1.45; }
+  .dc-afronden { width: 100%; margin-top: 12px; }
+  .dc-gemeld { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .dc-gemeld li {
+    padding: 8px 10px; border-radius: 8px; background: var(--warn-soft);
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .dc-gemeld b { font-size: 12px; color: var(--warn); }
+  .dc-gemeld span { font-size: 11.5px; color: var(--muted); }
+  .dc-melden-open { width: 100%; margin-top: 12px; justify-content: center; }
+  .dc-melden { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .dc-kritisch-keuze { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+  .dc-melden-acties { display: flex; gap: 8px; }
+  .dc-melden-acties .btn { flex: 1; justify-content: center; }
+
+  /* ── Werkplaats (wagenpark) ─────────────────────────────────────────── */
+  .wp-blokkade {
+    background: var(--crit-soft); border: 1px solid var(--crit); border-radius: 10px;
+    padding: 10px 13px; margin-bottom: 12px; color: var(--crit);
+  }
+  .wp-blokkade b { display: flex; align-items: center; gap: 7px; font-size: 12.5px; }
+  .wp-blokkade > span { display: block; font-family: ui-monospace, Consolas, monospace; font-size: 12px; margin: 4px 0; }
+  .wp-blokkade p { font-size: 11.5px; margin: 0; line-height: 1.45; }
+  .wp-lijst { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .wp-melding {
+    border: 1px solid var(--line); border-left: 3px solid var(--line-strong);
+    border-radius: 10px; padding: 10px 13px;
+  }
+  .wp-melding.kritisch { border-left-color: var(--crit); }
+  .wp-kop { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .wp-kenteken { font-size: 12px; color: var(--accent); font-weight: 600; }
+  .wp-punt { font-size: 12px; font-weight: 600; }
+  .wp-kritisch {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--crit); font-weight: 700;
+  }
+  .wp-status {
+    margin-left: auto; font-size: 10.5px; padding: 2px 9px; border-radius: 999px;
+    background: var(--surface-2); color: var(--muted);
+  }
+  .wp-status.s-open { background: var(--warn-soft); color: var(--warn); font-weight: 600; }
+  .wp-status.s-ingepland { background: var(--info-soft); color: var(--info); font-weight: 600; }
+  .wp-oms { font-size: 12.5px; margin: 6px 0 3px; line-height: 1.45; }
+  .wp-meta { font-size: 11px; color: var(--faint); margin: 0; }
+  .wp-acties { display: flex; gap: 8px; margin-top: 9px; }
+  .wp-acties .btn { padding: 4px 12px; font-size: 11.5px; }
+  .wp-verholpen { margin-top: 10px; }

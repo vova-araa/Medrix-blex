@@ -4,6 +4,7 @@ import {
   urenTotalen,
   type EmballageSoort,
   type TaakEventType,
+  type Voertuigcontrole,
   type WerktijdEventType,
 } from "@sharzi/domain";
 import { useState } from "react";
@@ -23,6 +24,7 @@ import {
 } from "../data/state";
 import { statusLabel, t, TALEN, type Taal } from "../i18n";
 import { initialen, tijd, venster } from "../utils";
+import { DagcontroleKaart } from "./DagcontroleKaart";
 import { Icoon, type IcoonNaam } from "./Icoon";
 
 interface Props {
@@ -38,13 +40,16 @@ interface Props {
   onNulCmr: (taakId: string) => void;
   onZetTrailer: (ritId: string, kenteken: string) => void;
   onRitKm: (ritId: string, veld: "start" | "eind", waarde: number) => void;
+  onControle: (controle: Voertuigcontrole) => void;
+  onLosseMelding: (kenteken: string, omschrijving: string, kritisch: boolean) => void;
   taal: Taal;
   onZetTaal: (taal: Taal) => void;
 }
 
 export function ChauffeurView({
   state, nu, actieveChauffeur, onKiesChauffeur, onRegistreer, onWerktijdEvent,
-  onZetOffline, onEmballage, onCmr, onNulCmr, onZetTrailer, onRitKm, taal, onZetTaal,
+  onZetOffline, onEmballage, onCmr, onNulCmr, onZetTrailer, onRitKm,
+  onControle, onLosseMelding, taal, onZetTaal,
 }: Props) {
   const [verbergGedane, setVerbergGedane] = useState(false);
   const chauffeurs = state.ritten.map((r) => r.chauffeur).filter(Boolean);
@@ -211,6 +216,19 @@ export function ChauffeurView({
                 )}
               </ul>
             </div>
+          )}
+
+          {rit && (
+            <DagcontroleKaart
+              state={state}
+              nu={nu}
+              chauffeur={actieveChauffeur}
+              ritId={rit.id}
+              kenteken={rit.voertuig.kentekenGenormaliseerd}
+              trailerKenteken={trailerKenteken}
+              onControle={onControle}
+              onLosseMelding={onLosseMelding}
+            />
           )}
 
           <KlokKaart state={state} nu={nu} chauffeur={actieveChauffeur} onWerktijdEvent={onWerktijdEvent} />
