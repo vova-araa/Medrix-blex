@@ -7,9 +7,19 @@ const reistijd = (van: string, naar: string) => (van === naar ? 0 : 60);
 
 const ruim: RijtijdStatus = {
   dagRijMinuten: 60, dagResterendMinuten: 480,
+  dagResterendMetVerlengingMinuten: 540, verlengingenGebruikt: 0, verlengingenOver: 2,
   blokRijMinuten: 60, blokResterendMinuten: 210,
+  pauzeNodig: false, pauzeDeel1Gehad: false,
   weekRijMinuten: 600, weekResterendMinuten: 2000,
-  pauzeNodig: false,
+  tweeWekenRijMinuten: 600, tweeWekenResterendMinuten: 4800,
+  verkorteDagRustenGebruikt: 0, verkorteDagRustenOver: 3,
+  minutenSindsWeekRust: 600, minutenTotWeekRustDeadline: 7040,
+  openstaandeCompensatieMinuten: 0,
+  weekArbeidMinuten: 700, weekArbeidResterendMinuten: 2900,
+  gemiddeldeWeekArbeidMinuten: 700,
+  dienstMinuten: 120, dienstResterendMinuten: 600,
+  nachtdienst: false,
+  overtredingen: [],
 };
 
 const kandidaat = (

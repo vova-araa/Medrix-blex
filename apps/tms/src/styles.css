@@ -128,6 +128,34 @@
   .btn.fb-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
   /* ── KPI-strip ──────────────────────────── */
+  .dagkiezer {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px 0; max-width: 1280px; margin: 0 auto;
+  }
+  .dagkiezer-pijl {
+    width: 30px; height: 30px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .dagkiezer-dag { display: flex; flex-direction: column; min-width: 190px; }
+  .dagkiezer-dag b { font-size: 14px; }
+  .dagkiezer-dag b::first-letter { text-transform: uppercase; }
+  .dagkiezer-dag span { font-size: 11.5px; color: var(--muted); }
+  .dagkiezer-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .dagkiezer-tab {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 12px; font-size: 12px; color: var(--muted); cursor: pointer;
+  }
+  .dagkiezer-tab:hover { border-color: var(--line-strong); color: var(--ink); }
+  .dagkiezer-tab.actief {
+    background: var(--accent-soft); border-color: var(--accent);
+    color: var(--accent); font-weight: 600;
+  }
+  .dagkiezer-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .fleet-leeg {
+    background: var(--surface); border: 1px dashed var(--line-strong); border-radius: 10px;
+    padding: 28px; text-align: center; color: var(--muted); font-size: 13px;
+  }
+
   .kpis {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 12px; padding: 14px 16px 0; max-width: 1280px; margin: 0 auto;
@@ -1175,3 +1203,6 @@
 .autoplan-rest { border: 1px dashed var(--warn); border-radius: 10px; padding: 12px 14px; }
 .autoplan-rest h4 { margin: 0 0 4px; font-size: 13px; display: flex; align-items: center; gap: 6px; color: var(--warn); }
 .autoplan-rest ul { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; display: grid; gap: 3px; }
+
+  /* Lading waarvan het tijdvenster niet op de gekozen plandag valt. */
+  .venster.ander-dag { color: var(--warn); font-weight: 600; }

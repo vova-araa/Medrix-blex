@@ -3,6 +3,7 @@ import {
   automatischPlan,
   formatteerGeld,
   kanInplannen,
+  lokaalTijdstipMs,
   maakCreditnota,
   sjabloonVan,
   totalenVan,
@@ -87,6 +88,7 @@ export default function App() {
   const [uitval, setUitval] = useState<{ ritId: string; chauffeur: string; resultaat: VervangResultaat } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [zijbalkIn, setZijbalkIn] = useState(false);
+  const [planDatum, setPlanDatum] = useState("2026-08-07");
   // De taal staat in de state, niet alleen in de i18n-module: anders
   // hertekent alleen de taalkiezer en blijft de rest van de app staan.
   const [huidigeTaal, setHuidigeTaal] = useState<Taal>("nl");
@@ -188,11 +190,14 @@ export default function App() {
       }
     }
 
+    // Een lege rit van morgen begint niet "over een half uur" maar op zijn eigen
+    // dag: de basis is 06:00 lokaal op de ritdatum, of nu als die al voorbij is.
+    const dagBasis = Math.max(simMs, lokaalTijdstipMs(rit.datum, 6));
     const bestaand = takenVanRit(state, ritId);
     const laatsteEind = bestaand.length
       ? Math.max(...bestaand.map((tk) => Date.parse(tk.geplandTot)))
-      : simMs;
-    const start = new Date(Math.max(laatsteEind, simMs) + 30 * 60_000);
+      : dagBasis;
+    const start = new Date(Math.max(laatsteEind, dagBasis) + 30 * 60_000);
     const eind = new Date(start.getTime() + 45 * 60_000);
 
     // Client genereert UUID's (CLAUDE.md §7.2) — nooit wachten op een server-id.
@@ -767,6 +772,8 @@ export default function App() {
           onSelecteerTaak={setGeselecteerdeTaak}
           onAutoPlan={startAutoPlan}
           onVerplaatsStop={verplaatsStopInRit}
+          planDatum={planDatum}
+          onZetPlanDatum={setPlanDatum}
         />
       )}
       {rol === "bedrijf" && effectieveTab === "operatie" && (

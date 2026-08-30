@@ -11,6 +11,11 @@ export const nl = {
   "kpi.problemen": "problemen",
   "kpi.ongepland": "ongeplande zendingen",
 
+  "planbord.vorige": "Vorige dag",
+  "planbord.volgende": "Volgende dag",
+  "planbord.ritten": "{n} ritten",
+  "planbord.geenRitten": "Geen ritten op deze dag.",
+
   "route.omhoog": "Stop eerder in de rit",
   "route.omlaag": "Stop later in de rit",
   "route.fout.lossen_voor_laden": "Kan niet: dan wordt er gelost vóórdat de zending geladen is.",

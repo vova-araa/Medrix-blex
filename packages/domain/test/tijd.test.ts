@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lokaleDatum, nachtMinuten, weekStartMs, zoneOffsetMinuten } from "../src/tijd";
+import { lokaalTijdstipMs, lokaleDatum, nachtMinuten, weekStartMs, zoneOffsetMinuten } from "../src/tijd";
 
 const iso = (ms: number) => new Date(ms).toISOString();
 
@@ -42,5 +42,22 @@ describe("tijd (Europe/Amsterdam)", () => {
 
   it("telt geen nacht voor een dienst die overdag valt", () => {
     expect(nachtMinuten(Date.parse("2026-08-07T08:00:00Z"), Date.parse("2026-08-07T16:00:00Z"))).toBe(0);
+  });
+});
+
+describe("lokaalTijdstipMs", () => {
+  it("zet 06:00 zomertijd om naar 04:00 UTC", () => {
+    expect(new Date(lokaalTijdstipMs("2026-08-08", 6)).toISOString())
+      .toBe("2026-08-08T04:00:00.000Z");
+  });
+
+  it("zet 06:00 wintertijd om naar 05:00 UTC", () => {
+    expect(new Date(lokaalTijdstipMs("2026-01-15", 6)).toISOString())
+      .toBe("2026-01-15T05:00:00.000Z");
+  });
+
+  it("geeft middernacht lokaal als standaard", () => {
+    expect(lokaleDatum(new Date(lokaalTijdstipMs("2026-08-08")).toISOString()))
+      .toBe("2026-08-08");
   });
 });

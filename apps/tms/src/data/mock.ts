@@ -16,6 +16,8 @@ import type { WachtrijItem } from "@sharzi/connector-kit";
 
 const TENANT = "blex";
 const dag = (tijd: string) => `2026-08-07T${tijd}:00Z`;
+// Morgen: het planbord loopt over meerdere dagen, dus er staat al werk klaar.
+const morgen = (tijd: string) => `2026-08-08T${tijd}:00Z`;
 
 const depot: Adres = { naam: "Depot Venlo", plaats: "Venlo", land: "NL" };
 
@@ -85,6 +87,16 @@ const zendingen: Record<string, Zending> = {
     van: { naam: "DC Jumbo", plaats: "Veghel", land: "NL", tijdvenster: { van: dag("10:00"), tot: dag("16:00") } },
     naar: depot,
   },
+  "SHZ-115-004": {
+    id: "SHZ-115-004", tenantId: TENANT, orderId: "O-1010", barcode: "SHZ-115-004",
+    laadmeters: 5.4, gewichtKg: 4200, omschrijving: "7 pallets diepvries",
+    van: depot, naar: { naam: "DC Jumbo", plaats: "Veghel", land: "NL", tijdvenster: { van: morgen("05:00"), tot: morgen("07:00") } },
+  },
+  "SHZ-115-008": {
+    id: "SHZ-115-008", tenantId: TENANT, orderId: "O-1011", barcode: "SHZ-115-008",
+    laadmeters: 3.8, gewichtKg: 2600, omschrijving: "5 pallets veevoer",
+    van: depot, naar: { naam: "Van Dijk Agro", plaats: "Helmond", land: "NL", tijdvenster: { van: morgen("07:00"), tot: morgen("09:00") } },
+  },
   // Retourzending op de rit van Kowalski: beide taken staan nog op "gepland",
   // dus als zijn rit vastloopt kan de herstel-lus deze zending verplaatsen.
   "SHZ-114-025": {
@@ -116,6 +128,19 @@ const ritten: Rit[] = [
     id: "R-260807-05", tenantId: TENANT, datum: "2026-08-07", chauffeur: "", charter: false,
     voertuig: { kentekenGenormaliseerd: "66KLM2", landcode: "NL", omschrijving: "Bakwagen", capaciteitLaadmeters: 8.0 },
   },
+  // ── Morgen ──────────────────────────────────────────────────────────────
+  {
+    id: "R-260808-01", tenantId: TENANT, datum: "2026-08-08", chauffeur: "J. Peeters", charter: false,
+    voertuig: { kentekenGenormaliseerd: "43BKL7", landcode: "NL", omschrijving: "Trekker + city-trailer", capaciteitLaadmeters: 13.6 },
+  },
+  {
+    id: "R-260808-02", tenantId: TENANT, datum: "2026-08-08", chauffeur: "S. de Boer", charter: false,
+    voertuig: { kentekenGenormaliseerd: "12PGH9", landcode: "NL", omschrijving: "Bakwagen met laadklep", capaciteitLaadmeters: 8.0 },
+  },
+  {
+    id: "R-260808-03", tenantId: TENANT, datum: "2026-08-08", chauffeur: "", charter: false,
+    voertuig: { kentekenGenormaliseerd: "87TDF3", landcode: "NL", omschrijving: "Bakwagen", capaciteitLaadmeters: 8.0 },
+  },
 ];
 
 const taak = (
@@ -124,6 +149,14 @@ const taak = (
 ): Taak => ({
   id, tenantId: TENANT, ritId, soort, adres,
   geplandVan: dag(van), geplandTot: dag(tot), zendingId,
+});
+
+const morgenTaak = (
+  id: string, ritId: string, soort: Taak["soort"], adres: Adres,
+  van: string, tot: string, zendingId?: string
+): Taak => ({
+  id, tenantId: TENANT, ritId, soort, adres,
+  geplandVan: morgen(van), geplandTot: morgen(tot), zendingId,
 });
 
 const taken: Taak[] = [
@@ -139,6 +172,11 @@ const taken: Taak[] = [
   taak("T-09", "R-260807-03", "lossen", zendingen["SHZ-114-015"].naar, "06:30", "07:30", "SHZ-114-015"),
   taak("T-10", "R-260807-04", "laden", depot, "06:00", "06:30", "SHZ-114-019"),
   taak("T-11", "R-260807-04", "lossen", zendingen["SHZ-114-019"].naar, "07:30", "08:10", "SHZ-114-019"),
+  // Morgen — nog niets gestart, alleen ingepland.
+  morgenTaak("T-20", "R-260808-01", "laden", depot, "03:30", "04:00", "SHZ-115-004"),
+  morgenTaak("T-21", "R-260808-01", "lossen", zendingen["SHZ-115-004"].naar, "05:00", "06:00", "SHZ-115-004"),
+  morgenTaak("T-22", "R-260808-02", "laden", depot, "04:30", "05:00", "SHZ-115-008"),
+  morgenTaak("T-23", "R-260808-02", "lossen", zendingen["SHZ-115-008"].naar, "07:00", "07:45", "SHZ-115-008"),
 ];
 
 const events: TaakEvent[] = [
@@ -150,6 +188,10 @@ const events: TaakEvent[] = [
   ev("T-06", "taak_aangemaakt", "03:56", "planning", "tms-web"),
   ev("T-07", "taak_aangemaakt", "03:56", "planning", "tms-web"),
   ev("T-12", "taak_aangemaakt", "03:56", "planning", "tms-web"),
+  ev("T-20", "taak_aangemaakt", "09:10", "planning", "tms-web"),
+  ev("T-21", "taak_aangemaakt", "09:10", "planning", "tms-web"),
+  ev("T-22", "taak_aangemaakt", "09:12", "planning", "tms-web"),
+  ev("T-23", "taak_aangemaakt", "09:12", "planning", "tms-web"),
   ev("T-08", "taak_aangemaakt", "03:57", "planning", "tms-web"),
   ev("T-09", "taak_aangemaakt", "03:57", "planning", "tms-web"),
   ev("T-10", "taak_aangemaakt", "03:58", "planning", "tms-web"),
@@ -184,6 +226,8 @@ const orders: Record<string, Order> = {
   "O-1007": { id: "O-1007", tenantId: TENANT, opdrachtgever: "Bouwgroep Limburg BV", referentie: "BGL-7801" },
   "O-1008": { id: "O-1008", tenantId: TENANT, opdrachtgever: "Van Dijk Agro BV", referentie: "VDA-2240" },
   "O-1009": { id: "O-1009", tenantId: TENANT, opdrachtgever: "Jumbo Supermarkten BV", referentie: "JMB-88430" },
+  "O-1010": { id: "O-1010", tenantId: TENANT, opdrachtgever: "Jumbo Supermarkten BV", referentie: "JMB-88512" },
+  "O-1011": { id: "O-1011", tenantId: TENANT, opdrachtgever: "Van Dijk Agro BV", referentie: "VDA-2255" },
 };
 
 // Voorbeeldfoto als inline SVG — echte uploads komen via de adresbibliotheek.

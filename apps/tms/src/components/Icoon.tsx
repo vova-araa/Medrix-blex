@@ -8,9 +8,12 @@ export type IcoonNaam =
   | "rapportage" | "assistent" | "dock" | "edi" | "document" | "boek"
   | "modules" | "check" | "waarschuwing" | "pakket" | "pijl" | "locatie"
   | "pen" | "speel" | "stopblok" | "koffie" | "stuur" | "camera" | "maan"
-  | "vlag" | "plus" | "kruis" | "timer" | "info" | "mail" | "koppeling";
+  | "vlag" | "plus" | "kruis" | "timer" | "info" | "mail" | "koppeling"
+  | "chevron-links" | "chevron-rechts";
 
 const PADEN: Record<IcoonNaam, JSX.Element> = {
+  "chevron-links": <path d="M15 5 8 12l7 7" />,
+  "chevron-rechts": <path d="M9 5l7 7-7 7" />,
   mail: (
     <>
       <rect x="3" y="5.5" width="18" height="13" rx="1.5" />

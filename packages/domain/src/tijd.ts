@@ -65,3 +65,18 @@ export function nachtMinuten(
   }
   return Math.round(nacht);
 }
+
+/**
+ * UTC-tijdstip van een lokale klokstand op een kalenderdag (`YYYY-MM-DD`).
+ * Twee passes zodat een zomertijdwissel op die dag geen uur verschuift.
+ */
+export function lokaalTijdstipMs(
+  datum: string, uur = 0, minuut = 0, zone = ZONE
+): number {
+  const [jaar, maand, dag] = datum.split("-").map(Number);
+  const lokaalAlsUtc = Date.UTC(jaar, maand - 1, dag, uur, minuut);
+  let gok = lokaalAlsUtc - zoneOffsetMinuten(lokaalAlsUtc, zone) * 60_000;
+  const offsetDaar = zoneOffsetMinuten(gok, zone);
+  gok = lokaalAlsUtc - offsetDaar * 60_000;
+  return gok;
+}

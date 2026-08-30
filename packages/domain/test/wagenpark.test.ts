@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  bewakingVan, bewakingVanVloot, kostenVanDag, WAGENPARK_REGELS, type Voertuig,
+  bewakingVan, bewakingVanVloot, kostenVanDag, WAGENPARK_REGELS, type WagenparkVoertuig,
 } from "../src/wagenpark";
 
 const NU = "2026-08-07T10:00:00Z";

@@ -1,4 +1,4 @@
-import { formatteerKenteken, type Rit } from "@sharzi/domain";
+import { formatteerKenteken, lokaleDatum, type Rit } from "@sharzi/domain";
 import { useState, type DragEvent } from "react";
 import {
   gebruikteLaadmeters,
@@ -9,7 +9,7 @@ import {
 } from "../data/state";
 import { statusLabel, t } from "../i18n";
 import { ritEta } from "../kaart/simulatie";
-import { initialen, laadmeters, tijd } from "../utils";
+import { datumDagKort, datumLabel, initialen, laadmeters, tijd } from "../utils";
 import { Icoon, type IcoonNaam } from "./Icoon";
 import { TruckSvg } from "./TruckSvg";
 
@@ -20,12 +20,20 @@ interface Props {
   onSelecteerTaak: (taakId: string) => void;
   onAutoPlan: () => void;
   onVerplaatsStop: (ritId: string, taakId: string, richting: "omhoog" | "omlaag") => void;
+  planDatum: string;
+  onZetPlanDatum: (datum: string) => void;
 }
 
-export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak, onAutoPlan, onVerplaatsStop }: Props) {
-  const alleTaken = state.taken;
+export function BedrijfView({
+  state, nu, onPlanZending, onSelecteerTaak, onAutoPlan, onVerplaatsStop, planDatum, onZetPlanDatum,
+}: Props) {
+  // Het planbord toont één dag tegelijk. Ritten van andere dagen blijven in de state staan;
+  // alleen de weergave is gefilterd.
+  const dagRitten = state.ritten.filter((r) => r.datum === planDatum);
+  const dagRitIds = new Set(dagRitten.map((r) => r.id));
+  const alleTaken = state.taken.filter((tk) => dagRitIds.has(tk.ritId));
   const kpis: Array<{ ico: IcoonNaam; cls: string; n: string; label: string }> = [
-    { ico: "truck", cls: "i-truck", n: String(state.ritten.filter((r) => statusVanRit(state, r.id) === "onderweg").length), label: t("kpi.rittenOnderweg") },
+    { ico: "truck", cls: "i-truck", n: String(dagRitten.filter((r) => statusVanRit(state, r.id) === "onderweg").length), label: t("kpi.rittenOnderweg") },
     { ico: "check", cls: "i-ok", n: `${alleTaken.filter((tk) => statusVanTaak(state, tk.id) === "afgerond").length}/${alleTaken.length}`, label: t("kpi.takenAfgerond") },
     { ico: "waarschuwing", cls: "i-warn", n: String(alleTaken.filter((tk) => statusVanTaak(state, tk.id) === "probleem").length), label: t("kpi.problemen") },
     { ico: "pakket", cls: "i-box", n: String(state.ongepland.length), label: t("kpi.ongepland") },
@@ -33,6 +41,12 @@ export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak, onAutoP
 
   return (
     <div>
+      <Dagkiezer
+        state={state}
+        planDatum={planDatum}
+        aantalRitten={dagRitten.length}
+        onZetPlanDatum={onZetPlanDatum}
+      />
       <div className="kpis">
         {kpis.map((k) => (
           <div className="kpi-tile" key={k.label}>
@@ -42,9 +56,12 @@ export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak, onAutoP
         ))}
       </div>
       <div className="bedrijf-main">
-        <OngeplandLijst state={state} onAutoPlan={onAutoPlan} />
+        <OngeplandLijst state={state} planDatum={planDatum} onAutoPlan={onAutoPlan} />
         <div className="fleet">
-          {state.ritten.map((rit) => (
+          {dagRitten.length === 0 && (
+            <div className="fleet-leeg">{t("planbord.geenRitten")}</div>
+          )}
+          {dagRitten.map((rit) => (
             <RitKaart
               key={rit.id}
               rit={rit}
@@ -61,7 +78,65 @@ export function BedrijfView({ state, nu, onPlanZending, onSelecteerTaak, onAutoP
   );
 }
 
-function OngeplandLijst({ state, onAutoPlan }: { state: AppState; onAutoPlan: () => void }) {
+function verschuifDatum(datum: string, dagen: number): string {
+  const [j, m, d] = datum.split("-").map(Number);
+  return new Date(Date.UTC(j, m - 1, d + dagen)).toISOString().slice(0, 10);
+}
+
+function Dagkiezer({
+  state, planDatum, aantalRitten, onZetPlanDatum,
+}: {
+  state: AppState;
+  planDatum: string;
+  aantalRitten: number;
+  onZetPlanDatum: (datum: string) => void;
+}) {
+  const datums = [...new Set(state.ritten.map((r) => r.datum))].sort();
+  const eerste = datums[0] ?? planDatum;
+  const laatste = datums[datums.length - 1] ?? planDatum;
+  const vorige = verschuifDatum(planDatum, -1);
+  const volgende = verschuifDatum(planDatum, 1);
+
+  return (
+    <div className="dagkiezer">
+      <button
+        className="btn dagkiezer-pijl"
+        disabled={planDatum <= eerste}
+        aria-label={t("planbord.vorige")}
+        onClick={() => onZetPlanDatum(vorige)}
+      >
+        <Icoon naam="chevron-links" maat={14} />
+      </button>
+      <div className="dagkiezer-dag">
+        <b>{datumLabel(planDatum)}</b>
+        <span>{t("planbord.ritten", { n: String(aantalRitten) })}</span>
+      </div>
+      <button
+        className="btn dagkiezer-pijl"
+        disabled={planDatum >= laatste}
+        aria-label={t("planbord.volgende")}
+        onClick={() => onZetPlanDatum(volgende)}
+      >
+        <Icoon naam="chevron-rechts" maat={14} />
+      </button>
+      <div className="dagkiezer-tabs">
+        {datums.map((d) => (
+          <button
+            key={d}
+            className={`dagkiezer-tab${d === planDatum ? " actief" : ""}`}
+            onClick={() => onZetPlanDatum(d)}
+          >
+            {datumDagKort(d)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OngeplandLijst({
+  state, planDatum, onAutoPlan,
+}: { state: AppState; planDatum: string; onAutoPlan: () => void }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-head">
@@ -89,9 +164,18 @@ function OngeplandLijst({ state, onAutoPlan }: { state: AppState; onAutoPlan: ()
               <div className="barcode mono">{z.barcode}</div>
               <div className="route">{z.van.naam} → {z.naar.naam}</div>
               <div className="specs">{z.omschrijving} · {laadmeters(z.laadmeters)} lm</div>
-              {z.naar.tijdvenster && (
-                <div className="venster">{tijd(z.naar.tijdvenster.van)}–{tijd(z.naar.tijdvenster.tot)}</div>
-              )}
+              {z.naar.tijdvenster && (() => {
+                // Op een planbord van meerdere dagen is een venster zonder dag
+                // misleidend: toon de dag zodra hij afwijkt van de gekozen dag.
+                const dagVanVenster = lokaleDatum(z.naar.tijdvenster.van);
+                const anders = dagVanVenster !== planDatum;
+                return (
+                  <div className={`venster${anders ? " ander-dag" : ""}`}>
+                    {anders && <>{datumDagKort(z.naar.tijdvenster.van)} · </>}
+                    {tijd(z.naar.tijdvenster.van)}–{tijd(z.naar.tijdvenster.tot)}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}

@@ -1,6 +1,11 @@
 // Weergavehulpjes. Tijden staan in UTC in de data; hier — en alleen hier —
 // worden ze geformatteerd naar Europe/Amsterdam (CLAUDE.md §5.3).
 
+import { taal } from "./i18n";
+
+const LOCALES: Record<string, string> = { nl: "nl-NL", en: "en-GB", pl: "pl-PL", ro: "ro-RO" };
+const locale = () => LOCALES[taal()] ?? "nl-NL";
+
 const tijdFormat = new Intl.DateTimeFormat("nl-NL", {
   hour: "2-digit",
   minute: "2-digit",
@@ -26,7 +31,21 @@ export function initialen(naam: string): string {
 
 /** Korte datum in lokale weergave: 7 aug 2026. */
 export function datumKort(iso: string): string {
-  return new Intl.DateTimeFormat("nl-NL", {
+  return new Intl.DateTimeFormat(locale(), {
     day: "numeric", month: "short", year: "numeric", timeZone: "Europe/Amsterdam",
+  }).format(new Date(iso));
+}
+
+/** Dag zonder jaartal voor een tab: vr 7 aug. */
+export function datumDagKort(iso: string): string {
+  return new Intl.DateTimeFormat(locale(), {
+    weekday: "short", day: "numeric", month: "short", timeZone: "Europe/Amsterdam",
+  }).format(new Date(iso));
+}
+
+/** Volledige dag voor een kop: vrijdag 7 augustus. */
+export function datumLabel(iso: string): string {
+  return new Intl.DateTimeFormat(locale(), {
+    weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Amsterdam",
   }).format(new Date(iso));
 }
