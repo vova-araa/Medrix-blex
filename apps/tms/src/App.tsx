@@ -16,7 +16,7 @@ import {
   verplaatsStop,
   type Factuur,
   type DockEventType, type EmballageSoort, type Order, type PlanResultaat, type VervangResultaat,
-  type PlanVoorstel, type Taak, type TaakEvent,
+  type PlanVoorstel, type Taak, type TaakEvent, type VoorbehoudSoort,
   type TaakEventType, type WerktijdEventType, type Zending,
 } from "@sharzi/domain";
 import { useEffect, useReducer, useRef, useState } from "react";
@@ -717,6 +717,26 @@ export default function App() {
     meld(t("toast.emballage", { klant }));
   }
 
+  // Een voorbehoud is bewijs: het wordt vastgelegd met tijdstip en wie, en
+  // daarna nooit meer gewijzigd (CLAUDE.md §5.1).
+  function legVoorbehoudVast(
+    zendingId: string, soort: VoorbehoudSoort, omschrijving: string
+  ) {
+    dispatch({
+      type: "voorbehoud",
+      voorbehoud: {
+        id: crypto.randomUUID(),
+        tenantId: TENANT,
+        zendingId,
+        soort,
+        omschrijving,
+        wie: "administratie",
+        tijdstip: nu,
+      },
+    });
+    meld(t("toast.voorbehoud", { zending: state.zendingen[zendingId]?.barcode ?? zendingId }));
+  }
+
   function boekEmballage(invoer: {
     klant: string; soort: EmballageSoort; geleverd: number; retour: number;
   }) {
@@ -863,7 +883,9 @@ export default function App() {
         />
       )}
       {rol === "bedrijf" && effectieveTab === "wagenpark" && <WagenparkView state={state} nu={nu} onZetTrailer={zetTrailer} />}
-      {rol === "bedrijf" && effectieveTab === "documenten" && <DocumentenView state={state} />}
+      {rol === "bedrijf" && effectieveTab === "documenten" && (
+        <DocumentenView state={state} nu={nu} onVoorbehoud={legVoorbehoudVast} />
+      )}
       {rol === "bedrijf" && effectieveTab === "rapportage" && <RapportageView state={state} nu={nu} />}
       {rol === "bedrijf" && effectieveTab === "modules" && (
         <ModulesView state={state} onZetModule={zetModule} />

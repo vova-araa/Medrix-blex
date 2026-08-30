@@ -30,6 +30,11 @@ export interface Zending {
   laadmeters: number;
   gewichtKg: number;
   omschrijving: string;
+  /** Aantal colli en verpakkingswijze: verplicht op de vrachtbrief (art. 6 lid 1
+   *  CMR). Optioneel in het model omdat ze bij invoer nog kunnen ontbreken —
+   *  de vrachtbriefcontrole meldt ze dan als ontbrekend. */
+  aantalColli?: number;
+  verpakkingswijze?: string;
   van: Adres;
   naar: Adres;
 }

@@ -1,6 +1,6 @@
 import type {
   Adres, DockEvent, DockEventType, EmballageTransactie, Order, Rit, Taak, TaakEvent, TaakEventType,
-  WerktijdEvent, WerktijdEventType, Zending,
+  Voorbehoud, WerktijdEvent, WerktijdEventType, Zending,
 } from "@sharzi/domain";
 import { FixtureTruckAndTrailerClient } from "@sharzi/integratie-truck-and-trailer";
 import { FixtureTachoClient } from "@sharzi/integratie-tacho";
@@ -42,16 +42,19 @@ const zendingen: Record<string, Zending> = {
   "SHZ-114-002": {
     id: "SHZ-114-002", tenantId: TENANT, orderId: "O-1001", barcode: "SHZ-114-002",
     laadmeters: 4.8, gewichtKg: 3900, omschrijving: "6 pallets droge kruidenierswaren",
+    aantalColli: 6, verpakkingswijze: "pallet",
     van: depot, naar: { naam: "DC Jumbo", plaats: "Veghel", land: "NL", tijdvenster: { van: dag("06:00"), tot: dag("07:00") } },
   },
   "SHZ-114-007": {
     id: "SHZ-114-007", tenantId: TENANT, orderId: "O-1002", barcode: "SHZ-114-007",
     laadmeters: 3.1, gewichtKg: 2100, omschrijving: "4 pallets veevoer",
+    aantalColli: 4, verpakkingswijze: "pallet",
     van: depot, naar: { naam: "Van Dijk Agro", plaats: "Helmond", land: "NL", tijdvenster: { van: dag("08:00"), tot: dag("09:00") } },
   },
   "SHZ-114-011": {
     id: "SHZ-114-011", tenantId: TENANT, orderId: "O-1003", barcode: "SHZ-114-011",
     laadmeters: 5.2, gewichtKg: 6400, omschrijving: "8 pallets fusten",
+    aantalColli: 8, verpakkingswijze: "pallet",
     van: depot, naar: { naam: "Brouwerij De Kroon", plaats: "Lieshout", land: "NL", tijdvenster: { van: dag("06:30"), tot: dag("08:00") } },
   },
   "SHZ-114-015": {
@@ -63,38 +66,45 @@ const zendingen: Record<string, Zending> = {
   "SHZ-114-019": {
     id: "SHZ-114-019", tenantId: TENANT, orderId: "O-1005", barcode: "SHZ-114-019",
     laadmeters: 3.4, gewichtKg: 2900, omschrijving: "Bouwmaterialen op 5 pallets",
+    aantalColli: 5, verpakkingswijze: "pallet",
     van: depot, naar: { naam: "Bouwmarkt Roermond", plaats: "Roermond", land: "NL", tijdvenster: { van: dag("07:30"), tot: dag("10:00") } },
   },
   "SHZ-114-021": {
     id: "SHZ-114-021", tenantId: TENANT, orderId: "O-1006", barcode: "SHZ-114-021",
     laadmeters: 2.4, gewichtKg: 1860, omschrijving: "4 pallets · 1.860 kg",
+    aantalColli: 4, verpakkingswijze: "pallet",
     van: depot, naar: { naam: "DC Plus", plaats: "Haaksbergen", land: "NL", tijdvenster: { van: dag("11:00"), tot: dag("13:00") } },
   },
   "SHZ-114-022": {
     id: "SHZ-114-022", tenantId: TENANT, orderId: "O-1007", barcode: "SHZ-114-022",
     laadmeters: 6.0, gewichtKg: 9200, omschrijving: "8 pallets · 9.200 kg",
+    aantalColli: 8, verpakkingswijze: "pallet",
     van: { naam: "Steenfabriek Panningen", plaats: "Panningen", land: "NL" },
     naar: { naam: "Bouwplaats Waalfront", plaats: "Nijmegen", land: "NL", tijdvenster: { van: dag("04:00"), tot: dag("14:00") } },
   },
   "SHZ-114-023": {
     id: "SHZ-114-023", tenantId: TENANT, orderId: "O-1008", barcode: "SHZ-114-023",
     laadmeters: 3.1, gewichtKg: 950, omschrijving: "12 rolcontainers",
+    aantalColli: 12, verpakkingswijze: "rolcontainer",
     van: depot, naar: { naam: "Van Dijk Agro", plaats: "Helmond", land: "NL", tijdvenster: { van: dag("12:00"), tot: dag("15:00") } },
   },
   "SHZ-114-024": {
     id: "SHZ-114-024", tenantId: TENANT, orderId: "O-1009", barcode: "SHZ-114-024",
     laadmeters: 2.5, gewichtKg: 700, omschrijving: "Retour: 26 europallets",
+    aantalColli: 26, verpakkingswijze: "europallet",
     van: { naam: "DC Jumbo", plaats: "Veghel", land: "NL", tijdvenster: { van: dag("10:00"), tot: dag("16:00") } },
     naar: depot,
   },
   "SHZ-115-004": {
     id: "SHZ-115-004", tenantId: TENANT, orderId: "O-1010", barcode: "SHZ-115-004",
     laadmeters: 5.4, gewichtKg: 4200, omschrijving: "7 pallets diepvries",
+    aantalColli: 7, verpakkingswijze: "pallet",
     van: depot, naar: { naam: "DC Jumbo", plaats: "Veghel", land: "NL", tijdvenster: { van: morgen("05:00"), tot: morgen("07:00") } },
   },
   "SHZ-115-008": {
     id: "SHZ-115-008", tenantId: TENANT, orderId: "O-1011", barcode: "SHZ-115-008",
     laadmeters: 3.8, gewichtKg: 2600, omschrijving: "5 pallets veevoer",
+    aantalColli: 5, verpakkingswijze: "pallet",
     van: depot, naar: { naam: "Van Dijk Agro", plaats: "Helmond", land: "NL", tijdvenster: { van: morgen("07:00"), tot: morgen("09:00") } },
   },
   // Retourzending op de rit van Kowalski: beide taken staan nog op "gepland",
@@ -102,6 +112,7 @@ const zendingen: Record<string, Zending> = {
   "SHZ-114-025": {
     id: "SHZ-114-025", tenantId: TENANT, orderId: "O-1003", barcode: "SHZ-114-025",
     laadmeters: 2.0, gewichtKg: 1200, omschrijving: "Retour: 40 lege fusten",
+    aantalColli: 40, verpakkingswijze: "fust",
     van: { naam: "Fustenloods", plaats: "Lieshout", land: "NL" },
     naar: depot,
   },
@@ -473,6 +484,22 @@ const mailThreads: MailThread[] = [
 
 // Koppelingslogboek: elk in- en uitgaand bericht is zichtbaar en een gefaald
 // bericht is opnieuw af te spelen (CLAUDE.md §6.3 — nooit stilzwijgend falen).
+// Voorbehouden bij aflevering (art. 30 CMR) op de enige zending die vandaag
+// al gelost is. Zichtbare schade is bij de aflevering zelf aangetekend; de
+// niet-zichtbare melding kwam later die ochtend binnen.
+const voorbehouden: Voorbehoud[] = [
+  {
+    id: "VB-001", tenantId: TENANT, zendingId: "SHZ-114-002", soort: "zichtbaar",
+    omschrijving: "Twee pallets aan de onderzijde ingedeukt; ontvanger heeft voor ontvangst getekend onder voorbehoud.",
+    wie: "DC Jumbo Veghel", tijdstip: dag("06:58"),
+  },
+  {
+    id: "VB-002", tenantId: TENANT, zendingId: "SHZ-114-002", soort: "niet_zichtbaar",
+    omschrijving: "Bij uitpakken bleek een derde pallet nat geworden. Schriftelijk gemeld per mail.",
+    wie: "DC Jumbo Veghel", tijdstip: dag("09:20"),
+  },
+];
+
 const koppelingLog: KoppelingLogRegel[] = [
   { id: "KL-001", koppelingId: "truck_and_trailer", richting: "in", omschrijving: "Wagenpark-sync: 5 voertuigen, 3 trailers", tijdstip: dag("05:30"), status: "geslaagd" },
   { id: "KL-002", koppelingId: "truck_and_trailer", richting: "in", omschrijving: "Onderhoudsstatus trekker 43-BKL-7", tijdstip: dag("05:30"), status: "geslaagd" },
@@ -584,6 +611,7 @@ export class MockDataBron implements DataBron {
       uitgever,
       mailThreads,
       koppelingLog,
+      voorbehouden,
     };
   }
 }

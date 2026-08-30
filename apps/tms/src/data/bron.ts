@@ -1,7 +1,8 @@
 import type { WachtrijItem } from "@sharzi/connector-kit";
 import type {
   ActiviteitBron, Adres, DockEvent, EmballageTransactie, Order, Rit, Taak, TaakEvent,
-  Factuur, Referentie, TachoToestemming, Uitgever, TachoUitlezing, WerktijdEvent, Zending,
+  Factuur, Referentie, TachoToestemming, Uitgever, TachoUitlezing, Voorbehoud,
+  WerktijdEvent, Zending,
 } from "@sharzi/domain";
 
 // De UI praat alleen met deze poort. Nu zit er een mock achter (in-memory);
@@ -136,6 +137,8 @@ export interface DagSnapshot {
   trailers: Trailer[];
   trailerVanRit: Record<string, string>;
   cmrs: CmrRegistratie[];
+  /** Voorbehouden bij aflevering (art. 30 CMR) — append-only, net als events. */
+  voorbehouden: Voorbehoud[];
   ritKm: Record<string, RitKm>;
   /** Rijtijd eerder deze week (vóór vandaag) per chauffeur, in minuten. */
   weekRijMinuten: Record<string, number>;

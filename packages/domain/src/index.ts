@@ -13,6 +13,7 @@ export * from "./wagenpark";
 export * from "./rijtijden";
 export * from "./tacho";
 export * from "./route";
+export * from "./vrachtbrief";
 export * from "./rapportage";
 export * from "./orderaanvraag";
 export * from "./autoplanner";

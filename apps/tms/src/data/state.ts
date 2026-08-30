@@ -18,6 +18,7 @@ import {
   type Zending,
   type Factuur,
   type FactuurStatus,
+  type Voorbehoud,
 } from "@sharzi/domain";
 import {
   adresSleutel,
@@ -67,6 +68,7 @@ export type Actie =
   | { type: "nieuwe_klant"; klant: Klant; tarief: Tarief }
   | { type: "dock_event"; event: DockEvent }
   | { type: "cmr_registreer"; cmr: CmrRegistratie }
+  | { type: "voorbehoud"; voorbehoud: Voorbehoud }
   | { type: "zet_trailer"; ritId: string; kenteken: string }
   | { type: "rit_km"; ritId: string; veld: "start" | "eind"; waarde: number }
   | { type: "zet_beleid"; actie: BeleidActie; stand: BeleidStand }
@@ -85,6 +87,7 @@ export type Actie =
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
   adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
+  voorbehouden: [],
   klanten: {}, dockEvents: [], trailers: [], trailerVanRit: {}, cmrs: [], ritKm: {},
   weekRijMinuten: {}, vorigeWeekRijMinuten: {}, weekArbeidMinuten: {},
   wagenparkSync: "", mailThreads: [], koppelingLog: [],
@@ -166,6 +169,9 @@ export function reducer(state: AppState, actie: Actie): AppState {
       return { ...state, dockEvents: [...state.dockEvents, actie.event] };
     case "cmr_registreer":
       return { ...state, cmrs: [...state.cmrs, actie.cmr] };
+    // Een voorbehoud wordt toegevoegd, nooit gewijzigd: het is bewijs (§5.1).
+    case "voorbehoud":
+      return { ...state, voorbehouden: [...state.voorbehouden, actie.voorbehoud] };
     case "zet_trailer":
       return { ...state, trailerVanRit: { ...state.trailerVanRit, [actie.ritId]: actie.kenteken } };
     case "rit_km": {

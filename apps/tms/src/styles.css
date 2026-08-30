@@ -1264,3 +1264,79 @@
   .emb-boek { margin-top: 4px; }
   .emb-corrigeer { padding: 3px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 5px; }
   @media (max-width: 1100px) { .emb-onder { grid-template-columns: 1fr; } }
+
+  /* ── Documenten en vrachtbrief ──────────────────────────────────────── */
+  .doc-balk { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 10px 0 12px; }
+  .doc-zoek {
+    flex: 1 1 260px; max-width: 360px; padding: 7px 10px;
+    border: 1px solid var(--line); border-radius: 8px; font-size: 13px;
+    background: var(--surface); color: var(--ink);
+  }
+  .doc-filter { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); }
+  .doc-telling { margin-left: auto; font-size: 12px; color: var(--faint); }
+  .doc-geen { color: var(--faint); }
+  .doc-open { padding: 3px 9px; font-size: 11.5px; }
+
+  .vb-printkop { display: none; }
+  .vb-onvolledig {
+    background: var(--warn-soft); border: 1px solid var(--warn); border-radius: 10px;
+    padding: 11px 14px; margin-bottom: 14px; color: var(--warn);
+  }
+  .vb-onvolledig b { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+  .vb-onvolledig p { font-size: 12px; margin: 6px 0 8px; line-height: 1.5; }
+  .vb-onvolledig ul { margin: 0; padding-left: 20px; font-size: 12px; }
+  .vb-onvolledig li { margin-bottom: 2px; }
+
+  .vb-voorbehoud { margin: 18px 0; }
+  .vb-voorbehoud h4 { margin: 0 0 4px; font-size: 13px; }
+  .vb-termijnen { list-style: none; margin: 10px 0; padding: 0; }
+  .vb-termijnen li {
+    display: flex; justify-content: space-between; gap: 12px;
+    padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px;
+    margin-bottom: 6px; font-size: 12px;
+  }
+  .vb-termijnen .vt-naam { font-weight: 600; }
+  .vb-termijnen .vt-stand { color: var(--muted); }
+  .vb-termijnen li.gemeld { border-color: var(--ok); background: var(--ok-soft); }
+  .vb-termijnen li.gemeld .vt-stand { color: var(--ok); font-weight: 600; }
+  .vb-termijnen li.verstreken { border-color: var(--crit); background: var(--crit-soft); }
+  .vb-termijnen li.verstreken .vt-stand { color: var(--crit); font-weight: 600; }
+  .vb-gemeld { margin-top: 10px; }
+  .vb-nieuw { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .vb-nieuw select { flex: 0 0 auto; }
+  .vb-nieuw input {
+    flex: 1 1 200px; padding: 6px 9px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: 12.5px; background: var(--surface); color: var(--ink);
+  }
+
+  /* Afdrukken levert het document, niet het scherm eromheen. Zonder deze
+     regels rolt de hele app mee de printer in en is de vrachtbrief onbruikbaar
+     als vervoersbewijs. */
+  @media print {
+    .zijbalk, .topbar, .proto-banner, .role-switch, .toast, .assistent-knop,
+    .geen-print, .detail-close { display: none !important; }
+    body, .werkblad, .werkblad-inhoud, .uren-main { background: #fff !important; }
+    .detail-overlay {
+      position: static !important; background: none !important;
+      display: block !important; padding: 0 !important;
+    }
+    .detail, .vrachtbrief-paneel {
+      position: static !important; width: 100% !important; max-width: none !important;
+      box-shadow: none !important; border: none !important; border-radius: 0 !important;
+      height: auto !important; max-height: none !important; overflow: visible !important;
+    }
+    .detail-body { overflow: visible !important; padding: 0 !important; }
+    /* Staat er een brief open, dan hoort de lijst eromheen niet op papier. */
+    .brief-open > .ph-card { display: none !important; }
+    .vb-printkop {
+      display: flex; flex-direction: column; gap: 2px;
+      border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 14px;
+    }
+    .vb-printkop b { font-size: 16px; }
+    .vb-printkop span { font-size: 11px; }
+    .vrachtbrief { color: #000; }
+    .event-list li, .vb-termijnen li, .vb-partijen .vb-blok {
+      break-inside: avoid; page-break-inside: avoid;
+    }
+    @page { margin: 16mm; }
+  }
