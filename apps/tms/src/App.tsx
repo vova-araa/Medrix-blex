@@ -2,7 +2,9 @@ import {
   achterstallig,
   automatischPlan,
   formatteerGeld,
+  boekTransactie,
   kanInplannen,
+  maakCorrectie,
   lokaalTijdstipMs,
   maakCreditnota,
   sjabloonVan,
@@ -715,6 +717,34 @@ export default function App() {
     meld(t("toast.emballage", { klant }));
   }
 
+  function boekEmballage(invoer: {
+    klant: string; soort: EmballageSoort; geleverd: number; retour: number;
+  }) {
+    dispatch({
+      type: "emballage_transactie",
+      transactie: boekTransactie({
+        id: crypto.randomUUID(),
+        tenantId: TENANT,
+        ...invoer,
+        tijdstip: nu,
+        wie: "administratie",
+      }),
+    });
+    meld(t("toast.emballageGeboekt", { klant: invoer.klant }));
+  }
+
+  // Een fout wordt tegengeboekt, nooit weggehaald: de oorspronkelijke regel
+  // blijft staan als bewijs (CLAUDE.md §5.2).
+  function corrigeerEmballage(transactieId: string) {
+    const origineel = state.emballage.find((e) => e.id === transactieId);
+    if (!origineel) return;
+    dispatch({
+      type: "emballage_transactie",
+      transactie: maakCorrectie(origineel, crypto.randomUUID(), nu, "administratie"),
+    });
+    meld(t("toast.emballageGecorrigeerd", { klant: origineel.klant }));
+  }
+
   const assistentActief = state.actieveModules.includes("assistent");
   const aantalMeldingen = meldingen(state, nu).length;
 
@@ -815,7 +845,14 @@ export default function App() {
           onCrediteer={crediteerFactuur}
         />
       )}
-      {rol === "bedrijf" && effectieveTab === "emballage" && <EmballageView state={state} />}
+      {rol === "bedrijf" && effectieveTab === "emballage" && (
+        <EmballageView
+          state={state}
+          nu={nu}
+          onBoek={boekEmballage}
+          onCorrigeer={corrigeerEmballage}
+        />
+      )}
       {rol === "bedrijf" && effectieveTab === "portaal" && (
         <PortaalView
           state={state}

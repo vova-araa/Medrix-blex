@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   emballageSaldi,
+  emballageStand,
   maakCorrectie,
   type EmballageSoort,
   type EmballageTransactie,
@@ -85,6 +86,16 @@ describe("emballageSaldi", () => {
     for (const klant of klanten) {
       for (const soort of soorten) {
         expect(saldi[klant]?.[soort] ?? 0).toBe(verwacht[klant]?.[soort] ?? 0);
+      }
+    }
+
+    // emballageStand rekent hetzelfde saldo uit, maar dan met ouderdom en
+    // waarde erbij. Beide moeten op dezelfde getallen uitkomen, anders kunnen
+    // het overzichtsscherm en een export uit elkaar gaan lopen.
+    const stand = emballageStand(transacties, "2026-08-08T00:00:00Z");
+    for (const klantStand of stand) {
+      for (const soortStand of klantStand.standen) {
+        expect(soortStand.saldo).toBe(verwacht[klantStand.klant]?.[soortStand.soort] ?? 0);
       }
     }
   });

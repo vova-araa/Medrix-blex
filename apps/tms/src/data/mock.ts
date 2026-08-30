@@ -302,7 +302,36 @@ const et = (
   wie: ritId ? "chauffeur" : "depot",
 });
 
+// Historie: emballage loopt over maanden, niet over een dag. Zonder oudere
+// boekingen is de ouderdomskolom altijd nul en zegt het scherm niets.
+let ethTeller = 0;
+const eth = (
+  klant: string, soort: EmballageTransactie["soort"],
+  geleverd: number, retour: number, datum: string
+): EmballageTransactie => ({
+  id: `ETH-${String(++ethTeller).padStart(3, "0")}`,
+  tenantId: TENANT,
+  klant, soort, geleverd, retour,
+  tijdstip: `${datum}T08:30:00Z`,
+  wie: "depot",
+});
+
 const emballage: EmballageTransactie[] = [
+  // Kwekerij Maasbree laat al sinds mei pallets staan: de rekening die niemand ziet.
+  eth("Kwekerij Maasbree", "europallet", 60, 0, "2026-05-12"),
+  eth("Kwekerij Maasbree", "europallet", 0, 18, "2026-06-02"),
+  eth("Kwekerij Maasbree", "kist", 24, 0, "2026-06-20"),
+  // Jumbo loopt netjes rond, met een restje van vorige maand.
+  eth("Jumbo Supermarkten BV", "europallet", 40, 0, "2026-07-06"),
+  eth("Jumbo Supermarkten BV", "europallet", 0, 34, "2026-07-20"),
+  eth("Jumbo Supermarkten BV", "rolcontainer", 16, 16, "2026-07-21"),
+  // Brouwerij De Kroon heeft fust in omloop sinds het voorseizoen.
+  eth("Brouwerij De Kroon", "fust", 240, 180, "2026-06-15"),
+  // Bij Plus Retail hebben wij te veel teruggehaald: saldo staat negatief.
+  eth("Plus Retail", "rolcontainer", 10, 22, "2026-07-28"),
+  // Van Dijk loopt gelijk op.
+  eth("Van Dijk Agro BV", "europallet", 24, 24, "2026-07-30"),
+
   et("Jumbo Supermarkten BV", "europallet", 26, 0, "06:54", "R-260807-01"),
   et("Jumbo Supermarkten BV", "europallet", 0, 20, "06:55", "R-260807-01"),
   et("Jumbo Supermarkten BV", "rolcontainer", 12, 8, "06:55", "R-260807-01"),
