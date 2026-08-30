@@ -21,10 +21,10 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { Assistent } from "./components/Assistent";
 import { AutoPlanView } from "./components/AutoPlanView";
 import { BedrijfView } from "./components/BedrijfView";
+import { RapportageView } from "./components/RapportageView";
 import { BerichtenView, type MailConcept } from "./components/BerichtenView";
 import { KoppelingenView } from "./components/KoppelingenView";
 import { ChauffeurView } from "./components/ChauffeurView";
-import { DashboardView } from "./components/DashboardView";
 import { DetailPaneel } from "./components/DetailPaneel";
 import { DockView } from "./components/DockView";
 import { DocumentenView } from "./components/DocumentenView";
@@ -821,7 +821,7 @@ export default function App() {
       )}
       {rol === "bedrijf" && effectieveTab === "wagenpark" && <WagenparkView state={state} nu={nu} onZetTrailer={zetTrailer} />}
       {rol === "bedrijf" && effectieveTab === "documenten" && <DocumentenView state={state} />}
-      {rol === "bedrijf" && effectieveTab === "rapportage" && <DashboardView state={state} nu={nu} />}
+      {rol === "bedrijf" && effectieveTab === "rapportage" && <RapportageView state={state} nu={nu} />}
       {rol === "bedrijf" && effectieveTab === "modules" && (
         <ModulesView state={state} onZetModule={zetModule} />
       )}

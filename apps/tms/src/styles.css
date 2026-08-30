@@ -1206,3 +1206,34 @@
 
   /* Lading waarvan het tijdvenster niet op de gekozen plandag valt. */
   .venster.ander-dag { color: var(--warn); font-weight: 600; }
+
+  /* ── Rapportage ─────────────────────────────────────────────────────── */
+  .rap-balk { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .rap-periodes { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rap-bereik { font-size: 12px; color: var(--muted); }
+  .rap-export { margin-left: auto; }
+  .rap-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 14px; flex-wrap: wrap; }
+  .rap-tab {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    padding: 8px 14px; font-size: 13px; color: var(--muted); cursor: pointer;
+    margin-bottom: -1px;
+  }
+  .rap-tab:hover { color: var(--ink); }
+  .rap-tab.actief { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .rap-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .rap-uitleg { font-size: 12px; color: var(--muted); margin: -4px 0 12px; max-width: 78ch; }
+  .rap-tabelwrap { overflow-x: auto; }
+  .rap-tabel { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .rap-tabel th, .rap-tabel td { padding: 7px 10px; text-align: left; white-space: nowrap; }
+  .rap-tabel th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--faint); border-bottom: 1px solid var(--line-strong); font-weight: 600;
+  }
+  .rap-tabel th.num, .rap-tabel td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .rap-tabel tbody tr { border-bottom: 1px solid var(--line); }
+  .rap-tabel tbody tr:hover { background: var(--surface-2); }
+  .rap-tabel td.let { color: var(--warn); font-weight: 600; }
+  .rap-tabel tfoot td {
+    border-top: 2px solid var(--line-strong); font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
