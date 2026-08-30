@@ -1,18 +1,23 @@
-import { dockLocatie, dockStatus, type DockEventType, type DockStatus } from "@sharzi/domain";
-import { useState } from "react";
-import { dockEventsVanZending, type AppState } from "../data/state";
+import {
+  dockLocatie, dockStatus, formatteerKenteken, laadlijsten, lokaleDatum,
+  type DockEventType, type DockStatus, type Laadlijst,
+} from "@sharzi/domain";
+import { useMemo, useState } from "react";
+import { dockEventsVanZending, takenVanRit, type AppState } from "../data/state";
 import { t } from "../i18n";
-import { tijd } from "../utils";
+import { laadmeters, tijd } from "../utils";
 import { Icoon } from "./Icoon";
 
 const VAKKEN = ["Dok 1", "Dok 2", "A1", "A2", "B1", "B2", "C1", "C2", "Schadevak"];
 
 interface Props {
   state: AppState;
+  nu: string;
   onDockEvent: (zendingId: string, type: DockEventType, locatie?: string) => void;
+  onZetOffline: (offline: boolean) => void;
 }
 
-export function DockView({ state, onDockEvent }: Props) {
+export function DockView({ state, nu, onDockEvent, onZetOffline }: Props) {
   const [invoer, setInvoer] = useState("");
   const [gekozen, setGekozen] = useState<string | null>(null);
   const [vak, setVak] = useState("A1");
@@ -21,6 +26,26 @@ export function DockView({ state, onDockEvent }: Props) {
   // Op het depot: alle zendingen waarvoor dock-events bestaan.
   const depotZendingen = Object.values(state.zendingen).filter(
     (z) => dockEventsVanZending(state, z.id).length > 0
+  );
+
+  // Laadlijst per uitgaande rit: het werk op het depot is niet "scan wat je
+  // ziet" maar "krijg deze auto vol en op tijd weg".
+  const lijsten = useMemo(
+    () => laadlijsten({
+      // Alleen de auto's van vandaag: morgen laden doe je morgen, en anders
+      // staat dezelfde chauffeur twee keer in de lijst.
+      ritten: state.ritten.filter((r) => r.chauffeur !== "" && r.datum === lokaleDatum(nu)),
+      zendingenVanRit: (ritId) => {
+        const ids = new Set(
+          takenVanRit(state, ritId)
+            .map((tk) => tk.zendingId)
+            .filter((id): id is string => !!id)
+        );
+        return [...ids].map((id) => state.zendingen[id]).filter(Boolean);
+      },
+      eventsVanZending: (zendingId) => dockEventsVanZending(state, zendingId),
+    }).filter((lijst) => lijst.totaal > 0),
+    [state, nu]
   );
 
   function scan(barcode: string) {
@@ -124,6 +149,8 @@ export function DockView({ state, onDockEvent }: Props) {
             </div>
           )}
 
+          <Laadlijsten lijsten={lijsten} onKies={(id) => { setGekozen(id); setFout(null); }} />
+
           <div className="ph-card ph-stops">
             <h4>{t("dock.opDepot")}</h4>
             {depotZendingen.length === 0 && <p className="kaart-kies">{t("dock.leeg")}</p>}
@@ -149,8 +176,76 @@ export function DockView({ state, onDockEvent }: Props) {
               })}
             </ul>
           </div>
+          <div className="ph-card sync-row">
+            <span className={`sync-chip ${state.offline ? "offline" : "online"}`}>
+              <span className="bol" />
+              {state.offline ? t("dock.offline", { aantal: state.outbox }) : t("dock.online")}
+            </span>
+            <label className="offline-toggle">
+              <input
+                type="checkbox"
+                checked={state.offline}
+                onChange={(e) => onZetOffline(e.target.checked)}
+              />
+              {t("chauffeur.offlineToggle")}
+            </label>
+          </div>
+          {state.offline && (
+            <p className="dock-offline-noot">{t("dock.offlineNoot")}</p>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Wat er nog op welke auto moet, met waar het staat. */
+function Laadlijsten({ lijsten, onKies }: {
+  lijsten: readonly Laadlijst[];
+  onKies: (zendingId: string) => void;
+}) {
+  if (lijsten.length === 0) return null;
+  return (
+    <div className="ph-card laadlijst">
+      <h4>{t("dock.laadlijst")}</h4>
+      <p className="dock-uitleg">{t("dock.laadlijstUitleg")}</p>
+      {lijsten.map((lijst) => (
+        <div className="ll-rit" key={lijst.ritId}>
+          <div className="ll-kop">
+            <div>
+              <b>{lijst.chauffeur}</b>
+              <span className="ll-kenteken mono">
+                {formatteerKenteken({ landcode: "NL", kenteken: lijst.kentekenGenormaliseerd })}
+              </span>
+              <span className="ll-ritnr mono">{lijst.ritId}</span>
+            </div>
+            <span className={`ll-stand${lijst.gereedVoorVertrek ? " gereed" : ""}`}>
+              {lijst.gereedVoorVertrek
+                ? t("dock.gereedVoorVertrek")
+                : t("dock.nogTeLaden", { n: lijst.openstaand })}
+            </span>
+          </div>
+          <div className="ll-balk">
+            <div
+              className="ll-vul"
+              style={{ width: `${Math.round((lijst.geladen / lijst.totaal) * 100)}%` }}
+            />
+          </div>
+          <ul className="ll-regels">
+            {lijst.regels.map((regel) => (
+              <li key={regel.zendingId}>
+                <button className={`ll-regel s-${regel.stand}`} onClick={() => onKies(regel.zendingId)}>
+                  <span className="mono ll-barcode">{regel.barcode}</span>
+                  <span className="ll-oms">{regel.omschrijving} · {laadmeters(regel.laadmeters)} lm</span>
+                  <span className="ll-plek">
+                    {regel.locatie ?? t(`dock.stand.${regel.stand}`)}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
   );
 }

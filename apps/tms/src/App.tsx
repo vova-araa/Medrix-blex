@@ -693,7 +693,11 @@ export default function App() {
         apparaat: "dock-scanner",
       },
     });
-    meld(t("toast.dock", { event: t(`dock.event.${type}`), zending: zendingId }));
+    if (state.offline) {
+      meld(t("toast.outbox", { event: t(`dock.event.${type}`) }));
+    } else {
+      meld(t("toast.dock", { event: t(`dock.event.${type}`), zending: zendingId }));
+    }
   }
 
   function registreerEmballage(taakId: string, soort: EmballageSoort, geleverd: number, retour: number) {
@@ -910,7 +914,9 @@ export default function App() {
         />
       )}
 
-      {rol === "dock" && <DockView state={state} onDockEvent={dockEvent} />}
+      {rol === "dock" && (
+        <DockView state={state} nu={nu} onDockEvent={dockEvent} onZetOffline={zetOffline} />
+      )}
         </main>
       </div>
 

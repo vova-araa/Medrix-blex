@@ -165,8 +165,15 @@ export function reducer(state: AppState, actie: Actie): AppState {
         klanten: { ...state.klanten, [actie.klant.naam]: actie.klant },
         tarieven: { ...state.tarieven, [actie.klant.naam]: actie.tarief },
       };
+    // Ook de dock-scanner werkt offline-first (§7.1): de registratie gaat
+    // lokaal in de wachtrij en wordt daarna gesynct. Het depot heeft dode
+    // zones tussen de dokken; wachten op het netwerk is geen optie.
     case "dock_event":
-      return { ...state, dockEvents: [...state.dockEvents, actie.event] };
+      return {
+        ...state,
+        dockEvents: [...state.dockEvents, actie.event],
+        outbox: state.offline ? state.outbox + 1 : state.outbox,
+      };
     case "cmr_registreer":
       return { ...state, cmrs: [...state.cmrs, actie.cmr] };
     // Een voorbehoud wordt toegevoegd, nooit gewijzigd: het is bewijs (§5.1).

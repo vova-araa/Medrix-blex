@@ -384,6 +384,21 @@ const dk = (
 });
 
 const dockEvents: DockEvent[] = [
+  // Vandaag op het depot geladen: deze zendingen staan al op de auto van
+  // Peeters en De Boer. De laadlijst per rit leest hieruit af wat er nog moet.
+  dk("SHZ-114-002", "aangemeld", "03:40"),
+  dk("SHZ-114-002", "ingescand", "04:05", "Dok 1"),
+  dk("SHZ-114-002", "uitgescand", "04:40"),
+  dk("SHZ-114-007", "aangemeld", "03:40"),
+  dk("SHZ-114-007", "ingescand", "04:10", "Dok 1"),
+  dk("SHZ-114-007", "uitgescand", "04:45"),
+  dk("SHZ-114-011", "aangemeld", "03:45"),
+  dk("SHZ-114-011", "ingescand", "04:20", "Dok 2"),
+  dk("SHZ-114-011", "uitgescand", "04:50"),
+  // Staat klaar in A1 maar is nog niet op de auto van Van der Meer.
+  dk("SHZ-114-019", "aangemeld", "04:00"),
+  dk("SHZ-114-019", "ingescand", "05:20", "A1"),
+  // Retourlading van Kowalski moet nog binnenkomen: blijft "verwacht".
   dk("SHZ-114-021", "aangemeld", "03:50"),
   dk("SHZ-114-021", "ingescand", "05:12", "A2"),
   dk("SHZ-114-022", "aangemeld", "03:50"),

@@ -1340,3 +1340,37 @@
     }
     @page { margin: 16mm; }
   }
+
+  /* Dock: laadlijst per uitgaande auto. */
+  .laadlijst { padding-bottom: 4px; }
+  .dock-uitleg { font-size: 11.5px; color: var(--muted); margin: 2px 0 10px; line-height: 1.45; }
+  .ll-rit { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+  .ll-rit:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .ll-kop { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .ll-kop b { font-size: 13px; }
+  .ll-kenteken { font-size: 10.5px; color: var(--accent); margin-left: 8px; }
+  .ll-stand { font-size: 11px; color: var(--warn); font-weight: 600; white-space: nowrap; }
+  .ll-stand.gereed { color: var(--ok); }
+  .ll-balk { height: 5px; border-radius: 999px; background: var(--surface-2); margin: 7px 0 9px; overflow: hidden; }
+  .ll-vul { height: 100%; background: var(--ok); border-radius: 999px; }
+  .ll-regels { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+  .ll-regel {
+    width: 100%; display: grid; grid-template-columns: auto 1fr auto; gap: 10px;
+    align-items: center; text-align: left; padding: 7px 9px; font-size: 11.5px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 3px solid var(--line-strong); border-radius: 8px;
+    color: var(--ink); cursor: pointer;
+  }
+  .ll-regel:hover { border-color: var(--accent); }
+  .ll-regel.s-geladen { border-left-color: var(--ok); opacity: 0.7; }
+  .ll-regel.s-gereed { border-left-color: var(--info); }
+  .ll-regel.s-verwacht { border-left-color: var(--line-strong); }
+  .ll-regel.s-schade { border-left-color: var(--crit); background: var(--crit-soft); }
+  .ll-barcode { font-size: 10.5px; }
+  .ll-oms { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ll-plek { font-weight: 600; white-space: nowrap; }
+  .dock-offline-noot {
+    font-size: 11.5px; color: var(--warn); background: var(--warn-soft);
+    border-radius: 8px; padding: 8px 10px; margin: 8px 0 0; line-height: 1.45;
+  }
+  .ll-ritnr { display: block; font-size: 10px; color: var(--faint); margin-top: 2px; }
