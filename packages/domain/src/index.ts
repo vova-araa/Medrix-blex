@@ -15,6 +15,7 @@ export * from "./rijtijden";
 export * from "./tacho";
 export * from "./route";
 export * from "./tijdbalk";
+export * from "./ritdossier";
 export * from "./vrachtbrief";
 export * from "./rapportage";
 export * from "./orderaanvraag";

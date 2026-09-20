@@ -27,6 +27,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { Assistent } from "./components/Assistent";
 import { AutoPlanView } from "./components/AutoPlanView";
 import { AdresboekView } from "./components/AdresboekView";
+import { RitdossierPaneel } from "./components/RitdossierPaneel";
 import { TaalKnop } from "./components/TaalKnop";
 import { InstructiesView } from "./components/InstructieBoek";
 import { BedrijfView } from "./components/BedrijfView";
@@ -98,6 +99,7 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [zijbalkIn, setZijbalkIn] = useState(false);
   const [planDatum, setPlanDatum] = useState("2026-08-07");
+  const [dossierRit, setDossierRit] = useState<string | null>(null);
   // De taal staat in de state, niet alleen in de i18n-module: anders
   // hertekent alleen de taalkiezer en blijft de rest van de app staan.
   const [huidigeTaal, setHuidigeTaal] = useState<Taal>("nl");
@@ -874,6 +876,7 @@ export default function App() {
           onVerplaatsStop={verplaatsStopInRit}
           planDatum={planDatum}
           onZetPlanDatum={setPlanDatum}
+          onOpenDossier={setDossierRit}
         />
       )}
       {rol === "bedrijf" && effectieveTab === "operatie" && (
@@ -1021,6 +1024,15 @@ export default function App() {
         />
       )}
 
+      {dossierRit && (
+        <RitdossierPaneel
+          state={state}
+          nu={nu}
+          ritId={dossierRit}
+          onSluit={() => setDossierRit(null)}
+          onSelecteerTaak={(taakId) => { setDossierRit(null); setGeselecteerdeTaak(taakId); }}
+        />
+      )}
       {orderFormOpen && (
         <NieuweOrder
           state={state}

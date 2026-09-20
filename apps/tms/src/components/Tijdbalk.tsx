@@ -24,9 +24,10 @@ interface Props {
   nu: string;
   datum: string;
   onSelecteerTaak: (taakId: string) => void;
+  onOpenDossier: (ritId: string) => void;
 }
 
-export function Tijdbalk({ state, nu, datum, onSelecteerTaak }: Props) {
+export function Tijdbalk({ state, nu, datum, onSelecteerTaak, onOpenDossier }: Props) {
   const [toonGaten, setToonGaten] = useState(true);
 
   const rijen = useMemo(
@@ -97,6 +98,7 @@ export function Tijdbalk({ state, nu, datum, onSelecteerTaak }: Props) {
               links={links}
               toonGaten={toonGaten}
               onSelecteerTaak={onSelecteerTaak}
+              onOpenDossier={onOpenDossier}
             />
           ))}
         </div>
@@ -115,11 +117,12 @@ export function Tijdbalk({ state, nu, datum, onSelecteerTaak }: Props) {
   );
 }
 
-function BalkRij({ rij, links, toonGaten, onSelecteerTaak }: {
+function BalkRij({ rij, links, toonGaten, onSelecteerTaak, onOpenDossier }: {
   rij: TijdbalkRij;
   links: (minuut: number) => number;
   toonGaten: boolean;
   onSelecteerTaak: (taakId: string) => void;
+  onOpenDossier: (ritId: string) => void;
 }) {
   const breedte = (van: number, tot: number) => Math.max(2, (tot - van) * PX_PER_MINUUT);
   const bezetting = Math.round(
@@ -131,7 +134,9 @@ function BalkRij({ rij, links, toonGaten, onSelecteerTaak }: {
       <div className="tb-naam">
         <span className="avatar">{initialen(rij.chauffeur || "—")}</span>
         <div>
-          <b>{rij.chauffeur || t("vloot.beschikbaar")}</b>
+          <button className="tb-dossier" onClick={() => onOpenDossier(rij.ritId)} title={t("dossier.open")}>
+            {rij.chauffeur || t("vloot.beschikbaar")}
+          </button>
           <span className="mono">
             {formatteerKenteken({ landcode: rij.landcode, kenteken: rij.kentekenGenormaliseerd })}
           </span>

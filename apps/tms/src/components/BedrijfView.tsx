@@ -23,12 +23,14 @@ interface Props {
   onVerplaatsStop: (ritId: string, taakId: string, richting: "omhoog" | "omlaag") => void;
   planDatum: string;
   onZetPlanDatum: (datum: string) => void;
+  onOpenDossier: (ritId: string) => void;
 }
 
 type Weergave = "kaarten" | "tijdbalk";
 
 export function BedrijfView({
-  state, nu, onPlanZending, onSelecteerTaak, onAutoPlan, onVerplaatsStop, planDatum, onZetPlanDatum,
+  state, nu, onPlanZending, onSelecteerTaak, onAutoPlan, onVerplaatsStop, planDatum,
+  onZetPlanDatum, onOpenDossier,
 }: Props) {
   // Twee manieren om naar dezelfde dag te kijken: kaarten om te slepen,
   // tijdbalk om te zien waar het knelt en waar nog ruimte zit.
@@ -64,7 +66,13 @@ export function BedrijfView({
         ))}
       </div>
       {weergave === "tijdbalk" && (
-        <Tijdbalk state={state} nu={nu} datum={planDatum} onSelecteerTaak={onSelecteerTaak} />
+        <Tijdbalk
+          state={state}
+          nu={nu}
+          datum={planDatum}
+          onSelecteerTaak={onSelecteerTaak}
+          onOpenDossier={onOpenDossier}
+        />
       )}
 
       <div className="bedrijf-main">
@@ -82,6 +90,7 @@ export function BedrijfView({
               onPlanZending={onPlanZending}
               onSelecteerTaak={onSelecteerTaak}
               onVerplaatsStop={onVerplaatsStop}
+              onOpenDossier={onOpenDossier}
             />
           ))}
         </div>
@@ -212,7 +221,7 @@ function OngeplandLijst({
 }
 
 function RitKaart({
-  rit, state, nu, onPlanZending, onSelecteerTaak, onVerplaatsStop,
+  rit, state, nu, onPlanZending, onSelecteerTaak, onVerplaatsStop, onOpenDossier,
 }: {
   rit: Rit;
   state: AppState;
@@ -220,6 +229,7 @@ function RitKaart({
   onPlanZending: (zendingId: string, ritId: string) => void;
   onSelecteerTaak: (taakId: string) => void;
   onVerplaatsStop: (ritId: string, taakId: string, richting: "omhoog" | "omlaag") => void;
+  onOpenDossier: (ritId: string) => void;
 }) {
   const [dropping, setDropping] = useState(false);
   const taken = takenVanRit(state, rit.id);
@@ -249,7 +259,13 @@ function RitKaart({
             {rit.chauffeur || t("vloot.beschikbaar")}
             {rit.charter && <span className="voertuigtype"> · {t("vloot.charter")}</span>}
           </div>
-          <div className="ritnr">{rit.id}</div>
+          <button
+            className="ritnr rc-dossier"
+            onClick={() => onOpenDossier(rit.id)}
+            title={t("dossier.open")}
+          >
+            {rit.id}
+          </button>
         </div>
         {eta && eta.vertragingMin > 0 && (
           <span className={`eta-chip${eta.naVenster ? " te-laat" : ""}`}>
