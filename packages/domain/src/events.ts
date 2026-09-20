@@ -3,6 +3,8 @@
 
 export type TaakEventType =
   | "taak_aangemaakt"
+  /** De planner heeft de stop naar een andere tijd of auto gezet. */
+  | "herpland"
   | "vertrokken"
   | "aangekomen"
   | "geladen"
@@ -30,6 +32,7 @@ export type TaakStatus =
 
 const STATUS_VAN_EVENT: Record<TaakEventType, TaakStatus> = {
   taak_aangemaakt: "gepland",
+  herpland: "gepland",
   vertrokken: "onderweg",
   aangekomen: "bezig",
   geladen: "afgerond",

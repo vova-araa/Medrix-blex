@@ -1623,6 +1623,11 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .tb-sleephint {
+    margin: -4px 0 10px; font-size: 11px; color: var(--faint);
+    display: flex; align-items: center; gap: 6px;
+  }
+
   .tb-scroll { overflow-x: auto; padding-bottom: 6px; }
   .tb-raster { position: relative; padding-left: 204px; box-sizing: content-box; }
   .tb-uren { position: relative; height: 22px; margin-bottom: 4px; }
@@ -1692,6 +1697,26 @@
   }
   button.tb-blok:hover { filter: brightness(1.08); }
   button.tb-blok:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+  /* Slepen: het blok zelf blijft staan maar vervaagt, en het spook laat zien
+     waar de stop terechtkomt. touch-action uit, anders scrollt de telefoon. */
+  button.tb-blok { touch-action: none; }
+  .tb-blok.sleept { opacity: .35; }
+  .tb-spook {
+    position: absolute; top: 4px; height: 38px; border-radius: 6px; z-index: 6;
+    border: 2px dashed var(--ok); background: var(--ok-soft);
+    pointer-events: none;
+  }
+  .tb-spook.fout { border-color: var(--crit); background: var(--crit-soft); }
+  .tb-spook-kaart {
+    position: absolute; top: 44px; left: 0; white-space: nowrap; z-index: 7;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 7px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.14); padding: 5px 9px; font-size: 11px;
+    display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums;
+  }
+  .tb-spook-fout { color: var(--crit); font-weight: 600; }
+  .tb-spook-let { color: var(--warn); font-weight: 600; }
+  .tb-spook-paar { color: var(--muted); }
 
   .tb-vrij {
     position: absolute; top: 4px; height: 38px; border-radius: 6px;

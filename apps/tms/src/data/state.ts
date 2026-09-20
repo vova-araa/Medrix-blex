@@ -101,7 +101,8 @@ export type Actie =
   | { type: "factuur_opgemaakt"; factuur: Factuur }
   | { type: "factuur_status"; nummer: string; status: FactuurStatus }
   | { type: "creditnota"; factuur: Factuur }
-  | { type: "herorden"; ritId: string; taken: Taak[] };
+  | { type: "herorden"; ritId: string; taken: Taak[] }
+  | { type: "herplan"; taken: Taak[]; events: TaakEvent[] };
 
 export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
@@ -291,6 +292,16 @@ export function reducer(state: AppState, actie: Actie): AppState {
           actie.factuur,
         ],
       };
+    case "herplan": {
+      // Verplaatste stops dragen hun nieuwe ritId al; de event-log houdt bij
+      // wie wat wanneer verzet heeft (§5.1).
+      const verzet = new Set(actie.taken.map((t) => t.id));
+      return {
+        ...state,
+        taken: [...state.taken.filter((t) => !verzet.has(t.id)), ...actie.taken],
+        events: [...state.events, ...actie.events],
+      };
+    }
     case "herorden": {
       // Alleen de taken van deze rit vervangen; de rest blijft zoals hij was.
       const nieuweIds = new Set(actie.taken.map((t) => t.id));

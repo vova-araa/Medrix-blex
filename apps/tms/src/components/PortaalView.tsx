@@ -1,4 +1,4 @@
-import type { Order, Zending } from "@sharzi/domain";
+import type { Order, TaakEvent, TaakEventType, Zending } from "@sharzi/domain";
 import { useState } from "react";
 import { eventsVanTaak, statusVanTaak, type AppState } from "../data/state";
 import { statusLabel, t } from "../i18n";
@@ -34,8 +34,13 @@ export function PortaalView({ state, nu, standaardDatum, onAfspraak, onAanmaken 
   const eta = rit ? ritEta(state, rit.id, nu) : null;
   const etaVoorDeze = eta && lossenTaak && eta.taakId === lossenTaak.id ? eta : null;
 
+  // Dat de planner intern geschoven heeft is geen mijlpaal voor de klant; die
+  // ziet het resultaat in de aankomsttijd en, als hij dat wil, in een bericht.
   const stappen = lossenTaak
-    ? eventsVanTaak(state, lossenTaak.id).map((e) => ({
+    ? eventsVanTaak(state, lossenTaak.id)
+      .filter((e): e is TaakEvent & { type: Exclude<TaakEventType, "herpland"> } =>
+        e.type !== "herpland")
+      .map((e) => ({
         id: e.id,
         label: t(`portaal.stap.${e.type}`),
         tijdstip: e.tijdstip,

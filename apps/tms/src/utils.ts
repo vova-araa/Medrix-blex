@@ -1,7 +1,8 @@
 // Weergavehulpjes. Tijden staan in UTC in de data; hier — en alleen hier —
 // worden ze geformatteerd naar Europe/Amsterdam (CLAUDE.md §5.3).
 
-import { taal } from "./i18n";
+import type { HerplanFout } from "@sharzi/domain";
+import { t, taal } from "./i18n";
 
 export const DATUM_LOCALES: Record<string, string> = {
   nl: "nl-NL", en: "en-GB", pl: "pl-PL", ro: "ro-RO",
@@ -50,4 +51,18 @@ export function datumLabel(iso: string): string {
   return new Intl.DateTimeFormat(locale(), {
     weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Amsterdam",
   }).format(new Date(iso));
+}
+
+/**
+ * Waarom een sleep op het planbord geweigerd is, in de taal van de planner.
+ * Zowel de balk (tijdens het slepen) als de melding erna gebruikt deze tekst,
+ * zodat je tweemaal dezelfde uitleg krijgt en niet twee verschillende.
+ */
+export function herplanReden(fout: HerplanFout | undefined): string {
+  if (!fout) return t("herplan.fout.onbekend");
+  if (fout.code === "volgorde" && fout.volgorde) return t(`route.fout.${fout.volgorde.soort}`);
+  return t(`herplan.fout.${fout.code}`, {
+    n: fout.minuten ?? 0,
+    lm: laadmeters(fout.laadmeters ?? 0),
+  });
 }

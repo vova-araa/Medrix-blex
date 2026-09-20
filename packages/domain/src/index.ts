@@ -23,3 +23,4 @@ export * from "./orderaanvraag";
 export * from "./autoplanner";
 export * from "./vervanging";
 export * from "./vergelijking";
+export * from "./herplan";

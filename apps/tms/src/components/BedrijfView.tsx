@@ -1,4 +1,4 @@
-import { formatteerKenteken, lokaleDatum, type Rit } from "@sharzi/domain";
+import { formatteerKenteken, lokaleDatum, type HerplanUitkomst, type Rit } from "@sharzi/domain";
 import { useState, type DragEvent } from "react";
 import {
   gebruikteLaadmeters,
@@ -24,13 +24,15 @@ interface Props {
   planDatum: string;
   onZetPlanDatum: (datum: string) => void;
   onOpenDossier: (ritId: string) => void;
+  onBeoordeelSleep: (taakId: string, ritId: string, startIso: string) => HerplanUitkomst | null;
+  onSleep: (taakId: string, ritId: string, startIso: string) => void;
 }
 
 type Weergave = "kaarten" | "tijdbalk";
 
 export function BedrijfView({
   state, nu, onPlanZending, onSelecteerTaak, onAutoPlan, onVerplaatsStop, planDatum,
-  onZetPlanDatum, onOpenDossier,
+  onZetPlanDatum, onOpenDossier, onBeoordeelSleep, onSleep,
 }: Props) {
   // Twee manieren om naar dezelfde dag te kijken: kaarten om te slepen,
   // tijdbalk om te zien waar het knelt en waar nog ruimte zit.
@@ -72,6 +74,8 @@ export function BedrijfView({
           datum={planDatum}
           onSelecteerTaak={onSelecteerTaak}
           onOpenDossier={onOpenDossier}
+          onBeoordeelSleep={onBeoordeelSleep}
+          onSleep={onSleep}
         />
       )}
 

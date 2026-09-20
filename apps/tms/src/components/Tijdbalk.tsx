@@ -1,12 +1,13 @@
 import {
   balkSamenvatting, balkTijd, balkVenster, bouwTijdbalk, formatteerKenteken, knelpuntenLijst,
-  vrijeGaten, type Gat, type KnelpuntRegel, type Segment, type TijdbalkRij,
+  lokaalTijdstipMs, vrijeGaten,
+  type Gat, type HerplanUitkomst, type KnelpuntRegel, type Segment, type TijdbalkRij,
 } from "@sharzi/domain";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { eventsVanTaak, takenVanRit, werktijdenVan, type AppState } from "../data/state";
 import { t } from "../i18n";
 import { geschatteRijMinuten } from "../kaart/simulatie";
-import { initialen } from "../utils";
+import { herplanReden, initialen } from "../utils";
 import { Icoon } from "./Icoon";
 
 // Het grafische planbord: auto's onder elkaar, tijd van links naar rechts.
@@ -37,12 +38,36 @@ const UURLABEL_MARGE = 28;
 const LABEL_VANAF_PX = 54;
 const TIJD_VANAF_PX = 96;
 
+/** Slepen gaat in stappen van vijf minuten; fijner plannen doet niemand. */
+const SNAP_MINUTEN = 5;
+
+/** Pas na deze verplaatsing is het slepen en niet klikken. */
+const SLEEP_DREMPEL_PX = 4;
+
 interface Props {
   state: AppState;
   nu: string;
   datum: string;
   onSelecteerTaak: (taakId: string) => void;
   onOpenDossier: (ritId: string) => void;
+  /** Beoordeelt een sleep zonder hem uit te voeren, voor de terugkoppeling. */
+  onBeoordeelSleep: (taakId: string, ritId: string, startIso: string) => HerplanUitkomst | null;
+  /** Voert de sleep uit; weigert het domein, dan komt daar de melding vandaan. */
+  onSleep: (taakId: string, ritId: string, startIso: string) => void;
+}
+
+/** Een sleep die bezig is: wat waarheen, en wat het domein ervan vindt. */
+interface Sleep {
+  taakId: string;
+  bronRitId: string;
+  duurMinuten: number;
+  /** Waar in het blok de planner het vastpakte, zodat het niet verspringt. */
+  grijpOffset: number;
+  doelRitId: string;
+  startMinuut: number;
+  /** Waar de muis begon, om een klik van een sleep te onderscheiden. */
+  vanafX: number;
+  uitkomst: HerplanUitkomst | null;
 }
 
 /** Waar de aandacht van de planner op staat nadat hij een knelpunt aanklikt. */
@@ -60,13 +85,18 @@ interface Zweefkaart {
   top: number;
 }
 
-export function Tijdbalk({ state, nu, datum, onSelecteerTaak, onOpenDossier }: Props) {
+export function Tijdbalk({
+  state, nu, datum, onSelecteerTaak, onOpenDossier, onBeoordeelSleep, onSleep,
+}: Props) {
   const [toonGaten, setToonGaten] = useState(true);
   const [zoom, setZoom] = useState<ZoomStand>("passend");
   const [markering, setMarkering] = useState<Markering | null>(null);
   const [zweef, setZweef] = useState<Zweefkaart | null>(null);
   const [bakBreedte, setBakBreedte] = useState(0);
+  const [sleep, setSleep] = useState<Sleep | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Na een echte sleep mag de klik die erop volgt de stop niet openen.
+  const netGesleept = useRef(false);
 
   useLayoutEffect(() => {
     const bak = scrollRef.current;
@@ -114,6 +144,75 @@ export function Tijdbalk({ state, nu, datum, onSelecteerTaak, onOpenDossier }: P
   const uren: number[] = [];
   for (let m = venster.vanMinuut; m <= venster.totMinuut; m += 60) uren.push(m);
 
+  // ── Slepen ────────────────────────────────────────────────────────────────
+  // De balk rekent in minuten sinds middernacht; het domein in ISO-tijden.
+  const middernacht = lokaalTijdstipMs(datum);
+  const isoVan = (minuut: number) => new Date(middernacht + minuut * 60_000).toISOString();
+
+  /** Onder welke auto en op welke minuut hangt de muis nu? */
+  const onderDeMuis = (x: number, y: number): { ritId: string; minuut: number } | null => {
+    const baan = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-rit]");
+    if (!baan) return null;
+    const vak = baan.getBoundingClientRect();
+    return {
+      ritId: baan.dataset.rit!,
+      minuut: venster.vanMinuut + (x - vak.left) / pxPerMinuut,
+    };
+  };
+
+  const startSleep = (segment: Segment, rij: TijdbalkRij, x: number, y: number) => {
+    const plek = onderDeMuis(x, y);
+    if (!plek || !segment.taakId) return;
+    setSleep({
+      taakId: segment.taakId,
+      bronRitId: rij.ritId,
+      duurMinuten: segment.totMinuut - segment.vanMinuut,
+      grijpOffset: plek.minuut - segment.vanMinuut,
+      doelRitId: rij.ritId,
+      startMinuut: segment.vanMinuut,
+      vanafX: x,
+      uitkomst: null,
+    });
+  };
+
+  useEffect(() => {
+    if (!sleep) return;
+
+    const beweeg = (e: PointerEvent) => {
+      const plek = onderDeMuis(e.clientX, e.clientY);
+      if (!plek) return;
+      // Een trillende hand is geen sleep; pas na een paar pixels of een andere
+      // baan telt het als verplaatsen in plaats van klikken.
+      const verschoven = Math.abs(e.clientX - sleep.vanafX) > SLEEP_DREMPEL_PX
+        || plek.ritId !== sleep.bronRitId;
+      if (!verschoven) return;
+      const rauw = plek.minuut - sleep.grijpOffset;
+      const startMinuut = Math.round(rauw / SNAP_MINUTEN) * SNAP_MINUTEN;
+      if (startMinuut === sleep.startMinuut && plek.ritId === sleep.doelRitId) return;
+      netGesleept.current = true;
+      setSleep({
+        ...sleep,
+        doelRitId: plek.ritId,
+        startMinuut,
+        uitkomst: onBeoordeelSleep(sleep.taakId, plek.ritId, isoVan(startMinuut)),
+      });
+    };
+
+    const los = () => {
+      if (netGesleept.current) onSleep(sleep.taakId, sleep.doelRitId, isoVan(sleep.startMinuut));
+      setSleep(null);
+      // De klik komt direct na pointerup; die moet nog weten dat er gesleept is.
+      setTimeout(() => { netGesleept.current = false; }, 0);
+    };
+
+    window.addEventListener("pointermove", beweeg);
+    window.addEventListener("pointerup", los);
+    return () => {
+      window.removeEventListener("pointermove", beweeg);
+      window.removeEventListener("pointerup", los);
+    };
+  });
+
   // Een knelpunt aanklikken schuift het bord naar dat moment en zet het blok
   // in de aandacht. Zonder dat blijft een lijst met meldingen een lijst.
   const springNaar = (regel: KnelpuntRegel) => {
@@ -160,6 +259,9 @@ export function Tijdbalk({ state, nu, datum, onSelecteerTaak, onOpenDossier }: P
       </div>
 
       <Samenvatting samenvatting={samenvatting} />
+      <p className="tb-sleephint">
+        <Icoon naam="pijl" maat={12} /> {t("herplan.sleepHint")}
+      </p>
 
       <div className="tb-scroll" ref={scrollRef}>
         <div className="tb-raster" style={{ width: `${breedte}px` }}>
@@ -178,6 +280,10 @@ export function Tijdbalk({ state, nu, datum, onSelecteerTaak, onOpenDossier }: P
               links={links}
               totaleBreedte={breedte}
               vrijNa={vrijNa.get(rij.ritId)}
+              sleep={sleep?.doelRitId === rij.ritId ? sleep : null}
+              sleeptHier={sleep?.bronRitId === rij.ritId ? sleep.taakId : null}
+              onStartSleep={startSleep}
+              netGesleept={netGesleept}
               pxPerMinuut={pxPerMinuut}
               toonGaten={toonGaten}
               markering={markering?.ritId === rij.ritId ? markering : null}
@@ -254,13 +360,19 @@ function Samenvatting({ samenvatting }: { samenvatting: ReturnType<typeof balkSa
 }
 
 function BalkRij({
-  rij, links, totaleBreedte, vrijNa, pxPerMinuut, toonGaten, markering, toonNuLabel,
-  onSelecteerTaak, onOpenDossier, onZweef,
+  rij, links, totaleBreedte, vrijNa, sleep, sleeptHier, pxPerMinuut, toonGaten,
+  markering, toonNuLabel, onSelecteerTaak, onOpenDossier, onZweef, onStartSleep, netGesleept,
 }: {
   rij: TijdbalkRij;
   links: (minuut: number) => number;
   totaleBreedte: number;
   vrijNa: Gat | undefined;
+  /** Een sleep die op déze baan is neergelegd. */
+  sleep: Sleep | null;
+  /** De stop die van deze baan wordt weggesleept, als die er is. */
+  sleeptHier: string | null;
+  onStartSleep: (segment: Segment, rij: TijdbalkRij, x: number, y: number) => void;
+  netGesleept: React.MutableRefObject<boolean>;
   pxPerMinuut: number;
   toonGaten: boolean;
   markering: Markering | null;
@@ -302,7 +414,9 @@ function BalkRij({
         </div>
       </div>
 
-      <div className="tb-baan">
+      <div className="tb-baan" data-rit={rij.ritId}>
+        {sleep && <Sleepspook sleep={sleep} links={links} pxPerMinuut={pxPerMinuut} />}
+
         {rij.markers.map((marker, i) => (
           <span
             key={`${marker.soort}-${i}`}
@@ -342,6 +456,9 @@ function BalkRij({
             links={links(segment.vanMinuut)}
             breedte={breedte(segment.vanMinuut, segment.totMinuut)}
             toonGaten={toonGaten}
+            sleept={sleeptHier === segment.taakId}
+            onStartSleep={(x, y) => onStartSleep(segment, rij, x, y)}
+            netGesleept={netGesleept}
             gemarkeerd={
               markering !== null &&
               (markering.taakId
@@ -358,7 +475,8 @@ function BalkRij({
 }
 
 function SegmentBlok({
-  segment, rij, nummer, links, breedte, toonGaten, gemarkeerd, onSelecteerTaak, onZweef,
+  segment, rij, nummer, links, breedte, toonGaten, gemarkeerd, sleept,
+  onSelecteerTaak, onZweef, onStartSleep, netGesleept,
 }: {
   segment: Segment;
   rij: TijdbalkRij;
@@ -367,6 +485,9 @@ function SegmentBlok({
   breedte: number;
   toonGaten: boolean;
   gemarkeerd: boolean;
+  sleept: boolean;
+  onStartSleep: (x: number, y: number) => void;
+  netGesleept: React.MutableRefObject<boolean>;
   onSelecteerTaak: (taakId: string) => void;
   onZweef: (kaart: Zweefkaart | null) => void;
 }) {
@@ -377,6 +498,7 @@ function SegmentBlok({
     segment.status ? `st-${segment.status}` : "",
     segment.buitenVenster ? "buiten-venster" : "",
     gemarkeerd ? "gemarkeerd" : "",
+    sleept ? "sleept" : "",
     segment.soort === "wachten" && toonGaten && breedte > 60 ? "gat" : "",
   ].filter(Boolean).join(" ");
 
@@ -430,11 +552,68 @@ function SegmentBlok({
       className={klassen}
       style={{ left: `${links}px`, width: `${breedte}px` }}
       title={titel}
-      onClick={() => onSelecteerTaak(segment.taakId!)}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        onStartSleep(e.clientX, e.clientY);
+      }}
+      onClick={() => {
+        // Wie net gesleept heeft wil de stop niet ook nog geopend zien.
+        if (netGesleept.current) return;
+        onSelecteerTaak(segment.taakId!);
+      }}
       {...zweefHandlers}
     >
       {inhoud}
     </button>
+  );
+}
+
+/**
+ * Waar de stop terechtkomt als de planner nu loslaat, met het oordeel van het
+ * domein erbij: groen met de nieuwe tijd, of rood met de reden waarom niet.
+ */
+function Sleepspook({ sleep, links, pxPerMinuut }: {
+  sleep: Sleep;
+  links: (minuut: number) => number;
+  pxPerMinuut: number;
+}) {
+  const mag = sleep.uitkomst?.toegestaan ?? true;
+  const waarschuwing = sleep.uitkomst?.waarschuwingen[0];
+  const fout = sleep.uitkomst?.fouten[0];
+  const reden = mag ? null : herplanReden(fout);
+  // Zit het knelpunt bij de stop die meeverhuist, dan is dat verwarrend: de
+  // planner sleept het lossen en krijgt een melding over het laden.
+  const bijPartner = !mag && fout?.taakId !== undefined && fout.taakId !== sleep.taakId;
+
+  return (
+    <div
+      className={`tb-spook${mag ? "" : " fout"}`}
+      style={{
+        left: `${links(sleep.startMinuut)}px`,
+        width: `${Math.max(3, sleep.duurMinuten * pxPerMinuut)}px`,
+      }}
+    >
+      <span className="tb-spook-kaart">
+        <b>{balkTijd(sleep.startMinuut)}–{balkTijd(sleep.startMinuut + sleep.duurMinuten)}</b>
+        {reden
+          ? (
+              <span className="tb-spook-fout">
+                {reden}
+                {bijPartner && <span className="tb-spook-paar"> {t("herplan.bijPaar")}</span>}
+              </span>
+            )
+          : waarschuwing && (
+              <span className="tb-spook-let">
+                {t(waarschuwing.minuten < 0 ? "herplan.vensterVroeg" : "herplan.venster", {
+                  n: Math.abs(waarschuwing.minuten),
+                })}
+              </span>
+            )}
+        {(sleep.uitkomst?.meeverhuisd.length ?? 0) > 0 && (
+          <span className="tb-spook-paar">{t("herplan.paar")}</span>
+        )}
+      </span>
+    </div>
   );
 }
 

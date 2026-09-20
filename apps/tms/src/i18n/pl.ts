@@ -50,6 +50,7 @@ export const pl: Partial<Record<VertaalSleutel, string>> = {
   "taak.emballage_retour": "Zwrot opakowań",
 
   "event.taak_aangemaakt": "Przystanek utworzony",
+  "event.herpland": "Przeniesione przez planistę",
   "event.vertrokken": "Wyjazd",
   "event.aangekomen": "Przyjazd na miejsce",
   "event.geladen": "Załadowano",

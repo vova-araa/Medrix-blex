@@ -17,6 +17,9 @@ import {
   vulSjabloon,
   hertijden,
   verplaatsStop,
+  beoordeelHerplan,
+  RIJTIJD_REGELS,
+  type HerplanUitkomst,
   type Factuur,
   type DockEventType, type EmballageSoort, type Order, type PlanResultaat, type VervangResultaat,
   type MeldingStatus, type PlanVoorstel, type Taak, type TaakEvent,
@@ -70,12 +73,13 @@ import {
   rijtijdVan,
   statusVanTaak,
   takenVanRit,
+  werktijdenVan,
   type BeleidActie,
   type BeleidStand,
 } from "./data/state";
 import { geschatteRijMinuten } from "./kaart/simulatie";
 import { statusLabel, t, zetTaal, type Taal } from "./i18n";
-import { datumKort, laadmeters, DATUM_LOCALES } from "./utils";
+import { datumKort, herplanReden, laadmeters, tijd, DATUM_LOCALES } from "./utils";
 
 const TENANT = "blex";
 const bron = new MockDataBron();
@@ -523,6 +527,71 @@ export default function App() {
     meld(t("toast.herordend"));
   }
 
+  /**
+   * Een stop op de tijdbalk naar een andere tijd of een andere auto slepen.
+   * Het domein beslist of het mag; hier wordt het alleen weggeschreven of
+   * geweigerd met de reden erbij. Beoordelen zonder uitvoeren kan ook — dat
+   * gebruikt de balk om tijdens het slepen te laten zien wat er gaat gebeuren.
+   */
+  function beoordeelSleep(
+    taakId: string, doelRitId: string, nieuweStartIso: string
+  ): HerplanUitkomst | null {
+    const taak = state.taken.find((tk) => tk.id === taakId);
+    const doelRit = state.ritten.find((r) => r.id === doelRitId);
+    if (!taak || !doelRit) return null;
+
+    const dienstStart = werktijdenVan(state, doelRit.chauffeur)[0]?.tijdstip;
+    return beoordeelHerplan({
+      taakId,
+      nieuweStartIso,
+      bron: takenVanRit(state, taak.ritId),
+      doel: takenVanRit(state, doelRitId),
+      doelRit,
+      statusVan: (id) => statusVanTaak(state, id),
+      reistijdMinuten: geschatteRijMinuten,
+      laadmetersVan: (zendingId) => state.zendingen[zendingId]?.laadmeters ?? 0,
+      nu,
+      dienstEindeIso: dienstStart
+        ? new Date(Date.parse(dienstStart) + RIJTIJD_REGELS.maxDienstMinuten * 60_000).toISOString()
+        : undefined,
+    });
+  }
+
+  function sleepStop(taakId: string, doelRitId: string, nieuweStartIso: string) {
+    const uit = beoordeelSleep(taakId, doelRitId, nieuweStartIso);
+    if (!uit) return;
+    if (!uit.toegestaan) {
+      meld(herplanReden(uit.fouten[0]));
+      return;
+    }
+
+    const verzet = uit.doelTaken.filter((tk) => {
+      const oud = state.taken.find((o) => o.id === tk.id);
+      return oud && (oud.ritId !== tk.ritId || oud.geplandVan !== tk.geplandVan);
+    });
+    const events: TaakEvent[] = verzet.map((tk) => ({
+      id: crypto.randomUUID(),
+      tenantId: TENANT,
+      taakId: tk.id,
+      type: "herpland",
+      tijdstip: nu,
+      wie: "planning",
+      apparaat: "tms-web",
+    }));
+    dispatch({ type: "herplan", taken: verzet, events });
+
+    const doelRit = state.ritten.find((r) => r.id === doelRitId);
+    meld(uit.meeverhuisd.length > 0
+      ? t("toast.herplandPaar", {
+          chauffeur: doelRit?.chauffeur ?? doelRitId,
+          zending: uit.meeverhuisd.join(", "),
+        })
+      : t("toast.herplandStop", {
+          tijd: tijd(nieuweStartIso),
+          chauffeur: doelRit?.chauffeur ?? doelRitId,
+        }));
+  }
+
   // ── Facturatie ────────────────────────────────────────────────────────────
   /** Conceptfactuur omzetten in een echte factuur met doorlopend nummer. */
   function maakFactuur(opdrachtgever: string) {
@@ -877,6 +946,8 @@ export default function App() {
           planDatum={planDatum}
           onZetPlanDatum={setPlanDatum}
           onOpenDossier={setDossierRit}
+          onBeoordeelSleep={beoordeelSleep}
+          onSleep={sleepStop}
         />
       )}
       {rol === "bedrijf" && effectieveTab === "operatie" && (
