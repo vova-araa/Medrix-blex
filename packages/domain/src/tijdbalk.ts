@@ -278,23 +278,42 @@ function bouwMarkers(rit: Rit, invoer: TijdbalkInvoer, maxDienst: number): Marke
 }
 
 /**
- * Het tijdvenster dat de balk moet tonen: van het vroegste begin tot het
- * laatste eind, afgerond op hele uren en met een uur lucht aan beide kanten.
- * Zo staat de dag altijd op een ronde streep en schuift hij niet bij elke tik.
+ * Het tijdvenster dat de balk moet tonen: alles wat er getekend wordt — stops
+ * én markers — met een uur lucht aan beide kanten, afgerond op hele uren. Een
+ * vast venster van 's ochtends vroeg tot 's avonds laat zou van elke dag een
+ * half leeg bord maken; een dag die om half zes begint en om half een klaar is
+ * hoort ook zo breed te staan.
+ *
+ * Markers buiten de kalenderdag tellen niet mee: de nu-streep van vandaag mag
+ * het bord van morgen niet uitrekken.
  */
 export function balkVenster(
   rijen: readonly TijdbalkRij[],
-  minimaal = { vanUur: 4, totUur: 20 }
+  opties: { minimaalUren?: number; luchtMinuten?: number } = {}
 ): { vanMinuut: number; totMinuut: number } {
-  if (rijen.length === 0) {
-    return { vanMinuut: minimaal.vanUur * 60, totMinuut: minimaal.totUur * 60 };
+  const minimaalUren = opties.minimaalUren ?? 8;
+  const lucht = opties.luchtMinuten ?? 60;
+
+  const punten: number[] = [];
+  for (const rij of rijen) {
+    punten.push(rij.vanMinuut, rij.totMinuut);
+    for (const marker of rij.markers) {
+      if (marker.minuut >= 0 && marker.minuut <= 24 * 60) punten.push(marker.minuut);
+    }
   }
-  const vroegste = Math.min(...rijen.map((r) => r.vanMinuut));
-  const laatste = Math.max(...rijen.map((r) => r.totMinuut));
-  return {
-    vanMinuut: Math.min(minimaal.vanUur * 60, Math.floor((vroegste - 60) / 60) * 60),
-    totMinuut: Math.max(minimaal.totUur * 60, Math.ceil((laatste + 60) / 60) * 60),
-  };
+  if (punten.length === 0) return { vanMinuut: 6 * 60, totMinuut: 6 * 60 + minimaalUren * 60 };
+
+  let van = Math.floor((Math.min(...punten) - lucht) / 60) * 60;
+  let tot = Math.ceil((Math.max(...punten) + lucht) / 60) * 60;
+
+  // Een korte dag helemaal uitrekken leest ook niet; onder deze breedte
+  // groeit het venster aan beide kanten mee.
+  const tekort = minimaalUren * 60 - (tot - van);
+  if (tekort > 0) {
+    van -= Math.ceil(tekort / 120) * 60;
+    tot += Math.ceil(tekort / 120) * 60;
+  }
+  return { vanMinuut: van, totMinuut: tot };
 }
 
 /**
@@ -310,6 +329,12 @@ export interface Gat {
   minuten: number;
   /** Waar de auto staat op het moment dat het gat begint. */
   plaats: string;
+  /**
+   * Een gat tussen twee stops, of de tijd die na de laatste stop nog over is
+   * binnen de dienst. Dat laatste is meestal het grootste gat van de dag en
+   * de eerste plek waar een spoedorder heen kan.
+   */
+  soort: "tussen" | "na";
 }
 
 export function vrijeGaten(
@@ -329,8 +354,125 @@ export function vrijeGaten(
         totMinuut: segment.totMinuut,
         minuten,
         plaats: segment.plaats ?? "",
+        soort: "tussen",
+      });
+    }
+
+    // Wat er na de laatste stop nog binnen de dienst overblijft. Zonder een
+    // ingeklokte dienst weten we niet tot hoe laat hij mag, en zeggen we niets.
+    const einde = rij.markers.find((m) => m.soort === "dienst_einde")?.minuut;
+    if (einde !== undefined && einde - rij.totMinuut >= minimaalMinuten) {
+      gaten.push({
+        ritId: rij.ritId,
+        chauffeur: rij.chauffeur,
+        vanMinuut: rij.totMinuut,
+        totMinuut: einde,
+        minuten: einde - rij.totMinuut,
+        plaats: rij.segmenten[rij.segmenten.length - 1].plaats ?? "",
+        soort: "na",
       });
     }
   }
   return gaten.sort((a, b) => b.minuten - a.minuten);
+}
+
+// ── Samenvatting en knelpuntenlijst ─────────────────────────────────────────
+//
+// Een planbord dat alleen gekleurde blokken toont laat de planner zelf tellen.
+// Deze twee functies doen dat tellen: hoe de dag ervoor staat, en wat er
+// precies misgaat. De UI hoeft dan niets meer te rekenen.
+
+export interface BalkSamenvatting {
+  ritten: number;
+  /** Stops: laden, lossen en emballage samen. Rijden en wachten tellen niet. */
+  stops: number;
+  bezetteMinuten: number;
+  wachtMinuten: number;
+  /** Aandeel van de tijd tussen eerste en laatste stop dat echt werk is. */
+  bezettingPct: number;
+  knelpunten: number;
+  /** Ritten zonder één knelpunt — de dag die vanzelf goed gaat. */
+  schoneRitten: number;
+  /** Minuten in gaten die groot genoeg zijn om nog iets in te plannen. */
+  vrijeMinuten: number;
+  vrijeGaten: number;
+  vroegsteMinuut: number;
+  laatsteMinuut: number;
+}
+
+export function balkSamenvatting(
+  rijen: readonly TijdbalkRij[],
+  minimaalGatMinuten = 60
+): BalkSamenvatting {
+  const gaten = vrijeGaten(rijen, minimaalGatMinuten);
+  const bezetteMinuten = rijen.reduce((som, r) => som + r.bezetteMinuten, 0);
+  const wachtMinuten = rijen.reduce((som, r) => som + r.wachtMinuten, 0);
+  const totaal = bezetteMinuten + wachtMinuten;
+
+  return {
+    ritten: rijen.length,
+    stops: rijen.reduce(
+      (som, r) => som + r.segmenten.filter((s) => s.taakId !== undefined).length, 0
+    ),
+    bezetteMinuten,
+    wachtMinuten,
+    bezettingPct: totaal === 0 ? 0 : Math.round((bezetteMinuten / totaal) * 100),
+    knelpunten: rijen.reduce((som, r) => som + r.knelpunten.length, 0),
+    schoneRitten: rijen.filter((r) => r.knelpunten.length === 0).length,
+    vrijeMinuten: gaten.reduce((som, g) => som + g.minuten, 0),
+    vrijeGaten: gaten.length,
+    vroegsteMinuut: rijen.length === 0 ? 0 : Math.min(...rijen.map((r) => r.vanMinuut)),
+    laatsteMinuut: rijen.length === 0 ? 0 : Math.max(...rijen.map((r) => r.totMinuut)),
+  };
+}
+
+export interface KnelpuntRegel extends Knelpunt {
+  ritId: string;
+  chauffeur: string;
+  kentekenGenormaliseerd: string;
+  landcode: string;
+  /** Waar het misgaat, als dat bij een stop hoort. */
+  plaats?: string;
+}
+
+/**
+ * Volgorde van dringendheid. Te krap staat bovenaan: dat is een plan dat niet
+ * te rijden is en alles erna schuift mee. Een gemist venster raakt één klant,
+ * en de pauzemelding is een wettelijke grens die de chauffeur zelf nog kan
+ * pakken door eerder te stoppen.
+ */
+const ERNST: Record<KnelpuntSoort, number> = {
+  te_krap: 0,
+  buiten_venster: 1,
+  pauze_overschreden: 2,
+};
+
+/** Alle knelpunten van het bord op één rij, dringendste eerst. */
+export function knelpuntenLijst(rijen: readonly TijdbalkRij[]): KnelpuntRegel[] {
+  const regels: KnelpuntRegel[] = [];
+  for (const rij of rijen) {
+    for (const knelpunt of rij.knelpunten) {
+      const bij = knelpunt.taakId
+        ? rij.segmenten.find((s) => s.taakId === knelpunt.taakId)
+        : rij.segmenten.find((s) => s.vanMinuut <= knelpunt.minuut && s.totMinuut >= knelpunt.minuut);
+      regels.push({
+        ...knelpunt,
+        ritId: rij.ritId,
+        chauffeur: rij.chauffeur,
+        kentekenGenormaliseerd: rij.kentekenGenormaliseerd,
+        landcode: rij.landcode,
+        plaats: bij?.plaats,
+      });
+    }
+  }
+  return regels.sort(
+    (a, b) => ERNST[a.soort] - ERNST[b.soort] || a.minuut - b.minuut
+  );
+}
+
+/** Minuten sinds middernacht als HH:MM. */
+export function balkTijd(minuut: number): string {
+  const uren = Math.floor(minuut / 60);
+  const minuten = Math.round(minuut - uren * 60);
+  return `${String(uren % 24).padStart(2, "0")}:${String(minuten).padStart(2, "0")}`;
 }

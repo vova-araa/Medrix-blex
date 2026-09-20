@@ -1588,7 +1588,7 @@
 
   .tijdbalk { max-width: 1280px; margin: 14px auto 0; }
   .tb-leeg { max-width: 1280px; margin: 14px auto 0; color: var(--muted); font-size: 13px; }
-  .tb-kop { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tb-kop { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
   .tb-legenda { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--muted); }
   .tb-leg { display: inline-flex; align-items: center; gap: 5px; }
   .tb-leg.let { color: var(--warn); font-weight: 600; }
@@ -1597,11 +1597,35 @@
   .tb-staal.s-lossen { background: var(--accent); }
   .tb-staal.s-rijden { background: var(--line-strong); }
   .tb-staal.s-wachten { background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 3px, var(--line) 3px, var(--line) 6px); }
-  .tb-gaten-knop { margin-left: auto; }
+  .tb-knoppen { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .tb-zoom { display: inline-flex; background: var(--surface-2); border-radius: 7px; padding: 2px; }
+  .tb-zoomknop {
+    background: none; border: none; cursor: pointer; font: inherit; font-size: 11px;
+    color: var(--muted); padding: 3px 9px; border-radius: 5px;
+  }
+  .tb-zoomknop:hover { color: var(--ink); }
+  .tb-zoomknop.actief { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .tb-zoomknop:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .tb-samenvatting {
+    display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin-bottom: 12px;
+  }
+  .tb-cijfer {
+    background: var(--surface-2); border-radius: 9px; padding: 7px 12px;
+    display: flex; flex-direction: column; gap: 1px; min-width: 96px;
+  }
+  .tb-cijfer.let { background: var(--crit-soft); }
+  .tb-cijfer-waarde { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .tb-cijfer.let .tb-cijfer-waarde { color: var(--crit); }
+  .tb-cijfer-naam { font-size: 10.5px; color: var(--muted); }
+  .tb-venstertijd {
+    margin-left: auto; align-self: center; font-size: 11px; color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
 
   .tb-scroll { overflow-x: auto; padding-bottom: 6px; }
-  .tb-raster { position: relative; min-width: 100%; padding-left: 168px; box-sizing: content-box; }
-  .tb-uren { position: relative; height: 20px; margin-bottom: 4px; }
+  .tb-raster { position: relative; padding-left: 204px; box-sizing: content-box; }
+  .tb-uren { position: relative; height: 22px; margin-bottom: 4px; }
   .tb-uur {
     position: absolute; top: 0; font-size: 10.5px; color: var(--faint);
     font-variant-numeric: tabular-nums; transform: translateX(-50%);
@@ -1611,55 +1635,133 @@
     height: 9999px; background: var(--line); opacity: .6;
   }
 
-  .tb-rij { position: relative; display: flex; align-items: stretch; margin-bottom: 6px; }
+  .tb-rij { position: relative; display: flex; align-items: stretch; margin-bottom: 8px; }
   .tb-naam {
-    position: absolute; left: -168px; width: 160px; display: flex; gap: 8px;
+    position: absolute; left: -204px; width: 196px; display: flex; gap: 8px;
     align-items: center; background: var(--surface); z-index: 3; padding: 2px 0;
   }
   .tb-naam > div { display: flex; flex-direction: column; min-width: 0; }
   .tb-naam b { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tb-naam .mono { font-size: 10px; color: var(--accent); }
-  .tb-bezetting { font-size: 10px; color: var(--faint); }
+  .tb-bezetting {
+    font-size: 9.5px; color: var(--faint); font-variant-numeric: tabular-nums;
+    display: flex; align-items: center; gap: 5px; white-space: nowrap;
+  }
+  .tb-rij-let { display: inline-flex; align-items: center; gap: 2px; color: var(--crit); font-weight: 700; }
   .tb-baan {
-    position: relative; height: 42px; flex: 1;
+    position: relative; height: 46px; flex: 1;
     background: var(--surface-2); border-radius: 8px;
   }
+  .tb-rij.gemarkeerd .tb-baan { background: var(--warn-soft); }
 
   .tb-blok {
-    position: absolute; top: 5px; height: 32px; border-radius: 6px;
+    position: absolute; top: 4px; height: 38px; border-radius: 6px;
     border: none; padding: 0 7px; display: flex; align-items: center;
     overflow: hidden; font: inherit; font-size: 10.5px; color: #fff;
     cursor: pointer; text-align: left;
   }
-  .tb-blok-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tb-blok-tekst { display: flex; align-items: center; gap: 6px; min-width: 0; width: 100%; }
+  .tb-blok-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+  .tb-blok-tijd {
+    margin-left: auto; font-variant-numeric: tabular-nums; opacity: .85;
+    white-space: nowrap; font-size: 9.5px;
+  }
+  .tb-nummer {
+    flex: none; width: 15px; height: 15px; border-radius: 50%;
+    background: rgba(255,255,255,.28); display: inline-flex;
+    align-items: center; justify-content: center; font-size: 9px; font-weight: 700;
+  }
+  .tb-nummer.solo { margin: 0 auto; }
   .tb-blok.s-laden { background: var(--info); }
   .tb-blok.s-lossen { background: var(--accent); }
   .tb-blok.s-emballage { background: var(--ok); }
-  .tb-blok.s-rijden { background: var(--line-strong); color: var(--ink); top: 14px; height: 14px; border-radius: 4px; }
+  .tb-blok.s-rijden {
+    background: var(--line-strong); color: var(--ink); top: 13px; height: 20px; border-radius: 4px;
+  }
+  .tb-blok.s-rijden .tb-blok-tijd { opacity: .7; }
   .tb-blok.s-wachten {
     background: repeating-linear-gradient(45deg, transparent, transparent 4px, var(--line) 4px, var(--line) 8px);
-    top: 14px; height: 14px; border-radius: 4px; cursor: default;
+    top: 13px; height: 20px; border-radius: 4px; cursor: default; color: var(--muted);
   }
-  .tb-blok.s-wachten.gat { background: var(--warn-soft); border: 1px dashed var(--warn); }
+  .tb-blok.s-wachten.gat { background: var(--warn-soft); border: 1px dashed var(--warn); color: var(--warn); }
   .tb-blok.st-afgerond { opacity: .55; }
   .tb-blok.st-probleem { background: var(--crit); }
   .tb-blok.buiten-venster { box-shadow: inset 0 0 0 2px var(--crit); }
+  .tb-blok.gemarkeerd {
+    outline: 2px solid var(--ink); outline-offset: 2px; z-index: 5; opacity: 1;
+  }
   button.tb-blok:hover { filter: brightness(1.08); }
   button.tb-blok:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
 
+  .tb-vrij {
+    position: absolute; top: 4px; height: 38px; border-radius: 6px;
+    border: 1px dashed var(--ok); background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--ok); overflow: hidden; white-space: nowrap;
+  }
+
   .tb-marker { position: absolute; top: 0; bottom: 0; width: 2px; z-index: 2; }
   .tb-marker.m-nu { background: var(--crit); }
-  .tb-marker.m-nu::before {
-    content: ""; position: absolute; top: -3px; left: -3px;
-    border: 4px solid transparent; border-top-color: var(--crit);
+  .tb-marker.m-dienst_einde { background: var(--warn); opacity: .8; }
+  .tb-marker-label {
+    position: absolute; white-space: nowrap; font-size: 9.5px; font-weight: 700;
+    padding: 1px 5px; border-radius: 4px; font-variant-numeric: tabular-nums;
   }
-  .tb-marker.m-dienst_einde { background: var(--warn); opacity: .7; }
-  .tb-knelpunt {
-    position: absolute; top: -4px; transform: translateX(-50%);
-    color: var(--warn); z-index: 4; line-height: 0;
+  .tb-marker.m-nu .tb-marker-label { top: -20px; left: -2px; background: var(--crit); color: #fff; }
+  .tb-marker.m-dienst_einde .tb-marker-label {
+    top: 50%; left: 4px; transform: translateY(-50%);
+    background: var(--surface); color: var(--warn); border: 1px solid var(--warn);
   }
-  .tb-knelpunt.k-buiten_venster, .tb-knelpunt.k-te_krap { color: var(--crit); }
+  /* Vlak bij de rechterrand klapt het label naar de andere kant van de streep,
+     anders valt het buiten het bord. */
+  .tb-marker.naar-links .tb-marker-label { left: auto; right: 6px; }
+  .tb-marker.m-nu.naar-links .tb-marker-label { right: 4px; }
+
+  .tb-zweef {
+    position: fixed; z-index: 60; width: 296px; pointer-events: none;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.16); padding: 10px 12px; font-size: 11.5px;
+  }
+  .tb-zweef-kop { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+  .tb-zweef-kop .tb-nummer { background: var(--line-strong); color: var(--ink); }
+  .tb-zweef-plaats { color: var(--muted); }
+  .tb-zweef-lijst { margin: 0; display: grid; gap: 4px; }
+  .tb-zweef-lijst > div { display: grid; grid-template-columns: 88px 1fr; gap: 8px; }
+  .tb-zweef-lijst dt { color: var(--muted); }
+  .tb-zweef-lijst dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .tb-raak { color: var(--ok); font-weight: 600; }
+  .tb-mis { color: var(--crit); font-weight: 600; }
+  .tb-vroeg { color: var(--warn); font-weight: 600; }
+  .tb-zweef-hint { margin: 7px 0 0; font-size: 10.5px; color: var(--faint); }
+
   .tb-gaten-noot { font-size: 11.5px; color: var(--muted); margin: 10px 0 0; }
+  .tb-schoon {
+    margin: 12px 0 0; font-size: 12px; color: var(--ok);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tb-knelpunten { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .tb-knelpunten ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 5px; }
+  .tb-knelregel {
+    width: 100%; display: grid; align-items: center; gap: 10px;
+    grid-template-columns: 46px 104px minmax(0, 1fr) 180px auto;
+    background: var(--surface-2); border: 1px solid transparent; border-left: 3px solid var(--warn);
+    border-radius: 7px; padding: 7px 10px; cursor: pointer; font: inherit;
+    font-size: 11.5px; text-align: left; color: var(--ink);
+  }
+  .tb-knelregel.k-te_krap, .tb-knelregel.k-buiten_venster { border-left-color: var(--crit); }
+  .tb-knelregel:hover { border-color: var(--line-strong); }
+  .tb-knelregel.actief { border-color: var(--ink); background: var(--warn-soft); }
+  .tb-knelregel:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tb-kneltijd { font-size: 11px; color: var(--muted); }
+  .tb-knelsoort { font-weight: 700; }
+  .tb-knelregel.k-te_krap .tb-knelsoort, .tb-knelregel.k-buiten_venster .tb-knelsoort { color: var(--crit); }
+  .tb-kneltekst { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tb-knelwie { color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tb-knelspring { color: var(--accent); font-size: 11px; font-weight: 600; white-space: nowrap; }
+  @media (max-width: 1100px) {
+    .tb-knelregel { grid-template-columns: 46px 104px minmax(0, 1fr); }
+    .tb-knelwie, .tb-knelspring { display: none; }
+  }
 
   /* ── Ritdossier ─────────────────────────────────────────────────────── */
   .ritdossier { max-width: 940px; }

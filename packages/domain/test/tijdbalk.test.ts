@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { balkVenster, bouwTijdbalk, vrijeGaten, type TijdbalkInvoer } from "../src/tijdbalk";
+import {
+  balkSamenvatting, balkTijd, balkVenster, bouwTijdbalk, knelpuntenLijst, vrijeGaten,
+  type TijdbalkInvoer,
+} from "../src/tijdbalk";
 import type { TaakEvent, TaakEventType } from "../src/events";
 import type { Rit, Taak } from "../src/types";
 
@@ -221,8 +224,8 @@ describe("bouwTijdbalk", () => {
 });
 
 describe("balkVenster", () => {
-  it("geeft een standaarddag als er niets staat", () => {
-    expect(balkVenster([])).toEqual({ vanMinuut: minuut(4), totMinuut: minuut(20) });
+  it("geeft een werkdag als er niets staat", () => {
+    expect(balkVenster([])).toEqual({ vanMinuut: minuut(6), totMinuut: minuut(14) });
   });
 
   it("rekt op naar hele uren met een uur lucht", () => {
@@ -235,9 +238,27 @@ describe("balkVenster", () => {
     expect(venster.totMinuut).toBe(minuut(24));
   });
 
-  it("krimpt nooit onder de standaarddag", () => {
+  it("volgt een korte dag in plaats van het hele etmaal te tonen", () => {
     const rijen = bouwTijdbalk(invoerVan([rit("R1")], [taak("T1", "R1", "laden", "Venlo", 10, 11)]));
-    expect(balkVenster(rijen)).toEqual({ vanMinuut: minuut(4), totMinuut: minuut(20) });
+    expect(balkVenster(rijen)).toEqual({ vanMinuut: minuut(6), totMinuut: minuut(15) });
+  });
+
+  it("houdt de streep voor einde dienst binnen beeld", () => {
+    const rijen = bouwTijdbalk(invoerVan(
+      [rit("R1")], [taak("T1", "R1", "laden", "Venlo", 6, 7)], [],
+      { dienstStart: () => iso(5, 30) }
+    ));
+    // Dienst van 05:30 duurt tot 17:30; die streep moet in het venster passen.
+    expect(balkVenster(rijen).totMinuut).toBeGreaterThanOrEqual(minuut(18));
+  });
+
+  it("laat de nu-streep van een andere dag het venster niet uitrekken", () => {
+    const rijen = bouwTijdbalk(invoerVan(
+      [rit("R1")], [taak("T1", "R1", "laden", "Venlo", 9, 10)], [],
+      // Nu is de dag ervoor: dat levert een negatieve minuut op.
+      { nu: new Date(Date.UTC(2026, 7, 6, 8)).toISOString() }
+    ));
+    expect(balkVenster(rijen).vanMinuut).toBeGreaterThanOrEqual(0);
   });
 });
 
@@ -264,5 +285,142 @@ describe("vrijeGaten", () => {
 
   it("vindt het kleine gat als de drempel lager staat", () => {
     expect(vrijeGaten(rijen(), 15).map((g) => g.minuten)).toEqual([180, 30]);
+  });
+
+  it("rekent de tijd na de laatste stop mee tot einde dienst", () => {
+    const metDienst = bouwTijdbalk(invoerVan(
+      [rit("R1", "Peeters")],
+      [taak("T1", "R1", "laden", "Venlo", 6, 7)],
+      [],
+      { dienstStart: () => iso(6) }   // dienst tot 18:00
+    ));
+    const gaten = vrijeGaten(metDienst, 60);
+    expect(gaten).toHaveLength(1);
+    expect(gaten[0]).toMatchObject({
+      soort: "na", vanMinuut: minuut(7), totMinuut: minuut(18), plaats: "Venlo",
+    });
+  });
+
+  it("zwijgt over de tijd erna als de chauffeur niet is ingeklokt", () => {
+    expect(vrijeGaten(rijen(), 60).every((g) => g.soort === "tussen")).toBe(true);
+  });
+});
+
+describe("balkSamenvatting", () => {
+  it("telt ritten, stops en bezetting over het hele bord", () => {
+    const rijen = bouwTijdbalk(invoerVan(
+      [rit("R1"), rit("R2", "M. Bakker")],
+      [
+        taak("T1", "R1", "laden", "Venlo", 6, 7),
+        taak("T2", "R1", "lossen", "Veghel", 9, 10),
+        taak("T3", "R2", "laden", "Venlo", 8, 9),
+      ]
+    ));
+    const samen = balkSamenvatting(rijen);
+    expect(samen.ritten).toBe(2);
+    expect(samen.stops).toBe(3);
+    // R1: 60 + 60 werk + 60 rijden = 180 bezet, 60 wachten. R2: 60 bezet.
+    expect(samen.bezetteMinuten).toBe(240);
+    expect(samen.wachtMinuten).toBe(60);
+    expect(samen.bezettingPct).toBe(80);
+  });
+
+  it("geeft nullen terug voor een leeg bord", () => {
+    expect(balkSamenvatting([])).toMatchObject({
+      ritten: 0, stops: 0, bezettingPct: 0, knelpunten: 0, vrijeMinuten: 0,
+    });
+  });
+
+  it("telt de ritten zonder knelpunt apart", () => {
+    const rijen = bouwTijdbalk(invoerVan(
+      [rit("R1"), rit("R2", "M. Bakker")],
+      [
+        // R1 is te krap: een uur rijden in een half uur.
+        taak("T1", "R1", "laden", "Venlo", 6, 7),
+        taak("T2", "R1", "lossen", "Veghel", 7.5, 8),
+        taak("T3", "R2", "laden", "Venlo", 8, 9),
+      ]
+    ));
+    const samen = balkSamenvatting(rijen);
+    expect(samen.knelpunten).toBe(1);
+    expect(samen.schoneRitten).toBe(1);
+  });
+
+  it("telt alleen gaten die groot genoeg zijn om iets in te plannen", () => {
+    const rijen = bouwTijdbalk(invoerVan([rit("R1")], [
+      taak("T1", "R1", "laden", "Venlo", 6, 7),
+      taak("T2", "R1", "lossen", "Veghel", 10, 11),
+    ]));
+    // Gat van 10:00 - 08:00 = 120 minuten wachten na een uur rijden.
+    expect(balkSamenvatting(rijen, 60)).toMatchObject({ vrijeGaten: 1, vrijeMinuten: 120 });
+    expect(balkSamenvatting(rijen, 180)).toMatchObject({ vrijeGaten: 0, vrijeMinuten: 0 });
+  });
+
+  it("geeft het eerste en laatste moment van de dag", () => {
+    const rijen = bouwTijdbalk(invoerVan(
+      [rit("R1"), rit("R2", "M. Bakker")],
+      [taak("T1", "R1", "laden", "Venlo", 6, 7), taak("T2", "R2", "lossen", "Veghel", 14, 15)]
+    ));
+    expect(balkSamenvatting(rijen)).toMatchObject({
+      vroegsteMinuut: minuut(6), laatsteMinuut: minuut(15),
+    });
+  });
+});
+
+describe("knelpuntenLijst", () => {
+  it("zet de dringendste bovenaan", () => {
+    const rijen = bouwTijdbalk(invoerVan(
+      [rit("R1"), rit("R2", "M. Bakker")],
+      [
+        // R1: te laat op het venster van 08:00-09:00.
+        taak("T1", "R1", "lossen", "Veghel", 9.5, 10, [8, 9]),
+        // R2: te krap, een uur rijden in een half uur.
+        taak("T2", "R2", "laden", "Venlo", 6, 7),
+        taak("T3", "R2", "lossen", "Veghel", 7.5, 8),
+      ]
+    ));
+    expect(knelpuntenLijst(rijen).map((k) => [k.soort, k.ritId])).toEqual([
+      ["te_krap", "R2"],
+      ["buiten_venster", "R1"],
+    ]);
+  });
+
+  it("hangt chauffeur, kenteken en plaats aan elk knelpunt", () => {
+    const rijen = bouwTijdbalk(invoerVan([rit("R1")], [
+      taak("T1", "R1", "lossen", "Veghel", 9.5, 10, [8, 9]),
+    ]));
+    expect(knelpuntenLijst(rijen)[0]).toMatchObject({
+      soort: "buiten_venster", chauffeur: "J. Peeters",
+      kentekenGenormaliseerd: "43BKL7", landcode: "NL", plaats: "Veghel", minuten: 60,
+    });
+  });
+
+  it("vindt de plaats ook bij een knelpunt zonder taak", () => {
+    // Vijf uur aaneengesloten rijden zonder gat van 45 minuten.
+    const rijen = bouwTijdbalk(invoerVan([rit("R1")], [
+      taak("T1", "R1", "laden", "Venlo", 6, 7),
+      taak("T2", "R1", "lossen", "Veghel", 10, 10.5),
+      taak("T3", "R1", "lossen", "Breda", 14, 14.5),
+    ], [], { reistijdMinuten: () => 180 }));
+    const pauze = knelpuntenLijst(rijen).find((k) => k.soort === "pauze_overschreden");
+    expect(pauze).toBeDefined();
+    expect(pauze!.plaats).toBeTruthy();
+  });
+
+  it("geeft een lege lijst als er niets misgaat", () => {
+    const rijen = bouwTijdbalk(invoerVan([rit("R1")], [taak("T1", "R1", "laden", "Venlo", 6, 7)]));
+    expect(knelpuntenLijst(rijen)).toEqual([]);
+  });
+});
+
+describe("balkTijd", () => {
+  it("schrijft minuten sinds middernacht als klok", () => {
+    expect(balkTijd(0)).toBe("00:00");
+    expect(balkTijd(minuut(6, 5))).toBe("06:05");
+    expect(balkTijd(minuut(14.5))).toBe("14:30");
+  });
+
+  it("loopt door na middernacht", () => {
+    expect(balkTijd(minuut(25))).toBe("01:00");
   });
 });
