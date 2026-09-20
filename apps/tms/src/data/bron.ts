@@ -1,8 +1,8 @@
 import type { WachtrijItem } from "@sharzi/connector-kit";
 import type {
   ActiviteitBron, Adres, DockEvent, EmballageTransactie, Order, Rit, Taak, TaakEvent,
-  Factuur, Garagemelding, Referentie, TachoToestemming, Uitgever, TachoUitlezing,
-  Voertuigcontrole, Voorbehoud, WerktijdEvent, Zending,
+  Factuur, Garagemelding, Notificatievoorkeur, Referentie, TachoToestemming, Uitgever,
+  TachoUitlezing, VerstuurdeNotificatie, Voertuigcontrole, Voorbehoud, WerktijdEvent, Zending,
 } from "@sharzi/domain";
 
 // De UI praat alleen met deze poort. Nu zit er een mock achter (in-memory);
@@ -143,6 +143,10 @@ export interface DagSnapshot {
   controles: Voertuigcontrole[];
   /** Gebreken die naar de garage gaan, met hun afhandeling. */
   garagemeldingen: Garagemelding[];
+  /** Per opdrachtgever: welke gebeurtenis een bericht oplevert. */
+  notificatievoorkeuren: Record<string, Notificatievoorkeur>;
+  /** Wat er daadwerkelijk aan klanten is verstuurd — append-only. */
+  notificatieLog: VerstuurdeNotificatie[];
   ritKm: Record<string, RitKm>;
   /** Rijtijd eerder deze week (vóór vandaag) per chauffeur, in minuten. */
   weekRijMinuten: Record<string, number>;

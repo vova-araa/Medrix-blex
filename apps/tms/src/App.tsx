@@ -900,6 +900,7 @@ export default function App() {
           onNieuwThread={verstuurNieuweMail}
           onAntwoord={verstuurMailAntwoord}
           onGelezen={(threadId) => dispatch({ type: "mail_gelezen", threadId })}
+          onZetVoorkeur={(voorkeur) => dispatch({ type: "zet_notificatievoorkeur", voorkeur })}
         />
       )}
       {rol === "bedrijf" && effectieveTab === "koppelingen" && (

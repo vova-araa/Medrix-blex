@@ -1714,3 +1714,67 @@
   .rd-saldo .rd-marge { margin-left: auto; font-size: 12px; }
   .rd-saldo.verlies { background: var(--crit-soft); color: var(--crit); }
   @media (max-width: 720px) { .rd-resultaat { grid-template-columns: 1fr; } }
+
+  /* ── Meldingsregels per klant ───────────────────────────────────────── */
+  .berichten-wrap { max-width: 1280px; margin: 0 auto; padding: 14px 16px; }
+  .meldingsregels { display: grid; grid-template-columns: 280px 1fr; gap: 14px; align-items: start; }
+  .mr-klanten { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .mr-klanten ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+  .mr-klant {
+    width: 100%; display: flex; flex-direction: column; gap: 3px; align-items: flex-start;
+    padding: 8px 10px; border: none; background: none; border-radius: 8px;
+    font: inherit; text-align: left; color: var(--ink); cursor: pointer;
+  }
+  .mr-klant:hover { background: var(--surface-2); }
+  .mr-klant.actief { background: var(--accent-soft); }
+  .mr-klant.actief .mr-naam { color: var(--accent); font-weight: 600; }
+  .mr-naam { font-size: 12.5px; }
+  .mr-meta { display: flex; align-items: center; gap: 8px; font-size: 10.5px; }
+  .mr-aan { color: var(--ok); }
+  .mr-uit { color: var(--faint); }
+  .mr-telling {
+    margin-left: auto; background: var(--surface-2); border-radius: 999px;
+    padding: 1px 7px; color: var(--muted); font-variant-numeric: tabular-nums;
+  }
+  .mr-paneel { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .mr-standaard {
+    font-size: 11.5px; color: var(--info); background: var(--info-soft);
+    border-radius: 8px; padding: 7px 10px; margin: 8px 0 0;
+  }
+  .mr-adres { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin: 12px 0; }
+  .mr-adres label:first-child { display: flex; flex-direction: column; gap: 4px; flex: 1 1 260px; font-size: 12px; color: var(--muted); }
+  .mr-adres input[type=email] {
+    padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: 13px; background: var(--surface); color: var(--ink);
+  }
+  .mr-waarschuwing {
+    display: flex; align-items: center; gap: 7px; font-size: 11.5px;
+    color: var(--warn); background: var(--warn-soft); border-radius: 8px;
+    padding: 7px 10px; margin: 0 0 12px;
+  }
+  .mr-tabel td { vertical-align: middle; }
+  .mr-tabel td:first-child { white-space: normal; max-width: 280px; }
+  .mr-omschrijving { display: block; font-size: 11px; color: var(--muted); line-height: 1.4; margin-top: 2px; }
+  .mr-standen { display: flex; gap: 3px; }
+  .mr-stand {
+    padding: 4px 10px; font-size: 11px; border-radius: 7px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  }
+  .mr-stand:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .mr-stand.s-automatisch.actief { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); font-weight: 600; }
+  .mr-stand.s-voorstel.actief { background: var(--info-soft); border-color: var(--info); color: var(--info); font-weight: 600; }
+  .mr-stand.s-uit.actief { background: var(--surface-2); border-color: var(--line-strong); color: var(--ink); font-weight: 600; }
+  .mr-drempel { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--muted); }
+  .mr-drempel input {
+    width: 62px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 7px;
+    font-size: 12px; background: var(--surface); color: var(--ink);
+  }
+  .mr-log li { padding-bottom: 10px; }
+  .mr-logtekst { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 3px 0; }
+  .mr-herkomst {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em;
+    padding: 1px 6px; border-radius: 999px; font-weight: 700;
+  }
+  .mr-herkomst.h-automatisch { background: var(--ok-soft); color: var(--ok); }
+  .mr-herkomst.h-planner { background: var(--info-soft); color: var(--info); }
+  @media (max-width: 1000px) { .meldingsregels { grid-template-columns: 1fr; } }

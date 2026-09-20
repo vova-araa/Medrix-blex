@@ -22,6 +22,9 @@ import {
   type FactuurStatus,
   type Garagemelding,
   type MeldingStatus,
+  type NotificatieGebeurtenis,
+  type Notificatievoorkeur,
+  type VerstuurdeNotificatie,
   type Voertuigcontrole,
   type Voorbehoud,
 } from "@sharzi/domain";
@@ -76,6 +79,8 @@ export type Actie =
   | { type: "voorbehoud"; voorbehoud: Voorbehoud }
   | { type: "voertuigcontrole"; controle: Voertuigcontrole; meldingen: Garagemelding[] }
   | { type: "garagemelding"; melding: Garagemelding }
+  | { type: "zet_notificatievoorkeur"; voorkeur: Notificatievoorkeur }
+  | { type: "notificatie_verstuurd"; notificatie: VerstuurdeNotificatie }
   | {
       type: "melding_afhandelen";
       meldingId: string;
@@ -102,6 +107,7 @@ export const leegState: AppState = {
   ritten: [], taken: [], events: [], zendingen: {}, orders: {}, ongepland: [],
   adresInfo: {}, werktijden: [], emballage: [], tarieven: {}, wagenpark: [],
   voorbehouden: [], controles: [], garagemeldingen: [],
+  notificatievoorkeuren: {}, notificatieLog: [],
   klanten: {}, dockEvents: [], trailers: [], trailerVanRit: {}, cmrs: [], ritKm: {},
   weekRijMinuten: {}, vorigeWeekRijMinuten: {}, weekArbeidMinuten: {},
   wagenparkSync: "", mailThreads: [], koppelingLog: [],
@@ -202,6 +208,17 @@ export function reducer(state: AppState, actie: Actie): AppState {
         garagemeldingen: [...state.garagemeldingen, ...actie.meldingen],
         outbox: state.offline ? state.outbox + 1 : state.outbox,
       };
+    case "zet_notificatievoorkeur":
+      return {
+        ...state,
+        notificatievoorkeuren: {
+          ...state.notificatievoorkeuren,
+          [actie.voorkeur.opdrachtgever]: actie.voorkeur,
+        },
+      };
+    // Het logboek is append-only: wat de deur uit is gegaan blijft staan (§5.1).
+    case "notificatie_verstuurd":
+      return { ...state, notificatieLog: [...state.notificatieLog, actie.notificatie] };
     case "garagemelding":
       return {
         ...state,
@@ -392,4 +409,20 @@ export function rijtijdVan(state: AppState, chauffeur: string, nu: string): Rijt
       [dezeWeek]: state.weekArbeidMinuten?.[chauffeur] ?? 0,
     },
   });
+}
+
+/** De ingestelde voorkeur van een opdrachtgever, of niets als hij er geen heeft. */
+export function voorkeurVan(
+  state: AppState, opdrachtgever: string
+): Notificatievoorkeur | undefined {
+  return state.notificatievoorkeuren[opdrachtgever];
+}
+
+/** Of er voor deze zending al een bericht over deze gebeurtenis uitging. */
+export function gebeurtenisGemeld(
+  state: AppState, zendingId: string, gebeurtenis: NotificatieGebeurtenis
+): boolean {
+  return state.notificatieLog.some(
+    (n) => n.zendingId === zendingId && n.gebeurtenis === gebeurtenis
+  );
 }

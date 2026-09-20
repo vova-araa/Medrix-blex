@@ -1,8 +1,9 @@
-import { CONTROLEPUNTEN, legeStanden } from "@sharzi/domain";
+import { CONTROLEPUNTEN, legeStanden, standaardVoorkeur } from "@sharzi/domain";
 import type {
   Adres, DockEvent, DockEventType, EmballageTransactie, Order, Rit, Taak, TaakEvent, TaakEventType,
   Voorbehoud, WerktijdEvent, WerktijdEventType, Zending,
-  ControlePunt, Garagemelding, PuntStand, Voertuigcontrole,
+  ControlePunt, Garagemelding, Notificatievoorkeur, PuntStand, VerstuurdeNotificatie,
+  Voertuigcontrole,
 } from "@sharzi/domain";
 import { FixtureTruckAndTrailerClient } from "@sharzi/integratie-truck-and-trailer";
 import { FixtureTachoClient } from "@sharzi/integratie-tacho";
@@ -562,6 +563,59 @@ const garagemeldingen: Garagemelding[] = [
   },
 ];
 
+// Notificatievoorkeuren: elke klant wil iets anders. Jumbo wil alles weten,
+// De Kroon alleen als het misgaat, Van Dijk heeft nog niets ingesteld.
+const notificatievoorkeuren: Record<string, Notificatievoorkeur> = {
+  "Jumbo Supermarkten BV": {
+    opdrachtgever: "Jumbo Supermarkten BV",
+    email: "transport@jumbo.example",
+    ookOntvanger: true,
+    regels: [
+      { gebeurtenis: "ingepland", stand: "automatisch" },
+      { gebeurtenis: "onderweg", stand: "automatisch" },
+      { gebeurtenis: "eta_gewijzigd", stand: "automatisch", drempelMinuten: 10 },
+      { gebeurtenis: "vertraging", stand: "automatisch", drempelMinuten: 10 },
+      { gebeurtenis: "afgeleverd", stand: "automatisch" },
+      { gebeurtenis: "probleem", stand: "automatisch" },
+      { gebeurtenis: "wachturen", stand: "voorstel" },
+    ],
+  },
+  "Brouwerij De Kroon": {
+    opdrachtgever: "Brouwerij De Kroon",
+    email: "expeditie@dekroon.example",
+    ookOntvanger: false,
+    regels: [
+      { gebeurtenis: "ingepland", stand: "uit" },
+      { gebeurtenis: "onderweg", stand: "uit" },
+      { gebeurtenis: "eta_gewijzigd", stand: "uit", drempelMinuten: 30 },
+      { gebeurtenis: "vertraging", stand: "automatisch", drempelMinuten: 30 },
+      { gebeurtenis: "afgeleverd", stand: "uit" },
+      { gebeurtenis: "probleem", stand: "voorstel" },
+      { gebeurtenis: "wachturen", stand: "uit" },
+    ],
+  },
+  "Plus Retail": standaardVoorkeur("Plus Retail", "logistiek@plusretail.example"),
+};
+
+const notificatieLog: VerstuurdeNotificatie[] = [
+  {
+    id: "NL-001", tenantId: TENANT, opdrachtgever: "Jumbo Supermarkten BV",
+    gebeurtenis: "afgeleverd", zendingId: "SHZ-114-002",
+    ontvangers: ["transport@jumbo.example"],
+    onderwerp: "Zending SHZ-114-002 bezorgd bij DC Jumbo Veghel",
+    tekst: "Uw zending is om 08:54 afgeleverd en afgetekend. De vrachtbrief staat in het portaal.",
+    tijdstip: dag("06:56"), herkomst: "automatisch",
+  },
+  {
+    id: "NL-002", tenantId: TENANT, opdrachtgever: "Jumbo Supermarkten BV",
+    gebeurtenis: "eta_gewijzigd", zendingId: "SHZ-114-024",
+    ontvangers: ["transport@jumbo.example", "dc.veghel@jumbo.example"],
+    onderwerp: "Nieuwe verwachte aankomsttijd voor SHZ-114-024",
+    tekst: "De ophaling van uw retouremballage schuift op naar 14:20.",
+    tijdstip: dag("08:15"), herkomst: "automatisch", verschuivingMinuten: 35,
+  },
+];
+
 const koppelingLog: KoppelingLogRegel[] = [
   { id: "KL-001", koppelingId: "truck_and_trailer", richting: "in", omschrijving: "Wagenpark-sync: 5 voertuigen, 3 trailers", tijdstip: dag("05:30"), status: "geslaagd" },
   { id: "KL-002", koppelingId: "truck_and_trailer", richting: "in", omschrijving: "Onderhoudsstatus trekker 43-BKL-7", tijdstip: dag("05:30"), status: "geslaagd" },
@@ -676,6 +730,8 @@ export class MockDataBron implements DataBron {
       voorbehouden,
       controles,
       garagemeldingen,
+      notificatievoorkeuren,
+      notificatieLog,
     };
   }
 }

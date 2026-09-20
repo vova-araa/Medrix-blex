@@ -1,10 +1,11 @@
-import { SJABLONEN, vulSjabloon, type SjabloonId } from "@sharzi/domain";
+import { SJABLONEN, vulSjabloon, type Notificatievoorkeur, type SjabloonId } from "@sharzi/domain";
 import { useState } from "react";
 import type { MailThread } from "../data/bron";
 import type { AppState } from "../data/state";
 import { t } from "../i18n";
 import { tijd } from "../utils";
 import { Icoon } from "./Icoon";
+import { MeldingsregelsView } from "./MeldingsregelsView";
 
 export interface MailConcept {
   tegenpartij: string;
@@ -24,9 +25,17 @@ interface Props {
   ) => void;
   onAntwoord: (threadId: string, tekst: string) => void;
   onGelezen: (threadId: string) => void;
+  onZetVoorkeur: (voorkeur: Notificatievoorkeur) => void;
 }
 
-export function BerichtenView({ state, concept, onNieuwThread, onAntwoord, onGelezen }: Props) {
+type Tab = "gesprekken" | "regels";
+
+export function BerichtenView({
+  state, concept, onNieuwThread, onAntwoord, onGelezen, onZetVoorkeur,
+}: Props) {
+  // Handmatige gesprekken en automatische meldingen horen bij elkaar: het is
+  // allebei wat de klant van ons hoort.
+  const [tab, setTab] = useState<Tab>("gesprekken");
   const threads = [...state.mailThreads].sort((a, b) => {
     const la = a.berichten.at(-1)?.tijdstip ?? "";
     const lb = b.berichten.at(-1)?.tijdstip ?? "";
@@ -43,6 +52,22 @@ export function BerichtenView({ state, concept, onNieuwThread, onAntwoord, onGel
   };
 
   return (
+    <div className="berichten-wrap">
+      <div className="rap-tabs">
+        {(["gesprekken", "regels"] as Tab[]).map((x) => (
+          <button
+            key={x}
+            className={`rap-tab${x === tab ? " actief" : ""}`}
+            onClick={() => setTab(x)}
+          >
+            {t(`melding.tab.${x}`)}
+          </button>
+        ))}
+      </div>
+
+      {tab === "regels" ? (
+        <MeldingsregelsView state={state} onZetVoorkeur={onZetVoorkeur} />
+      ) : (
     <div className="berichten-main">
       <aside className="ph-card berichten-lijst">
         <div className="operatie-kop">
@@ -94,6 +119,8 @@ export function BerichtenView({ state, concept, onNieuwThread, onAntwoord, onGel
           <p className="kaart-kies">{t("mail.kies")}</p>
         )}
       </div>
+    </div>
+      )}
     </div>
   );
 }
