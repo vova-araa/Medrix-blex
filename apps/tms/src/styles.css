@@ -1574,3 +1574,89 @@
   .ib-telefoon-kop { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .ib-telefoon-kop h4 { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 13px; }
   .ib-sluit { font-size: 11px; padding: 4px 10px; }
+
+  /* ── Tijdbalk-planbord ──────────────────────────────────────────────── */
+  .weergave-schakel { display: flex; gap: 2px; background: var(--surface-2); border-radius: 9px; padding: 2px; }
+  .weergave-knop {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border: none; background: none; border-radius: 7px;
+    font: inherit; font-size: 12px; color: var(--muted); cursor: pointer;
+  }
+  .weergave-knop:hover { color: var(--ink); }
+  .weergave-knop.actief { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .weergave-knop:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .tijdbalk { max-width: 1280px; margin: 14px auto 0; }
+  .tb-leeg { max-width: 1280px; margin: 14px auto 0; color: var(--muted); font-size: 13px; }
+  .tb-kop { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tb-legenda { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--muted); }
+  .tb-leg { display: inline-flex; align-items: center; gap: 5px; }
+  .tb-leg.let { color: var(--warn); font-weight: 600; }
+  .tb-staal { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  .tb-staal.s-laden { background: var(--info); }
+  .tb-staal.s-lossen { background: var(--accent); }
+  .tb-staal.s-rijden { background: var(--line-strong); }
+  .tb-staal.s-wachten { background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 3px, var(--line) 3px, var(--line) 6px); }
+  .tb-gaten-knop { margin-left: auto; }
+
+  .tb-scroll { overflow-x: auto; padding-bottom: 6px; }
+  .tb-raster { position: relative; min-width: 100%; padding-left: 168px; box-sizing: content-box; }
+  .tb-uren { position: relative; height: 20px; margin-bottom: 4px; }
+  .tb-uur {
+    position: absolute; top: 0; font-size: 10.5px; color: var(--faint);
+    font-variant-numeric: tabular-nums; transform: translateX(-50%);
+  }
+  .tb-uur::after {
+    content: ""; position: absolute; left: 50%; top: 15px; width: 1px;
+    height: 9999px; background: var(--line); opacity: .6;
+  }
+
+  .tb-rij { position: relative; display: flex; align-items: stretch; margin-bottom: 6px; }
+  .tb-naam {
+    position: absolute; left: -168px; width: 160px; display: flex; gap: 8px;
+    align-items: center; background: var(--surface); z-index: 3; padding: 2px 0;
+  }
+  .tb-naam > div { display: flex; flex-direction: column; min-width: 0; }
+  .tb-naam b { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tb-naam .mono { font-size: 10px; color: var(--accent); }
+  .tb-bezetting { font-size: 10px; color: var(--faint); }
+  .tb-baan {
+    position: relative; height: 42px; flex: 1;
+    background: var(--surface-2); border-radius: 8px;
+  }
+
+  .tb-blok {
+    position: absolute; top: 5px; height: 32px; border-radius: 6px;
+    border: none; padding: 0 7px; display: flex; align-items: center;
+    overflow: hidden; font: inherit; font-size: 10.5px; color: #fff;
+    cursor: pointer; text-align: left;
+  }
+  .tb-blok-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tb-blok.s-laden { background: var(--info); }
+  .tb-blok.s-lossen { background: var(--accent); }
+  .tb-blok.s-emballage { background: var(--ok); }
+  .tb-blok.s-rijden { background: var(--line-strong); color: var(--ink); top: 14px; height: 14px; border-radius: 4px; }
+  .tb-blok.s-wachten {
+    background: repeating-linear-gradient(45deg, transparent, transparent 4px, var(--line) 4px, var(--line) 8px);
+    top: 14px; height: 14px; border-radius: 4px; cursor: default;
+  }
+  .tb-blok.s-wachten.gat { background: var(--warn-soft); border: 1px dashed var(--warn); }
+  .tb-blok.st-afgerond { opacity: .55; }
+  .tb-blok.st-probleem { background: var(--crit); }
+  .tb-blok.buiten-venster { box-shadow: inset 0 0 0 2px var(--crit); }
+  button.tb-blok:hover { filter: brightness(1.08); }
+  button.tb-blok:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+  .tb-marker { position: absolute; top: 0; bottom: 0; width: 2px; z-index: 2; }
+  .tb-marker.m-nu { background: var(--crit); }
+  .tb-marker.m-nu::before {
+    content: ""; position: absolute; top: -3px; left: -3px;
+    border: 4px solid transparent; border-top-color: var(--crit);
+  }
+  .tb-marker.m-dienst_einde { background: var(--warn); opacity: .7; }
+  .tb-knelpunt {
+    position: absolute; top: -4px; transform: translateX(-50%);
+    color: var(--warn); z-index: 4; line-height: 0;
+  }
+  .tb-knelpunt.k-buiten_venster, .tb-knelpunt.k-te_krap { color: var(--crit); }
+  .tb-gaten-noot { font-size: 11.5px; color: var(--muted); margin: 10px 0 0; }

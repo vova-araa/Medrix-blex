@@ -11,6 +11,7 @@ import { statusLabel, t } from "../i18n";
 import { ritEta } from "../kaart/simulatie";
 import { datumDagKort, datumLabel, initialen, laadmeters, tijd } from "../utils";
 import { Icoon, type IcoonNaam } from "./Icoon";
+import { Tijdbalk } from "./Tijdbalk";
 import { TruckSvg } from "./TruckSvg";
 
 interface Props {
@@ -24,9 +25,14 @@ interface Props {
   onZetPlanDatum: (datum: string) => void;
 }
 
+type Weergave = "kaarten" | "tijdbalk";
+
 export function BedrijfView({
   state, nu, onPlanZending, onSelecteerTaak, onAutoPlan, onVerplaatsStop, planDatum, onZetPlanDatum,
 }: Props) {
+  // Twee manieren om naar dezelfde dag te kijken: kaarten om te slepen,
+  // tijdbalk om te zien waar het knelt en waar nog ruimte zit.
+  const [weergave, setWeergave] = useState<Weergave>("kaarten");
   // Het planbord toont één dag tegelijk. Ritten van andere dagen blijven in de state staan;
   // alleen de weergave is gefilterd.
   const dagRitten = state.ritten.filter((r) => r.datum === planDatum);
@@ -46,6 +52,8 @@ export function BedrijfView({
         planDatum={planDatum}
         aantalRitten={dagRitten.length}
         onZetPlanDatum={onZetPlanDatum}
+        weergave={weergave}
+        onZetWeergave={setWeergave}
       />
       <div className="kpis">
         {kpis.map((k) => (
@@ -55,13 +63,17 @@ export function BedrijfView({
           </div>
         ))}
       </div>
+      {weergave === "tijdbalk" && (
+        <Tijdbalk state={state} nu={nu} datum={planDatum} onSelecteerTaak={onSelecteerTaak} />
+      )}
+
       <div className="bedrijf-main">
         <OngeplandLijst state={state} planDatum={planDatum} onAutoPlan={onAutoPlan} />
         <div className="fleet">
           {dagRitten.length === 0 && (
             <div className="fleet-leeg">{t("planbord.geenRitten")}</div>
           )}
-          {dagRitten.map((rit) => (
+          {weergave === "kaarten" && dagRitten.map((rit) => (
             <RitKaart
               key={rit.id}
               rit={rit}
@@ -84,12 +96,14 @@ function verschuifDatum(datum: string, dagen: number): string {
 }
 
 function Dagkiezer({
-  state, planDatum, aantalRitten, onZetPlanDatum,
+  state, planDatum, aantalRitten, onZetPlanDatum, weergave, onZetWeergave,
 }: {
   state: AppState;
   planDatum: string;
   aantalRitten: number;
   onZetPlanDatum: (datum: string) => void;
+  weergave: Weergave;
+  onZetWeergave: (weergave: Weergave) => void;
 }) {
   const datums = [...new Set(state.ritten.map((r) => r.datum))].sort();
   const eerste = datums[0] ?? planDatum;
@@ -119,6 +133,19 @@ function Dagkiezer({
       >
         <Icoon naam="chevron-rechts" maat={14} />
       </button>
+      <div className="weergave-schakel">
+        {(["kaarten", "tijdbalk"] as Weergave[]).map((w) => (
+          <button
+            key={w}
+            className={`weergave-knop${w === weergave ? " actief" : ""}`}
+            onClick={() => onZetWeergave(w)}
+            aria-pressed={w === weergave}
+          >
+            <Icoon naam={w === "kaarten" ? "planbord" : "rapportage"} maat={13} />
+            {t(`planbord.weergave.${w}`)}
+          </button>
+        ))}
+      </div>
       <div className="dagkiezer-tabs">
         {datums.map((d) => (
           <button
